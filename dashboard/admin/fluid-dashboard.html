@@ -1,0 +1,2169 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Dashboard | Konig Guard Bureau</title>
+
+    <!-- Prevent the demo from appearing in search engines -->
+    <meta name="robots" content="noindex" />
+
+    <!-- Perfect Scrollbar -->
+    <link
+      type="text/css"
+      href="assets/vendor/perfect-scrollbar.css"
+      rel="stylesheet"
+    />
+
+    <!-- App CSS -->
+    <link type="text/css" href="assets/css/app.css" rel="stylesheet" />
+    <link type="text/css" href="assets/css/app.rtl.css" rel="stylesheet" />
+
+    <!-- Material Design Icons -->
+    <link
+      type="text/css"
+      href="assets/css/vendor-material-icons.css"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome FREE Icons -->
+    <link
+      type="text/css"
+      href="assets/css/vendor-fontawesome-free.css"
+      rel="stylesheet"
+    />
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=UA-133433427-1"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "UA-133433427-1");
+    </script>
+
+    <!-- Flatpickr -->
+    <link
+      type="text/css"
+      href="assets/css/vendor-flatpickr.css"
+      rel="stylesheet"
+    />
+    <link
+      type="text/css"
+      href="assets/css/vendor-flatpickr-airbnb.css"
+      rel="stylesheet"
+    />
+
+    <!-- Vector Maps -->
+    <link
+      type="text/css"
+      href="assets/vendor/jqvmap/jqvmap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body class="layout-fluid layout-sticky-subnav">
+    <div class="preloader"></div>
+
+    <!-- Header Layout -->
+    <div class="mdk-header-layout js-mdk-header-layout">
+      <!-- **********************************Top Header********************************** -->
+      <div id="header" class="mdk-header bg-dark js-mdk-header m-0" data-fixed>
+        <div class="mdk-header__content">
+          <div
+            class="navbar navbar-expand-sm navbar-main navbar-dark bg-dark pr-0 pr-0"
+            id="navbar"
+            data-primary
+          >
+            <div class="container-fluid p-0">
+              <!-- Navbar toggler -->
+              <button
+                class="navbar-toggler navbar-toggler-custom navbar-toggler-right d-block"
+                type="button"
+                data-toggle="sidebar"
+              >
+                <span class="material-icons">apps</span>
+              </button>
+
+              <!-- Navbar Brand -->
+              <a href="fluid-dashboard.html" class="navbar-brand">
+                <svg
+                  class="mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  style="width: 20px"
+                  viewBox="0 0 40 40"
+                >
+                  <path
+                    d="M40 34.16666667c.01-3.21166667-2.58333333-5.82333334-5.795-5.835-1.94-.00666667-3.75666667.955-4.84166667 2.565-.10166666.155-.295.22333333-.47166666.16666666L11.94 25.66666667c-.19-.06-.31-.245-.28833333-.44333334.01-.07333333.015-.14833333.015-.22333333 0-.06833333-.005-.13833333-.01333334-.20666667-.02166666-.20166666.105-.39.3-.44666666l17.96-5.13c.13833334-.04.28666667-.005.39333334.09166666 1.05.97333334 2.42833333 1.51666667 3.86 1.525C37.38833333 20.83333333 40 18.22166667 40 15s-2.61166667-5.83333333-5.83333333-5.83333333C32.52 9.17166667 30.95333333 9.87833333 29.86 11.11c-.11.12166667-.28.16833333-.43666667.11833333L11.91 5.65333333c-.16-.05-.27333333-.19166666-.28833333-.35833333-.30333334-3.20166667-3.14333334-5.55166667-6.345-5.24833333S-.275 3.19.02833333 6.39166667c.28166667 2.99333333 2.79833334 5.28 5.805 5.275 1.64666667-.005 3.21333334-.71333334 4.30666667-1.945.11-.12166667.28-.16833334.43666667-.11833334l16.57 5.27166667c.22.06833333.34166666.30333333.27166666.52333333-.04166666.13333334-.14833333.23833334-.28333333.275L9.90333333 20.59666667c-.13333333.03833333-.275.00833333-.38166666-.08-1.03333334-.86833334-2.33833334-1.34666667-3.68833334-1.35C2.61166667 19.16666667 0 21.77833333 0 25s2.61166667 5.83333333 5.83333333 5.83333333c1.355-.005 2.665-.485 3.7-1.35833333.10833334-.09166667.25833334-.12.39333334-.07666667l18.29 5.81833334c.14.04333333.24666666.15666666.28.3.75666666 3.13166666 3.90833333 5.05666666 7.04 4.3C38.14833333 39.185 39.99 36.85333333 40 34.16666667z"
+                  />
+                </svg>
+
+                <span>flowdash</span>
+              </a>
+
+              <form
+                class="search-form d-none d-sm-flex flex"
+                action="fluid-index.html"
+              >
+                <button class="btn" type="submit">
+                  <i class="material-icons">search</i>
+                </button>
+                <input type="text" class="form-control" placeholder="Search" />
+              </form>
+
+              <ul class="nav navbar-nav ml-auto d-none d-md-flex">
+                <li class="nav-item dropdown">
+                  <a
+                    href="#notifications_menu"
+                    class="nav-link dropdown-toggle"
+                    data-toggle="dropdown"
+                    data-caret="false"
+                  >
+                    <i
+                      class="material-icons nav-icon navbar-notifications-indicator"
+                      >notifications</i
+                    >
+                  </a>
+                  <div
+                    id="notifications_menu"
+                    class="dropdown-menu dropdown-menu-right navbar-notifications-menu"
+                  >
+                    <div class="dropdown-item d-flex align-items-center py-2">
+                      <span class="flex navbar-notifications-menu__title m-0"
+                        >Notifications</span
+                      >
+                      <a href="javascript:void(0)" class="text-muted"
+                        ><small>Clear all</small></a
+                      >
+                    </div>
+                    <div
+                      class="navbar-notifications-menu__content"
+                      data-perfect-scrollbar
+                    >
+                      <div class="py-2">
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <div
+                              class="avatar avatar-sm"
+                              style="width: 32px; height: 32px"
+                            >
+                              <img
+                                src="assets/images/256_daniel-gaffey-1060698-unsplash.jpg"
+                                alt="Avatar"
+                                class="avatar-img rounded-circle"
+                              />
+                            </div>
+                          </div>
+                          <div class="flex">
+                            <a href="">A.Demian</a> left a comment on
+                            <a href="">FlowDash</a><br />
+                            <small class="text-muted">1 minute ago</small>
+                          </div>
+                        </div>
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <a href="#">
+                              <div
+                                class="avatar avatar-xs"
+                                style="width: 32px; height: 32px"
+                              >
+                                <span
+                                  class="avatar-title bg-purple rounded-circle"
+                                  ><i class="material-icons icon-16pt"
+                                    >person_add</i
+                                  ></span
+                                >
+                              </div>
+                            </a>
+                          </div>
+                          <div class="flex">
+                            New user <a href="#">Peter Parker</a> signed up.<br />
+                            <small class="text-muted">1 hour ago</small>
+                          </div>
+                        </div>
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <a href="#">
+                              <div
+                                class="avatar avatar-xs"
+                                style="width: 32px; height: 32px"
+                              >
+                                <span class="avatar-title rounded-circle"
+                                  >JD</span
+                                >
+                              </div>
+                            </a>
+                          </div>
+                          <div class="flex">
+                            <a href="#">Big Joe</a>
+                            <small class="text-muted">wrote:</small><br />
+                            <div>
+                              Hey, how are you? What about our next meeting
+                            </div>
+                            <small class="text-muted">2 minutes ago</small>
+                          </div>
+                        </div>
+
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <div
+                              class="avatar avatar-sm"
+                              style="width: 32px; height: 32px"
+                            >
+                              <img
+                                src="assets/images/256_daniel-gaffey-1060698-unsplash.jpg"
+                                alt="Avatar"
+                                class="avatar-img rounded-circle"
+                              />
+                            </div>
+                          </div>
+                          <div class="flex">
+                            <a href="">A.Demian</a> left a comment on
+                            <a href="">FlowDash</a><br />
+                            <small class="text-muted">1 minute ago</small>
+                          </div>
+                        </div>
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <a href="#">
+                              <div
+                                class="avatar avatar-xs"
+                                style="width: 32px; height: 32px"
+                              >
+                                <span
+                                  class="avatar-title bg-purple rounded-circle"
+                                  ><i class="material-icons icon-16pt"
+                                    >person_add</i
+                                  ></span
+                                >
+                              </div>
+                            </a>
+                          </div>
+                          <div class="flex">
+                            New user <a href="#">Peter Parker</a> signed up.<br />
+                            <small class="text-muted">1 hour ago</small>
+                          </div>
+                        </div>
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <a href="#">
+                              <div
+                                class="avatar avatar-xs"
+                                style="width: 32px; height: 32px"
+                              >
+                                <span class="avatar-title rounded-circle"
+                                  >JD</span
+                                >
+                              </div>
+                            </a>
+                          </div>
+                          <div class="flex">
+                            <a href="#">Big Joe</a>
+                            <small class="text-muted">wrote:</small><br />
+                            <div>
+                              Hey, how are you? What about our next meeting
+                            </div>
+                            <small class="text-muted">2 minutes ago</small>
+                          </div>
+                        </div>
+
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <div
+                              class="avatar avatar-sm"
+                              style="width: 32px; height: 32px"
+                            >
+                              <img
+                                src="assets/images/256_daniel-gaffey-1060698-unsplash.jpg"
+                                alt="Avatar"
+                                class="avatar-img rounded-circle"
+                              />
+                            </div>
+                          </div>
+                          <div class="flex">
+                            <a href="">A.Demian</a> left a comment on
+                            <a href="">FlowDash</a><br />
+                            <small class="text-muted">1 minute ago</small>
+                          </div>
+                        </div>
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <a href="#">
+                              <div
+                                class="avatar avatar-xs"
+                                style="width: 32px; height: 32px"
+                              >
+                                <span
+                                  class="avatar-title bg-purple rounded-circle"
+                                  ><i class="material-icons icon-16pt"
+                                    >person_add</i
+                                  ></span
+                                >
+                              </div>
+                            </a>
+                          </div>
+                          <div class="flex">
+                            New user <a href="#">Peter Parker</a> signed up.<br />
+                            <small class="text-muted">1 hour ago</small>
+                          </div>
+                        </div>
+                        <div class="dropdown-item d-flex">
+                          <div class="mr-3">
+                            <a href="#">
+                              <div
+                                class="avatar avatar-xs"
+                                style="width: 32px; height: 32px"
+                              >
+                                <span class="avatar-title rounded-circle"
+                                  >JD</span
+                                >
+                              </div>
+                            </a>
+                          </div>
+                          <div class="flex">
+                            <a href="#">Big Joe</a>
+                            <small class="text-muted">wrote:</small><br />
+                            <div>
+                              Hey, how are you? What about our next meeting
+                            </div>
+                            <small class="text-muted">2 minutes ago</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <a
+                      href="javascript:void(0);"
+                      class="dropdown-item text-center navbar-notifications-menu__footer"
+                      >View All</a
+                    >
+                  </div>
+                </li>
+              </ul>
+
+              <ul
+                class="nav navbar-nav d-none d-sm-flex border-left navbar-height align-items-center"
+              >
+                <li class="nav-item dropdown">
+                  <a
+                    href="#account_menu"
+                    class="nav-link dropdown-toggle"
+                    data-toggle="dropdown"
+                    data-caret="false"
+                  >
+                    <span class="mr-1 d-flex-inline">
+                      <span class="text-light">Adrian D.</span>
+                    </span>
+                    <img
+                      src="assets/images/avatar/demi.png"
+                      class="rounded-circle"
+                      width="32"
+                      alt="Frontted"
+                    />
+                  </a>
+                  <div
+                    id="account_menu"
+                    class="dropdown-menu dropdown-menu-right"
+                  >
+                    <div class="dropdown-item-text dropdown-item-text--lh">
+                      <div><strong>Adrian Demian</strong></div>
+                      <div class="text-muted">@adriandemian</div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item active" href="fluid-dashboard.html"
+                      ><i class="material-icons">dvr</i> Dashboard</a
+                    >
+                    <a class="dropdown-item" href="fluid-profile.html"
+                      ><i class="material-icons">account_circle</i> My
+                      profile</a
+                    >
+                    <a class="dropdown-item" href="fluid-edit-account.html"
+                      ><i class="material-icons">edit</i> Edit account</a
+                    >
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="fluid-login.html"
+                      ><i class="material-icons">exit_to_app</i> Logout</a
+                    >
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- **********************************// END Top Header //********************************** -->
+
+      <!-- Header Layout Content -->
+      <div class="mdk-header-layout__content page">
+        <div class="page__header">
+          <div class="container-fluid page__heading-container">
+            <div class="page__heading d-flex align-items-end">
+              <div class="flex">
+                <nav aria-label="breadcrumb">
+                  <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#">Beranda</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                      Dashboard
+                    </li>
+                  </ol>
+                </nav>
+                <h1 class="m-0">Dashboard</h1>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- // END page__header -->
+
+        <!-- ********************************// START page__content //******************************* -->
+        <div class="container-fluid page__container">
+            <div class="row mt-3 mb-3">
+                <h3>Quick Access</h3>
+            </div>
+          <div class="row card-group-row">
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt"
+                        >accessibility</i
+                      >
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Role</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span class="avatar-title rounded-circle text-center">
+                      <i class="material-icons text-white icon-18pt"
+                        >person_add</i
+                      >
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Tambah User Baru</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-success"
+                    >
+                      <i class="material-icons text-white icon-18pt">person_add</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Tambah Personel</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-info"
+                    >
+                      <i class="material-icons text-white icon-18pt"
+                        >photo_library</i
+                      >
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Galeri</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-blue"
+                    >
+                      <i class="material-icons text-white icon-18pt">work</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Lowongan Kerja</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-warning"
+                    >
+                      <i class="material-icons text-white icon-18pt"
+                        >work</i
+                      >
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Struktur Organisasi</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt"
+                        >inbox</i
+                      >
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Kotak Masuk</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Berita/Artikel</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Klien Kami</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Mitra Kami</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt">insert_emoticon</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Testimoni</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Struktur Perusahaan</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Legalitas Perusahaan</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary"
+                    >
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="#" class="text-dark">
+                    <strong>Manage Layanan Kami</strong>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ****************************ANALISTIK DAN LAPORAN**************************** -->
+
+          <div class="row mt-4 mb-3">
+            <h3>Analitik & Laporan</h3>
+          </div>
+          <div class="row card-group-row">
+            <div class="col-lg-12">
+              <div class="card">
+                <!-- HEADER -->
+                <div
+                  class="card-header d-flex justify-content-between align-items-center"
+                >
+                  <h4 class="m-0">Visitor Analytics</h4>
+
+                  <!-- TOGGLE -->
+                  <ul class="nav nav-pills" id="chartToggle">
+                    <li class="nav-item">
+                      <a class="nav-link active" data-type="daily" href="#"
+                        >Harian</a
+                      >
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" data-type="weekly" href="#"
+                        >Mingguan</a
+                      >
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" data-type="monthly" href="#"
+                        >Bulanan</a
+                      >
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- BODY -->
+                <div class="card-body">
+                  <canvas id="visitorChart" height="100"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="card">
+                <!-- HEADER -->
+                <div
+                  class="card-header d-flex justify-content-between align-items-center flex-wrap"
+                >
+                  <h4 class="m-0">Total Pendapatan</h4>
+
+                  <!-- TOGGLE -->
+                  <ul class="nav nav-pills" id="revenueToggle">
+                    <li class="nav-item">
+                      <a class="nav-link active" data-type="personal" href="#"
+                        >Personal</a
+                      >
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" data-type="company" href="#"
+                        >Perusahaan</a
+                      >
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" data-type="all" href="#">Total</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- FILTER -->
+                <div class="card-body border-bottom">
+                  <div class="row">
+                    <div class="col-md-4">
+                      <label>Dari</label>
+                      <input type="date" id="dateFrom" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                      <label>Sampai</label>
+                      <input type="date" id="dateTo" class="form-control" />
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                      <button id="filterBtn" class="btn btn-primary w-100">
+                        Filter
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- TOTAL SUMMARY -->
+                <div class="card-body text-center border-bottom">
+                  <h6 class="text-muted">Total Pendapatan (1 Tahun)</h6>
+                  <h2 id="totalRevenueAll" style="font-weight: 600">Rp 0</h2>
+                </div>
+
+                <!-- CHART -->
+                <div class="card-body">
+                  <canvas id="revenueChart" height="100"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row justify-content-center">
+            <div class="col-lg-4">
+              <div class="card">
+                <!-- HEADER -->
+                <div
+                  class="card-header d-flex justify-content-between align-items-center"
+                >
+                  <h4 class="m-0">Total Personil</h4>
+                  <a href="#" class="btn btn-sm btn-primary">View</a>
+                </div>
+
+                <!-- FILTER -->
+                <div class="card-body border-bottom">
+                  <div class="row">
+                    <div class="col-4">
+                      <select id="filterGender" class="form-control">
+                        <option value="">Semua Gender</option>
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                      </select>
+                    </div>
+
+                    <div class="col-4">
+                      <select id="filterDept" class="form-control">
+                        <option value="">Semua Dept</option>
+                        <option value="Security">Security</option>
+                        <option value="Bodyguard">Bodyguard</option>
+                        <option value="Driver">Driver</option>
+                        <option value="Pramubakti">Pramubakti</option>
+                        <option value="Cleaning">Cleaning Service</option>
+                        <option value="Pengacara">Pengacara</option>
+                      </select>
+                    </div>
+
+                    <div class="col-4">
+                      <select id="filterStatus" class="form-control">
+                        <option value="">Semua Status</option>
+                        <option value="kontrak">Kontrak</option>
+                        <option value="tetap">Tetap</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CHART -->
+                <div class="card-body text-center">
+                  <canvas id="personnelChart" height="200"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-4">
+              <div class="card">
+                <!-- HEADER -->
+                <div
+                  class="card-header d-flex justify-content-between align-items-center"
+                >
+                  <h4 class="m-0">Total Klien</h4>
+                  <a href="#" class="btn btn-sm btn-primary">View</a>
+                </div>
+
+                <!-- TOGGLE TYPE -->
+                <div class="card-body border-bottom">
+                  <ul
+                    class="nav nav-pills justify-content-center mb-2"
+                    id="clientTypeToggle"
+                  >
+                    <li class="nav-item">
+                      <a class="nav-link active" data-type="personal" href="#"
+                        >Personal</a
+                      >
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" data-type="company" href="#"
+                        >Perusahaan</a
+                      >
+                    </li>
+                  </ul>
+
+                  <!-- STATUS FILTER -->
+                  <div class="text-center">
+                    <select
+                      id="clientStatusFilter"
+                      class="form-control w-50 mx-auto"
+                    >
+                      <option value="">Semua Status</option>
+                      <option value="aktif">Aktif</option>
+                      <option value="nonaktif">Nonaktif</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- CHART -->
+                <div class="card-body text-center">
+                  <canvas id="clientChart" height="200"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="card">
+                <!-- HEADER -->
+                <div
+                  class="card-header d-flex justify-content-between align-items-center"
+                >
+                  <h4 class="m-0">Laporan Keuangan Bulanan</h4>
+                  <a href="#" class="btn btn-sm btn-primary">Lihat</a>
+                </div>
+
+                <!-- FILTER -->
+                <div class="card-body border-bottom">
+                  <div class="row align-items-end">
+                    <div class="col-md-4">
+                      <label>Pilih Bulan</label>
+                      <input
+                        type="month"
+                        id="monthPicker"
+                        class="form-control"
+                      />
+                    </div>
+
+                    <div class="col-md-2">
+                      <button id="loadFinance" class="btn btn-success w-100">
+                        Tampilkan
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- KPI -->
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-md-6">
+                      <h6>Total Pendapatan</h6>
+                      <h2 id="totalIncome">Rp 0</h2>
+                    </div>
+
+                    <div class="col-md-6">
+                      <h6>Sisa Deposit</h6>
+                      <h2 id="totalBalance">Rp 0</h2>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CHART -->
+                <div class="card-body">
+                  <canvas id="financeChart" height="120"></canvas>
+                </div>
+
+                <!-- NOTE -->
+                <div class="card-body border-top">
+                  <p class="mb-1"><strong>Catatan:</strong></p>
+                  <p class="mb-1">
+                    • Total Pengeluaran Gaji: <span id="salaryCost">Rp 0</span>
+                  </p>
+                  <p class="mb-0">
+                    • Pengeluaran Kantor: <span id="officeCost">Rp 0</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- ********************************** //END page-content ********************************** -->
+        </div>
+        <!-- ********************************** //END page-content ********************************** -->
+      </div>
+    </div>
+    <!-- // END header-layout -->
+
+    <!-- App Settings FAB -->
+    <div id="app-settings" style="display: none">
+      <app-settings
+        layout-active="fluid"
+        :layout-location="{
+      'default': 'index.html',
+      'fixed': 'fixed-dashboard.html',
+      'fluid': 'fluid-dashboard.html',
+      'mini': 'mini-dashboard.html'
+    }"
+      ></app-settings>
+    </div>
+
+    <!-- ********************************** // MENU-Drawer ********************************** -->
+    <div class="mdk-drawer js-mdk-drawer" id="default-drawer" data-align="end">
+      <div class="mdk-drawer__content">
+        <div
+          class="sidebar sidebar-light sidebar-left sidebar-p-t"
+          data-perfect-scrollbar
+        >
+          <div class="sidebar-heading">Menu</div>
+          <ul class="sidebar-menu">
+            <li class="sidebar-menu-item active open">
+              <a
+                class="sidebar-menu-button"
+                data-toggle="collapse"
+                href="#dashboards_menu"
+              >
+                <i
+                  class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                  >dvr</i
+                >
+                <span class="sidebar-menu-text">Dashboards</span>
+                <span class="ml-auto sidebar-menu-toggle-icon"></span>
+              </a>
+              <ul class="sidebar-submenu collapse show" id="dashboards_menu">
+                <li class="sidebar-menu-item active">
+                  <a class="sidebar-menu-button" href="fluid-dashboard.html">
+                    <span class="sidebar-menu-text">Default</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-analytics.html">
+                    <span class="sidebar-menu-text">Analytics</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-staff.html">
+                    <span class="sidebar-menu-text">Staff</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-ecommerce.html">
+                    <span class="sidebar-menu-text">E-commerce</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a
+                    class="sidebar-menu-button"
+                    href="fluid-dashboard-quick-access.html"
+                  >
+                    <span class="sidebar-menu-text">Quick Access</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="sidebar-menu-item">
+              <a
+                class="sidebar-menu-button"
+                data-toggle="collapse"
+                href="#apps_menu"
+              >
+                <i
+                  class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                  >slideshow</i
+                >
+                <span class="sidebar-menu-text">Apps</span>
+                <span class="ml-auto sidebar-menu-toggle-icon"></span>
+              </a>
+              <ul class="sidebar-submenu collapse" id="apps_menu">
+                <li class="sidebar-menu-item">
+                  <a
+                    class="sidebar-menu-button"
+                    href="fluid-app-activities.html"
+                  >
+                    <span class="sidebar-menu-text">Activities</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-app-trello.html">
+                    <span class="sidebar-menu-text">Trello</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-app-projects.html">
+                    <span class="sidebar-menu-text">Projects</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a
+                    class="sidebar-menu-button"
+                    href="fluid-app-fullcalendar.html"
+                  >
+                    <span class="sidebar-menu-text">Event Calendar</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-app-chat.html">
+                    <span class="sidebar-menu-text">Chat</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-app-email.html">
+                    <span class="sidebar-menu-text">Email</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a
+                    class="sidebar-menu-button"
+                    data-toggle="collapse"
+                    href="#course_menu"
+                  >
+                    <span class="sidebar-menu-text">Education</span>
+                    <span class="ml-auto d-flex align-items-center">
+                      <span class="badge badge-primary">NEW</span>
+                      <span class="sidebar-menu-toggle-icon"></span>
+                    </span>
+                  </a>
+                  <ul class="sidebar-submenu collapse" id="course_menu">
+                    <li class="sidebar-menu-item">
+                      <a
+                        class="sidebar-menu-button"
+                        href="fluid-app-browse-courses.html"
+                      >
+                        <span class="sidebar-menu-text">Browse Courses</span>
+                      </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                      <a
+                        class="sidebar-menu-button"
+                        href="fluid-app-course.html"
+                      >
+                        <span class="sidebar-menu-text">Course</span>
+                      </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                      <a
+                        class="sidebar-menu-button"
+                        href="fluid-app-lesson.html"
+                      >
+                        <span class="sidebar-menu-text">Lesson</span>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+
+            <li class="sidebar-menu-item">
+              <a
+                class="sidebar-menu-button"
+                data-toggle="collapse"
+                href="#pages_menu"
+              >
+                <i
+                  class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                  >description</i
+                >
+                <span class="sidebar-menu-text">Pages</span>
+                <span class="ml-auto sidebar-menu-toggle-icon"></span>
+              </a>
+              <ul class="sidebar-submenu collapse" id="pages_menu">
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-companies.html">
+                    <span class="sidebar-menu-text">Companies</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-stories.html">
+                    <span class="sidebar-menu-text">Stories</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-discussions.html">
+                    <span class="sidebar-menu-text">Discussions</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-invoice.html">
+                    <span class="sidebar-menu-text">Invoice</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-pricing.html">
+                    <span class="sidebar-menu-text">Pricing</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-edit-account.html">
+                    <span class="sidebar-menu-text">Edit Account</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-profile.html">
+                    <span class="sidebar-menu-text">User Profile</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-payout.html">
+                    <span class="sidebar-menu-text">Payout</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a
+                    class="sidebar-menu-button"
+                    href="fluid-digital-product.html"
+                  >
+                    <span class="sidebar-menu-text">Digital Product</span>
+                    <span class="badge badge-primary ml-auto">NEW</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a
+                    class="sidebar-menu-button"
+                    data-toggle="collapse"
+                    href="#login_menu"
+                  >
+                    <span class="sidebar-menu-text">Login</span>
+                    <span class="ml-auto sidebar-menu-toggle-icon"></span>
+                  </a>
+                  <ul class="sidebar-submenu collapse" id="login_menu">
+                    <li class="sidebar-menu-item">
+                      <a class="sidebar-menu-button" href="login.html">
+                        <span class="sidebar-menu-text"
+                          >Login / Background Image</span
+                        >
+                      </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                      <a
+                        class="sidebar-menu-button"
+                        href="login-centered-boxed.html"
+                      >
+                        <span class="sidebar-menu-text"
+                          >Login / Centered Boxed</span
+                        >
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a
+                    class="sidebar-menu-button"
+                    data-toggle="collapse"
+                    href="#signup_menu"
+                  >
+                    <span class="sidebar-menu-text">Sign Up</span>
+                    <span class="ml-auto sidebar-menu-toggle-icon"></span>
+                  </a>
+                  <ul class="sidebar-submenu collapse" id="signup_menu">
+                    <li class="sidebar-menu-item">
+                      <a class="sidebar-menu-button" href="signup.html">
+                        <span class="sidebar-menu-text"
+                          >Sign Up / Background Image</span
+                        >
+                      </a>
+                    </li>
+                    <li class="sidebar-menu-item">
+                      <a
+                        class="sidebar-menu-button"
+                        href="signup-centered-boxed.html"
+                      >
+                        <span class="sidebar-menu-text"
+                          >Sign Up / Centered Boxed</span
+                        >
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+
+                <li class="sidebar-menu-item">
+                  <a
+                    class="sidebar-menu-button"
+                    href="fluid-product-listing.html"
+                  >
+                    <span class="sidebar-menu-text">Product Listing</span>
+                    <span class="badge badge-primary ml-auto">NEW</span>
+                  </a>
+                </li>
+
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fluid-blank.html">
+                    <span class="sidebar-menu-text">Blank Page</span>
+                    <span class="badge badge-primary ml-auto">NEW</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="sidebar-menu-item">
+              <a
+                class="sidebar-menu-button"
+                data-toggle="collapse"
+                href="#layouts_menu"
+              >
+                <i
+                  class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                  >view_compact</i
+                >
+                <span class="sidebar-menu-text">Layouts</span>
+                <span class="ml-auto sidebar-menu-toggle-icon"></span>
+              </a>
+              <ul class="sidebar-submenu collapse" id="layouts_menu">
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="index.html">
+                    <span class="sidebar-menu-text">Default</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item active">
+                  <a class="sidebar-menu-button" href="fluid-dashboard.html">
+                    <span class="sidebar-menu-text">Full Width Navs</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="fixed-dashboard.html">
+                    <span class="sidebar-menu-text">Fixed Navs</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a class="sidebar-menu-button" href="mini-dashboard.html">
+                    <span class="sidebar-menu-text">Mini Sidebar + Navs</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <div class="sidebar-heading">Components</div>
+          <div class="sidebar-block p-0 mb-0">
+            <ul class="sidebar-menu" id="components_menu">
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-buttons.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >mouse</i
+                  >
+                  <span class="sidebar-menu-text">Buttons</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-alerts.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >notifications</i
+                  >
+                  <span class="sidebar-menu-text">Alerts</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-avatars.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >person</i
+                  >
+                  <span class="sidebar-menu-text">Avatars</span>
+                  <span class="badge badge-primary ml-auto">NEW</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-modals.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >aspect_ratio</i
+                  >
+                  <span class="sidebar-menu-text">Modals</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-charts.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >pie_chart_outlined</i
+                  >
+                  <span class="sidebar-menu-text">Charts</span>
+                  <span class="badge badge-warning ml-auto">PRO</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-icons.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >brush</i
+                  >
+                  <span class="sidebar-menu-text">Icons</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-forms.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >text_format</i
+                  >
+                  <span class="sidebar-menu-text">Forms</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a
+                  class="sidebar-menu-button"
+                  href="fluid-ui-range-sliders.html"
+                >
+                  <!-- tune or low_priority or linear_scale or space_bar or swap_calls -->
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >tune</i
+                  >
+                  <span class="sidebar-menu-text">Range Sliders</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-datetime.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >event_available</i
+                  >
+                  <span class="sidebar-menu-text">Time &amp; Date</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-tables.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >dns</i
+                  >
+                  <span class="sidebar-menu-text">Tables</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-tabs.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >tab</i
+                  >
+                  <span class="sidebar-menu-text">Tabs</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-loaders.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >refresh</i
+                  >
+                  <span class="sidebar-menu-text">Loaders</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-drag.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >control_point</i
+                  >
+                  <span class="sidebar-menu-text">Drag &amp; Drop</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-pagination.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >last_page</i
+                  >
+                  <span class="sidebar-menu-text">Pagination</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a class="sidebar-menu-button" href="fluid-ui-vector-maps.html">
+                  <i
+                    class="sidebar-menu-icon sidebar-menu-icon--left material-icons"
+                    >location_on</i
+                  >
+                  <span class="sidebar-menu-text">Vector Maps</span>
+                </a>
+              </li>
+            </ul>
+
+            <div class="sidebar-p-a sidebar-b-y">
+              <div class="d-flex align-items-top mb-2">
+                <div
+                  class="sidebar-heading m-0 p-0 flex text-body js-text-body"
+                >
+                  Progress
+                </div>
+                <div class="font-weight-bold text-success">60%</div>
+              </div>
+              <div class="progress">
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  style="width: 60%"
+                  aria-valuenow="60"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="d-flex align-items-center sidebar-p-a border-bottom sidebar-account"
+          >
+            <a
+              href="fluid-profile.html"
+              class="flex d-flex align-items-center text-underline-0 text-body"
+            >
+              <span class="avatar avatar-sm mr-2">
+                <img
+                  src="assets/images/avatar/demi.png"
+                  alt="avatar"
+                  class="avatar-img rounded-circle"
+                />
+              </span>
+              <span class="flex d-flex flex-column">
+                <strong>Adrian Demian</strong>
+                <small class="text-muted text-uppercase">Site Manager</small>
+              </span>
+            </a>
+            <div class="dropdown ml-auto">
+              <a
+                href="#"
+                data-toggle="dropdown"
+                data-caret="false"
+                class="text-muted"
+                ><i class="material-icons">more_vert</i></a
+              >
+              <div class="dropdown-menu dropdown-menu-right">
+                <div class="dropdown-item-text dropdown-item-text--lh">
+                  <div><strong>Adrian Demian</strong></div>
+                  <div>@adriandemian</div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item active" href="fluid-dashboard.html"
+                  >Dashboard</a
+                >
+                <a class="dropdown-item" href="fluid-profile.html"
+                  >My profile</a
+                >
+                <a class="dropdown-item" href="fluid-edit-account.html"
+                  >Edit account</a
+                >
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="fluid-login.html">Logout</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-p-a">
+            <a
+              href="https://themeforest.net/item/stack-admin-bootstrap-4-dashboard-template/22959011"
+              class="btn btn-primary btn-block"
+              >Purchase &dollar;35</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ********************************** //END MENU-drawer ********************************** -->
+
+    <footer class="dashboard-footer mt-4">
+      <div class="container-fluid">
+        <div class="row align-items-center">
+          <!-- LEFT -->
+          <div class="col-md-6 text-md-left text-center mb-2 mb-md-0">
+            <span class="footer-text">
+              © 2026 Your Company. All rights reserved.
+            </span>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="col-md-6 text-md-right text-center">
+            <a href="#" class="footer-link">Privacy</a>
+            <a href="#" class="footer-link">Terms</a>
+            <a href="#" class="footer-link">Support</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- jQuery -->
+    <script src="assets/vendor/jquery.min.js"></script>
+
+    <!-- Bootstrap -->
+    <script src="assets/vendor/popper.min.js"></script>
+    <script src="assets/vendor/bootstrap.min.js"></script>
+
+    <!-- Perfect Scrollbar -->
+    <script src="assets/vendor/perfect-scrollbar.min.js"></script>
+
+    <!-- DOM Factory -->
+    <script src="assets/vendor/dom-factory.js"></script>
+
+    <!-- MDK -->
+    <script src="assets/vendor/material-design-kit.js"></script>
+
+    <!-- App -->
+    <script src="assets/js/toggle-check-all.js"></script>
+    <script src="assets/js/check-selected-row.js"></script>
+    <script src="assets/js/dropdown.js"></script>
+    <script src="assets/js/sidebar-mini.js"></script>
+    <script src="assets/js/app.js"></script>
+
+    <!-- App Settings (safe to remove) -->
+    <script src="assets/js/app-settings.js"></script>
+
+    <!-- Flatpickr -->
+    <script src="assets/vendor/flatpickr/flatpickr.min.js"></script>
+    <script src="assets/js/flatpickr.js"></script>
+
+    <!-- Global Settings -->
+    <script src="assets/js/settings.js"></script>
+
+    <!-- Moment.js -->
+    <script src="assets/vendor/moment.min.js"></script>
+    <script src="assets/vendor/moment-range.js"></script>
+
+    <!-- Chart.js -->
+    <script src="assets/vendor/Chart.min.js"></script>
+
+    <!-- App Charts JS -->
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/chartjs-rounded-bar.js"></script>
+    <script src="assets/js/page.ui-charts.js"></script>
+
+    <!-- Chart Samples -->
+    <script src="assets/js/page.dashboard.js"></script>
+    <script src="assets/js/progress-charts.js"></script>
+
+    <!-- Vector Maps -->
+    <script src="assets/vendor/jqvmap/jquery.vmap.min.js"></script>
+    <script src="assets/vendor/jqvmap/maps/jquery.vmap.world.js"></script>
+    <script src="assets/js/vector-maps.js"></script>
+    <script>
+      // VISITOR WEB
+      const ctx = document.getElementById("visitorChart").getContext("2d");
+
+      let chart;
+
+      // DATA SIMULASI
+      const dataSets = {
+        daily: {
+          labels: [
+            "00",
+            "02",
+            "04",
+            "06",
+            "08",
+            "10",
+            "12",
+            "14",
+            "16",
+            "18",
+            "20",
+            "22",
+          ],
+          data: [12, 19, 8, 15, 25, 30, 40, 35, 50, 45, 38, 28],
+        },
+        weekly: {
+          labels: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
+          data: [120, 190, 300, 250, 220, 310, 400],
+        },
+        monthly: {
+          labels: ["M1", "M2", "M3", "M4"],
+          data: [1200, 1900, 1500, 2200],
+        },
+      };
+
+      // INIT CHART
+      function loadChart(type = "daily") {
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: dataSets[type].labels,
+            datasets: [
+              {
+                label: "Visitors",
+                data: dataSets[type].data,
+                borderColor: "#6774DF",
+                backgroundColor: "rgba(103,116,223,0.1)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      // LOAD DEFAULT
+      loadChart();
+
+      document.querySelectorAll("#chartToggle .nav-link").forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+
+          // remove active
+          document
+            .querySelectorAll("#chartToggle .nav-link")
+            .forEach((el) => el.classList.remove("active"));
+
+          this.classList.add("active");
+
+          const type = this.getAttribute("data-type");
+          loadChart(type);
+        });
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      // TOTAL PENDAPATAN
+      // =======================
+      // DATA SIMULASI
+      // =======================
+      const revenueData = {
+        personal: [
+          { date: "2026-01-10", value: 200 },
+          { date: "2026-02-05", value: 350 },
+          { date: "2026-03-12", value: 500 },
+          { date: "2026-04-04", value: 300 },
+          { date: "2026-05-20", value: 450 },
+        ],
+        company: [
+          { date: "2026-01-15", value: 1000 },
+          { date: "2026-02-10", value: 1200 },
+          { date: "2026-03-22", value: 900 },
+          { date: "2026-04-18", value: 1500 },
+          { date: "2026-05-25", value: 1800 },
+        ],
+      };
+
+      // =======================
+      // SETUP CHART
+      // =======================
+      const ctxRevenue = document
+        .getElementById("revenueChart")
+        .getContext("2d");
+
+      let revenueChart;
+      let currentType = "all"; // default langsung total
+
+      // =======================
+      // FORMAT RUPIAH
+      // =======================
+      function formatRupiah(num) {
+        return "Rp " + num.toLocaleString("id-ID");
+      }
+
+      // =======================
+      // FILTER DATA
+      // =======================
+      function getDataByType(type, from, to) {
+        let data = [];
+
+        if (type === "all") {
+          data = [...revenueData.personal, ...revenueData.company];
+        } else {
+          data = revenueData[type];
+        }
+
+        return data.filter((item) => {
+          if (!from && !to) return true;
+
+          const date = new Date(item.date);
+          const fromDate = from ? new Date(from) : null;
+          const toDate = to ? new Date(to) : null;
+
+          return (!fromDate || date >= fromDate) && (!toDate || date <= toDate);
+        });
+      }
+
+      // =======================
+      // GROUP BY BULAN (JAN-DEC)
+      // =======================
+      function groupByMonth(data) {
+        const months = Array(12).fill(0);
+
+        data.forEach((item) => {
+          const month = new Date(item.date).getMonth(); // 0-11
+          months[month] += item.value;
+        });
+
+        return months;
+      }
+
+      // =======================
+      // LOAD CHART
+      // =======================
+      function loadRevenueChart(type, from = null, to = null) {
+        const filtered = getDataByType(type, from, to);
+        const monthlyData = groupByMonth(filtered);
+
+        const labels = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "Mei",
+          "Jun",
+          "Jul",
+          "Agu",
+          "Sep",
+          "Okt",
+          "Nov",
+          "Des",
+        ];
+
+        // TOTAL SEMUA
+        const total = monthlyData.reduce((a, b) => a + b, 0);
+
+        document.getElementById("totalRevenueAll").innerText =
+          formatRupiah(total);
+
+        // HAPUS CHART LAMA
+        if (revenueChart) revenueChart.destroy();
+
+        // WARNA DINAMIS
+        let color = "#6774DF";
+        if (type === "personal") color = "#7DC668";
+        if (type === "company") color = "#F5B666";
+
+        // CREATE CHART
+        revenueChart = new Chart(ctxRevenue, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Pendapatan",
+                data: monthlyData,
+                backgroundColor: color,
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            animation: {
+              duration: 1200,
+              easing: "easeOutQuart",
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return formatRupiah(context.raw);
+                  },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      // =======================
+      // INIT
+      // =======================
+      loadRevenueChart("all");
+
+      // =======================
+      // TOGGLE BUTTON
+      // =======================
+      document.querySelectorAll(".nav-pills .nav-link").forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+
+          document
+            .querySelectorAll(".nav-pills .nav-link")
+            .forEach((el) => el.classList.remove("active"));
+
+          this.classList.add("active");
+
+          currentType = this.dataset.type;
+
+          const from = document.getElementById("dateFrom").value;
+          const to = document.getElementById("dateTo").value;
+
+          loadRevenueChart(currentType, from, to);
+        });
+      });
+
+      // =======================
+      // FILTER BUTTON
+      // =======================
+      document
+        .getElementById("filterBtn")
+        .addEventListener("click", function () {
+          const from = document.getElementById("dateFrom").value;
+          const to = document.getElementById("dateTo").value;
+
+          loadRevenueChart(currentType, from, to);
+        });
+    </script>
+
+    <script>
+      // TOTAL KARYAWAN ATAU PERSONEL
+      const personnelData = [
+        { dept: "Security", gender: "L", status: "tetap" },
+        { dept: "Security", gender: "P", status: "kontrak" },
+        { dept: "Bodyguard", gender: "L", status: "tetap" },
+        { dept: "Driver", gender: "L", status: "kontrak" },
+        { dept: "Pramubakti", gender: "P", status: "tetap" },
+        { dept: "Cleaning", gender: "P", status: "kontrak" },
+        { dept: "Pengacara", gender: "L", status: "tetap" },
+        { dept: "Driver", gender: "L", status: "tetap" },
+        { dept: "Security", gender: "L", status: "kontrak" },
+        { dept: "Cleaning", gender: "P", status: "tetap" },
+      ];
+
+      function getFilteredData() {
+        const gender = document.getElementById("filterGender").value;
+        const dept = document.getElementById("filterDept").value;
+        const status = document.getElementById("filterStatus").value;
+
+        return personnelData.filter((p) => {
+          return (
+            (!gender || p.gender === gender) &&
+            (!dept || p.dept === dept) &&
+            (!status || p.status === status)
+          );
+        });
+      }
+
+      // GROUP BY DEPT
+      function groupByDept(data) {
+        const result = {
+          Security: 0,
+          Bodyguard: 0,
+          Driver: 0,
+          Pramubakti: 0,
+          Cleaning: 0,
+          Pengacara: 0,
+        };
+
+        data.forEach((p) => {
+          result[p.dept]++;
+        });
+
+        return result;
+      }
+
+      const ctxPersonel = document
+        .getElementById("personnelChart")
+        .getContext("2d");
+
+      let personelChart;
+
+      function loadPersonelChart() {
+        const filtered = getFilteredData();
+        const grouped = groupByDept(filtered);
+
+        if (personelChart) personelChart.destroy();
+
+        personelChart = new Chart(ctxPersonel, {
+          type: "doughnut",
+          data: {
+            labels: Object.keys(grouped),
+            datasets: [
+              {
+                data: Object.values(grouped),
+                backgroundColor: [
+                  "#6774DF",
+                  "#7DC668",
+                  "#F5B666",
+                  "#5dd2bc",
+                  "#ff7076",
+                  "#939FAD",
+                ],
+              },
+            ],
+          },
+          options: {
+            cutout: "65%",
+            plugins: {
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        });
+      }
+
+      // INIT
+      loadPersonelChart();
+
+      ["filterGender", "filterDept", "filterStatus"].forEach((id) => {
+        document
+          .getElementById(id)
+          .addEventListener("change", loadPersonelChart);
+      });
+    </script>
+
+    <script>
+      const clientData = [
+        { type: "personal", status: "aktif" },
+        { type: "personal", status: "nonaktif" },
+        { type: "personal", status: "aktif" },
+        { type: "company", status: "aktif" },
+        { type: "company", status: "nonaktif" },
+        { type: "company", status: "aktif" },
+        { type: "company", status: "aktif" },
+        { type: "personal", status: "aktif" },
+      ];
+
+      let currentClientType = "personal";
+
+      function getFilteredClientData() {
+        const status = document.getElementById("clientStatusFilter").value;
+
+        return clientData.filter((c) => {
+          return (
+            c.type === currentClientType && (!status || c.status === status)
+          );
+        });
+      }
+
+      function groupClientStatus(data) {
+        return {
+          Aktif: data.filter((d) => d.status === "aktif").length,
+          Nonaktif: data.filter((d) => d.status === "nonaktif").length,
+        };
+      }
+
+      const ctxClient = document.getElementById("clientChart").getContext("2d");
+
+      let clientChart;
+
+      function loadClientChart() {
+        const filtered = getFilteredClientData();
+        const grouped = groupClientStatus(filtered);
+
+        if (clientChart) clientChart.destroy();
+
+        clientChart = new Chart(ctxClient, {
+          type: "doughnut",
+          data: {
+            labels: ["Aktif", "Nonaktif"],
+            datasets: [
+              {
+                data: [grouped.Aktif, grouped.Nonaktif],
+                backgroundColor: ["#7DC668", "#ff7076"],
+              },
+            ],
+          },
+          options: {
+            cutout: "65%",
+            plugins: {
+              legend: {
+                position: "bottom",
+              },
+            },
+          },
+        });
+      }
+
+      // INIT
+      loadClientChart();
+
+      // TOGGLE TYPE
+      document
+        .querySelectorAll("#clientTypeToggle .nav-link")
+        .forEach((btn) => {
+          btn.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            document
+              .querySelectorAll("#clientTypeToggle .nav-link")
+              .forEach((el) => el.classList.remove("active"));
+
+            this.classList.add("active");
+
+            currentClientType = this.dataset.type;
+            loadClientChart();
+          });
+        });
+
+      // STATUS FILTER
+      document
+        .getElementById("clientStatusFilter")
+        .addEventListener("change", loadClientChart);
+    </script>
+
+    <script>
+      // UNTUK PENGELUARAN
+      const financeData = {
+        "2026-04": {
+          income: 15000000,
+          salary: 5000000,
+          office: 2000000,
+        },
+        "2026-05": {
+          income: 18000000,
+          salary: 6000000,
+          office: 2500000,
+        },
+      };
+
+      // -----------------------------
+      function formatRupiah(num) {
+        return "Rp " + num.toLocaleString("id-ID");
+      }
+
+      // ANIMASI ANGKA
+      function animateValue(id, start, end, duration) {
+        let range = end - start;
+        let current = start;
+        let increment = range / (duration / 16);
+
+        const obj = document.getElementById(id);
+
+        const timer = setInterval(() => {
+          current += increment;
+
+          if (
+            (increment > 0 && current >= end) ||
+            (increment < 0 && current <= end)
+          ) {
+            current = end;
+            clearInterval(timer);
+          }
+
+          obj.innerText = formatRupiah(Math.floor(current));
+        }, 16);
+      }
+
+      // -------------------------------------
+      const ctxFinance = document
+        .getElementById("financeChart")
+        .getContext("2d");
+
+      let financeChart;
+
+      function loadFinanceChart(income, expense) {
+        if (financeChart) financeChart.destroy();
+
+        financeChart = new Chart(ctxFinance, {
+          type: "bar",
+          data: {
+            labels: ["Pendapatan", "Pengeluaran"],
+            datasets: [
+              {
+                data: [income, expense],
+                backgroundColor: ["#7DC668", "#ff7076"],
+              },
+            ],
+          },
+          options: {
+            indexAxis: "y", // horizontal
+            animation: {
+              duration: 1200,
+              easing: "easeOutQuart",
+            },
+            plugins: {
+              legend: { display: false },
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      // ------------------------------------
+      function loadFinance(month) {
+        const data = financeData[month];
+        if (!data) return;
+
+        const income = data.income;
+        const salary = data.salary;
+        const office = data.office;
+
+        const totalExpense = salary + office;
+        const balance = income - totalExpense;
+
+        // ANIMASI KPI
+        animateValue("totalIncome", 0, income, 800);
+        animateValue("totalBalance", 0, balance, 800);
+
+        // NOTE
+        document.getElementById("salaryCost").innerText = formatRupiah(salary);
+        document.getElementById("officeCost").innerText = formatRupiah(office);
+
+        // CHART
+        loadFinanceChart(income, totalExpense);
+      }
+
+      // ----------------------------
+      document
+        .getElementById("loadFinance")
+        .addEventListener("click", function () {
+          const month = document.getElementById("monthPicker").value;
+
+          if (!month) {
+            alert("Pilih bulan dulu");
+            return;
+          }
+
+          loadFinance(month);
+        });
+    </script>
+  </body>
+</html>
