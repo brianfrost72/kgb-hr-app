@@ -7,7 +7,7 @@
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Manage Client Personal/Private - Dashboard | Konig Guard Bureau</title>
+    <title>Manage Client Perusahaan - Dashboard | Konig Guard Bureau</title>
 
     <!-- Prevent the demo from appearing in search engines -->
     <meta name="robots" content="noindex" />
@@ -84,11 +84,11 @@
                                 <ol class="breadcrumb mb-0">
                                     <li class="breadcrumb-item"><a href="#">Beranda</a></li>
                                     <li class="breadcrumb-item active" aria-current="page">
-                                        Manage Klien Personal/Private
+                                        Manage Klien Perusahaan
                                     </li>
                                 </ol>
                             </nav>
-                            <h1 class="m-0">Manage Klien Personal/Private</h1>
+                            <h1 class="m-0">Manage Klien Perusahaan</h1>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                 <div class="container mt-4">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between">
-                            <h4 class="card-title">Manage Klien Personal/Private</h4>
+                            <h4 class="card-title">Manage Klien Perusahaan</h4>
                         </div>
 
                         <div class="card-body">

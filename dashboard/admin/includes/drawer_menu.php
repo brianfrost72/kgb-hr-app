@@ -161,7 +161,7 @@
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
+                            <a class="sidebar-menu-button" href="manage_client-corporate.php">
                                 <span class="sidebar-menu-text">Perusahaan</span>
                             </a>
                         </li>
@@ -182,7 +182,7 @@
                     </a>
                     <ul class="sidebar-submenu collapse" id="order_menu">
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-companies.html">
+                            <a class="sidebar-menu-button" href="manage_order-in.php">
                                 <span class="sidebar-menu-text">Order In</span>
                             </a>
                         </li>

@@ -20333,6 +20333,48 @@ table tbody tr {
   cursor: not-allowed;
 }
 
+/* ORDER IN */
+.search-form {
+  position: relative;
+  z-index: 9999;
+}
+
+.search-form button {
+  position: relative;
+  z-index: 10000;
+  pointer-events: auto;
+}
+
+.list-group-item {
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.list-group-item:hover {
+  background: #f5f7ff;
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* ACTIVE (yang biru) */
+.list-group-item.border-right-primary {
+  background: #eef2ff;
+  box-shadow: inset 3px 0 0 #4f6df5;
+}
+
+/* HOVER (yang belum aktif) */
+.list-group-item:hover:not(.border-right-primary) {
+  background: #f8f9ff;
+}
+
+.list-group-item {
+  transition: all 0.25s ease;
+}
+
+.list-group-item:hover strong {
+  color: #4f6df5;
+}
+
 /**************************************** FOOTER *************************************************/
 .dashboard-footer {
   background: #333333;
