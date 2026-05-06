@@ -129,6 +129,11 @@
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
+                            <a class="sidebar-menu-button" href="manage_employee_payment.php">
+                                <span class="sidebar-menu-text">Manage Penggajian</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
                             <a class="sidebar-menu-button" href="manage_deposite_reports.php">
                                 <span class="sidebar-menu-text">Deposit Keuangan</span>
                             </a>
@@ -343,12 +348,12 @@
                         <li class="sidebar-menu-item">
                             <a
                                 class="sidebar-menu-button"
-                                href="fluid-app-activities.html">
+                                href="add_job_information.php">
                                 <span class="sidebar-menu-text">Tambah Info Loker</span>
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-app-trello.html">
+                            <a class="sidebar-menu-button" href="manage_job_information.php">
                                 <span class="sidebar-menu-text">Manage Info Loker</span>
                             </a>
                         </li>
@@ -369,12 +374,7 @@
                     </a>
                     <ul class="sidebar-submenu collapse" id="company_structure_menu">
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-companies.html">
-                                <span class="sidebar-menu-text">Tambah Struktur Perusahaan</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
+                            <a class="sidebar-menu-button" href="manage_company_structure.php">
                                 <span class="sidebar-menu-text">Manage Struktur Perusahaan</span>
                             </a>
                         </li>
@@ -395,12 +395,7 @@
                     </a>
                     <ul class="sidebar-submenu collapse" id="gallery_menu">
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-companies.html">
-                                <span class="sidebar-menu-text">Tambah Galeri</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
+                            <a class="sidebar-menu-button" href="manage_gallery.php">
                                 <span class="sidebar-menu-text">Manage Galeri</span>
                             </a>
                         </li>
@@ -421,12 +416,7 @@
                     </a>
                     <ul class="sidebar-submenu collapse" id="our_client_menu">
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-companies.html">
-                                <span class="sidebar-menu-text">Tambah Klien Kami</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
+                            <a class="sidebar-menu-button" href="manage_our_clients.php">
                                 <span class="sidebar-menu-text">Manage Klien Kami</span>
                             </a>
                         </li>
@@ -436,7 +426,7 @@
 
                 <!-- LEGALITAS MENU -->
                 <li class="sidebar-menu-item">
-                    <a class="sidebar-menu-button" href="fluid-ui-buttons.html">
+                    <a class="sidebar-menu-button" href="manage_legality.php">
                         <i
                             class="sidebar-menu-icon sidebar-menu-icon--left material-icons">assignment_turned_in</i>
                         <span class="sidebar-menu-text">Legalitas</span>
