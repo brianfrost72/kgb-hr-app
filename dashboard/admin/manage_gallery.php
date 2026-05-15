@@ -216,6 +216,68 @@
     <?php include 'includes/drawer_menu.php'; ?>
     <!-- ********************************** //END MENU-drawer ********************************** -->
 
+    <!-- =========================
+    MODAL SUKSES SIMPAN GALERI
+========================= -->
+
+    <div class="modal fade" id="modalSuksesGaleri" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+
+            <div class="modal-content border-0"
+                style="
+                border-radius:18px;
+                overflow:hidden;
+            ">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:90px;
+                        height:90px;
+                        border-radius:50%;
+                        background:#ecfdf3;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:50px;
+                            color:#16a34a;
+                        ">
+                            check_circle
+                        </span>
+
+                    </div>
+
+                    <!-- TITLE -->
+                    <h4 class="font-weight-bold mb-2">
+                        Simpan Berhasil
+                    </h4>
+
+                    <!-- TEXT -->
+                    <p class="text-muted mb-4" id="textGaleriBerhasil">
+                        Galeri berhasil disimpan
+                    </p>
+
+                    <!-- BUTTON -->
+                    <button type="button"
+                        class="btn btn-success px-4"
+                        data-dismiss="modal"
+                        style="
+                        min-width:120px;
+                        height:45px;
+                        border-radius:10px;
+                    ">
+                        Okay
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
 
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
@@ -373,6 +435,12 @@
             filesArray = [];
             document.getElementById("preview").innerHTML = "";
             document.getElementById("formGaleri").reset();
+
+            // MODAL SUKSES
+            document.getElementById("textGaleriBerhasil").innerHTML =
+                `<b>${nama}</b> berhasil disimpan`;
+
+            $('#modalSuksesGaleri').modal('show');
         });
 
         // DELETE dengan konfirmasi

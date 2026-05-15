@@ -200,6 +200,122 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL VALIDASI -->
+    <div class="modal fade" id="modalValidasi">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg"
+                style="
+                border-radius:22px;
+                overflow:hidden;
+            ">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:90px;
+                        height:90px;
+                        border-radius:50%;
+                        background:#fff4e5;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:50px;
+                            color:#ff9800;
+                        ">
+                            error_outline
+                        </span>
+
+                    </div>
+
+                    <h3 class="font-weight-bold mb-2">
+                        Validasi
+                    </h3>
+
+                    <p class="text-muted mb-4"
+                        id="validasiText">
+
+                        Nama departemen wajib diisi
+
+                    </p>
+
+                    <button class="btn btn-warning px-4"
+                        data-dismiss="modal"
+                        style="
+                        border-radius:12px;
+                        height:45px;
+                        min-width:130px;
+                        color:white;
+                    ">
+                        Mengerti
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUKSES -->
+    <div class="modal fade" id="modalSuccess">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg"
+                style="
+                border-radius:22px;
+                overflow:hidden;
+            ">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:95px;
+                        height:95px;
+                        border-radius:50%;
+                        background:#eafaf1;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:55px;
+                            color:#28a745;
+                        ">
+                            check_circle
+                        </span>
+
+                    </div>
+
+                    <h3 class="font-weight-bold mb-2"
+                        id="successTitle">
+
+                        Berhasil
+
+                    </h3>
+
+                    <p class="text-muted mb-4"
+                        id="successText">
+
+                        Data berhasil disimpan
+
+                    </p>
+
+                    <button class="btn btn-success px-4"
+                        data-dismiss="modal"
+                        style="
+                        border-radius:12px;
+                        height:45px;
+                        min-width:130px;
+                    ">
+                        OK
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- ********************************** // MODAL ********************************** -->
 
     <footer class="dashboard-footer mt-4">
@@ -373,16 +489,65 @@
         }
 
         function tambahData() {
-            let nama = document.getElementById("departemenTambah").value;
-            if (!nama) {
-                alert("Harus diisi!");
+
+            let input = document.getElementById("departemenTambah");
+            let nama = input.value.trim();
+
+            // VALIDASI
+            if (nama === "") {
+
+                document.getElementById("validasiText").innerHTML =
+                    "Nama departemen wajib diisi";
+
+                $('#modalValidasi').modal('show');
+
+                input.focus();
+
                 return;
             }
 
+            // DUPLIKAT
+            let exists = data.some(d =>
+                d.nama.toLowerCase() === nama.toLowerCase()
+            );
+
+            if (exists) {
+
+                document.getElementById("validasiText").innerHTML =
+                    `Departemen <strong>${nama}</strong> sudah tersedia`;
+
+                $('#modalValidasi').modal('show');
+
+                return;
+            }
+
+            // TAMBAH DATA
             data.push({
-                nama,
+                nama
             });
+
+            // REFRESH TABLE
             renderTable();
+
+            // CLOSE MODAL
+            $('#modalTambah').modal('hide');
+
+            // SUCCESS TITLE
+            document.getElementById("successTitle").innerHTML =
+                "Tambah Berhasil";
+
+            // SUCCESS TEXT
+            document.getElementById("successText").innerHTML = `
+        <strong>${nama}</strong> berhasil ditambahkan
+    `;
+
+            // SHOW MODAL
+            $('#modalSuccess').modal('show');
+
+            // RESET
+            input.value = "";
+
+            document.getElementById("checkAll").checked = false;
         }
 
         function editData(index) {
@@ -393,10 +558,63 @@
         }
 
         function updateData() {
-            let index = document.getElementById("editIndex").value;
-            data[index].nama = document.getElementById("departemenEdit").value;
 
+            let index = document.getElementById("editIndex").value;
+
+            let input = document.getElementById("departemenEdit");
+            let nama = input.value.trim();
+
+            // VALIDASI
+            if (nama === "") {
+
+                document.getElementById("validasiText").innerHTML =
+                    "Nama departemen edit wajib diisi";
+
+                $('#modalValidasi').modal('show');
+
+                input.focus();
+
+                return;
+            }
+
+            // DUPLIKAT
+            let exists = data.some((d, i) =>
+                i != index &&
+                d.nama.toLowerCase() === nama.toLowerCase()
+            );
+
+            if (exists) {
+
+                document.getElementById("validasiText").innerHTML =
+                    `Departemen <strong>${nama}</strong> sudah tersedia`;
+
+                $('#modalValidasi').modal('show');
+
+                return;
+            }
+
+            // UPDATE
+            data[index].nama = nama;
+
+            // REFRESH TABLE
             renderTable();
+
+            // CLOSE
+            $('#modalEdit').modal('hide');
+
+            // TITLE
+            document.getElementById("successTitle").innerHTML =
+                "Edit Berhasil";
+
+            // TEXT
+            document.getElementById("successText").innerHTML = `
+        <strong>${nama}</strong> berhasil di edit
+    `;
+
+            // SHOW
+            $('#modalSuccess').modal('show');
+
+            document.getElementById("checkAll").checked = false;
         }
 
         function hapusData(index) {

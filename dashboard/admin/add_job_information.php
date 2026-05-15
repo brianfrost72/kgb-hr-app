@@ -97,7 +97,7 @@
 
             <!-- ********************************// START page__content //******************************* -->
             <div class="container-fluid page__container">
-                <div class="card" style="border-radius:10px;">
+                <div class="card mt-4" style="border-radius:10px;">
                     <div class="card-body">
 
                         <!-- TITLE -->
@@ -151,7 +151,7 @@
                                 <textarea class="form-control" rows="5" placeholder="Tulis deskripsi lowongan kerja di sini..."></textarea>
                             </div>
 
-                             <!-- KOUTA -->
+                            <!-- KOUTA -->
                             <div class="form-group">
                                 <label>Kuota Pelamar <span style="color:red">*</span></label>
                                 <input type="number" class="form-control" placeholder="Contoh: 5">
@@ -191,7 +191,6 @@
 
                             <!-- BUTTON -->
                             <div class="d-flex justify-content-end mt-4">
-                                <button type="button" class="btn btn-light mr-2">Batal</button>
                                 <button type="submit" class="btn btn-primary">
                                     <span class="material-icons" style="font-size:18px; vertical-align:middle;">send</span>
                                     Submit
@@ -230,6 +229,61 @@
     <!-- ********************************** // MENU-Drawer ********************************** -->
     <?php include 'includes/drawer_menu.php'; ?>
     <!-- ********************************** //END MENU-drawer ********************************** -->
+
+    <!-- MODAL SUKSES POSTING -->
+    <div class="modal fade" id="modalPostingBerhasil" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0" style="border-radius:18px; overflow:hidden;">
+
+                <!-- BODY -->
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:90px;
+                        height:90px;
+                        border-radius:50%;
+                        background:#ecfdf3;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:50px;
+                            color:#16a34a;
+                        ">
+                            check_circle
+                        </span>
+
+                    </div>
+
+                    <!-- TITLE -->
+                    <h4 class="mb-2 font-weight-bold">
+                        Posting Berhasil
+                    </h4>
+
+                    <!-- TEXT -->
+                    <p class="text-muted mb-4" id="textPostingBerhasil">
+                        Lowongan berhasil di posting
+                    </p>
+
+                    <!-- BUTTON -->
+                    <button type="button"
+                        class="btn btn-success px-4"
+                        id="btnOkayPosting"
+                        style="
+                        border-radius:10px;
+                        height:45px;
+                        min-width:120px;
+                    ">
+                        Okay
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
@@ -287,6 +341,33 @@
     <script src="assets/vendor/jqvmap/maps/jquery.vmap.world.js"></script>
     <script src="assets/js/vector-maps.js"></script>
 
+    <script>
+        // FORM SUBMIT
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+
+            // AMBIL JUDUL LOWONGAN
+            let judul = $('input[type="text"]').first().val();
+
+            // VALIDASI TEXT
+            if (judul.trim() === '') {
+                judul = 'Lowongan';
+            }
+
+            // SET TEXT MODAL
+            $('#textPostingBerhasil').html(
+                '<b>' + judul + '</b> berhasil di posting'
+            );
+
+            // SHOW MODAL
+            $('#modalPostingBerhasil').modal('show');
+        });
+
+        // BUTTON OKAY
+        $('#btnOkayPosting').on('click', function() {
+            location.reload();
+        });
+    </script>
 </body>
 
 </html>

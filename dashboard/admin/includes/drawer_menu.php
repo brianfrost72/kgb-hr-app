@@ -40,6 +40,11 @@
                                 <span class="sidebar-menu-text">Manage Role</span>
                             </a>
                         </li>
+                        <li class="sidebar-menu-item">
+                            <a class="sidebar-menu-button" href="add_branches.php">
+                                <span class="sidebar-menu-text">Tambah Cabang Lokasi</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <!-- ROLE AKSES MENU END -->
@@ -174,59 +179,28 @@
                 </li>
                 <!-- MASTER CLIENT MENU END -->
 
-                <!-- MASTER ORDER MENU -->
+                <!-- ORDER MENU -->
                 <li class="sidebar-menu-item">
-                    <a
-                        class="sidebar-menu-button"
-                        data-toggle="collapse"
-                        href="#order_menu">
+                    <a class="sidebar-menu-button" href="manage_orders.php">
                         <i
                             class="sidebar-menu-icon sidebar-menu-icon--left material-icons">local_grocery_store</i>
-                        <span class="sidebar-menu-text">Master Order</span>
-                        <span class="ml-auto sidebar-menu-toggle-icon"></span>
+                        <span class="sidebar-menu-text">Manage Order</span>
                     </a>
-                    <ul class="sidebar-submenu collapse" id="order_menu">
-                        <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="manage_order-in.php">
-                                <span class="sidebar-menu-text">Order In</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
-                                <span class="sidebar-menu-text">Estimasi Biaya</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
-                                <span class="sidebar-menu-text">Ajukan Kontrak</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
-                                <span class="sidebar-menu-text">Pembayaran</span>
-                            </a>
-                        </li>
-                        <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
-                                <span class="sidebar-menu-text">Invoice</span>
-                            </a>
-                        </li>
-                    </ul>
                 </li>
-                <!-- MASTER ORDER MENU END -->
+                <!-- ORDER MENU END -->
 
                 <!-- MEMBER MENU -->
-                <li class="sidebar-menu-item">
+                <!-- <li class="sidebar-menu-item">
                     <a class="sidebar-menu-button" href="fluid-ui-alerts.html">
                         <i
                             class="sidebar-menu-icon sidebar-menu-icon--left material-icons">person</i>
                         <span class="sidebar-menu-text">Member</span>
                     </a>
-                </li>
+                </li> -->
                 <!-- MEMBER MENU END -->
 
                 <!-- MASTER MEMBER FEATURE MENU -->
-                <li class="sidebar-menu-item">
+                <!-- <li class="sidebar-menu-item">
                     <a
                         class="sidebar-menu-button"
                         data-toggle="collapse"
@@ -248,11 +222,11 @@
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> -->
                 <!-- MASTER MEMBER FEATURE MENU END -->
 
                 <!-- MASTER TRANSACTION MENU -->
-                <li class="sidebar-menu-item">
+                <!-- <li class="sidebar-menu-item">
                     <a
                         class="sidebar-menu-button"
                         data-toggle="collapse"
@@ -274,11 +248,11 @@
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> -->
                 <!-- MASTER TRANSACTION MENU END -->
 
                 <!-- MASTER REPORT MENU -->
-                <li class="sidebar-menu-item">
+                <!-- <li class="sidebar-menu-item">
                     <a
                         class="sidebar-menu-button"
                         data-toggle="collapse"
@@ -300,11 +274,11 @@
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> -->
                 <!-- MASTER REPORT MENU END -->
 
                 <!-- MASTER TESTIMONY -->
-                <li class="sidebar-menu-item">
+                <!-- <li class="sidebar-menu-item">
                     <a
                         class="sidebar-menu-button"
                         data-toggle="collapse"
@@ -326,9 +300,10 @@
                             </a>
                         </li>
                     </ul>
-                </li>
+                </li> -->
                 <!-- MASTER TESTIMONY END -->
             </ul>
+
             <!-- *********************************CONTENT MENU********************************* -->
             <div class="sidebar-heading">CONTENT MENU</div>
             <ul class="sidebar-menu">
@@ -448,17 +423,27 @@
                     </a>
                     <ul class="sidebar-submenu collapse" id="article_menu">
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-companies.html">
-                                <span class="sidebar-menu-text">Tambah Berita / Artikel</span>
+                            <a class="sidebar-menu-button" href="manage_article_category.php">
+                                <span class="sidebar-menu-text">Manage Kategori</span>
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
-                                <span class="sidebar-menu-text">Manage Berita / Artikel</span>
+                            <a class="sidebar-menu-button" href="manage_article_subcategory.php">
+                                <span class="sidebar-menu-text">Manage Sub-Kategori</span>
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="fluid-stories.html">
+                            <a class="sidebar-menu-button" href="add_post.php">
+                                <span class="sidebar-menu-text">Tambah Postingan</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a class="sidebar-menu-button" href="manage_article.php">
+                                <span class="sidebar-menu-text">Manage Postingan</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a class="sidebar-menu-button" href="manage_comments.php">
                                 <span class="sidebar-menu-text">Manage Komentar</span>
                                 <span class="badge badge-primary badge-pill ml-1">3</span>
                             </a>
@@ -469,7 +454,7 @@
 
                 <!-- KOTAK MASUK MENU -->
                 <li class="sidebar-menu-item">
-                    <a class="sidebar-menu-button" href="fluid-ui-buttons.html">
+                    <a class="sidebar-menu-button" href="manage_inbox.php">
                         <i
                             class="sidebar-menu-icon sidebar-menu-icon--left material-icons">inbox</i>
                         <span class="sidebar-menu-text">Kotak Masuk</span>

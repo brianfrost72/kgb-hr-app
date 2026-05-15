@@ -7,7 +7,7 @@
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Manage Client Personal/Private - Dashboard | Konig Guard Bureau</title>
+    <title>Manage Klien Personal/Private - Dashboard | Konig Guard Bureau</title>
 
     <!-- Prevent the demo from appearing in search engines -->
     <meta name="robots" content="noindex" />
@@ -125,6 +125,7 @@
                                     <thead>
                                         <tr>
                                             <th><input type="checkbox" id="checkAll"></th>
+                                            <th>No.</th>
                                             <th>ID Klien</th>
                                             <th>Nama</th>
                                             <th>Email</th>
@@ -193,9 +194,6 @@
                         <!-- BODY -->
                         <div class="profile-body text-center">
 
-                            <!-- AVATAR -->
-                            <!-- <img id="viewPhoto" class="profile-avatar"> -->
-
                             <!-- NAME -->
                             <h4 id="viewNama" class="mt-2 mb-1"></h4>
                             <span id="viewRoles" class="badge badge-pill badge-primary px-3 py-1"></span>
@@ -204,18 +202,18 @@
                             <div class="profile-grid mt-4">
 
                                 <div>
+                                    <small>ID Klien</small>
+                                    <p id="viewClientID"></p>
+                                </div>
+
+                                <div>
                                     <small>Email</small>
                                     <p id="viewEmail"></p>
                                 </div>
 
                                 <div>
-                                    <small>Departemen</small>
-                                    <p id="viewDepartment"></p>
-                                </div>
-
-                                <div>
-                                    <small>Jabatan</small>
-                                    <p id="viewJabatan"></p>
+                                    <small>No. Telepon / WA</small>
+                                    <p id="viewTelepon"></p>
                                 </div>
 
                                 <div>
@@ -224,18 +222,28 @@
                                 </div>
 
                                 <div>
+                                    <small>NPWP</small>
+                                    <p id="viewNpwp"></p>
+                                </div>
+
+                                <div>
+                                    <small>Instagram</small>
+                                    <p id="viewIg"></p>
+                                </div>
+
+                                <div>
+                                    <small>Facebook</small>
+                                    <p id="viewFb"></p>
+                                </div>
+
+                                <div>
+                                    <small>LinkedIn</small>
+                                    <p id="viewLinkedIn"></p>
+                                </div>
+
+                                <div>
                                     <small>Alamat</small>
                                     <p id="viewAlamat"></p>
-                                </div>
-
-                                <div>
-                                    <small>Cabang</small>
-                                    <p id="viewCabang"></p>
-                                </div>
-
-                                <div>
-                                    <small>No KTP</small>
-                                    <p id="viewKtp"></p>
                                 </div>
                             </div>
 
@@ -307,15 +315,25 @@
 
     <script>
         let data = [{
+                clientID: "C0001",
                 nama: "Brian",
                 email: "brian@mail.com",
                 no_tlp: "081234567890",
+                npwp: "1234567890",
+                instagram: "@brian72",
+                facebook: "brian72",
+                linkedin: "brian72",
                 status: "Aktif"
             },
             {
+                clientID: "C0002",
                 nama: "Steven",
                 email: "steven@mail.com",
                 no_tlp: "081234567891",
+                npwp: "1234567890",
+                instagram: "@steven72",
+                facebook: "steven72",
+                linkedin: "steven72",
                 status: "Aktif"
             }
         ];
@@ -343,6 +361,8 @@
 <tr>
     <td><input type="checkbox" class="rowCheck" data-index="${start + index}"></td>
     <td>${start + index + 1}</td>
+
+    <td>${item.clientID}</td>
 
     <td class="d-flex align-items-center">
         <img src="${item.photo || 'assets/images/avatars/foto-sushi-128246.jpg'}" alt="Photo"
@@ -533,24 +553,25 @@
                 let user = data[index];
 
                 document.getElementById("viewPhoto").src = user.photo || 'assets/images/avatars/foto-sushi-128246.jpg';
+                document.getElementById("viewClientID").innerText = user.clientID;
                 document.getElementById("viewNama").innerText = user.nama;
                 document.getElementById("viewEmail").innerText = user.email;
-                document.getElementById("viewRoles").innerText = user.roles;
-                document.getElementById("viewDepartment").innerText = user.department || '-';
-                document.getElementById("viewJabatan").innerText = user.jabatan || '-';
+                document.getElementById("viewTelepon").innerText = user.telepon || '-';
                 document.getElementById("viewGender").innerText = user.gender || '-';
+                document.getElementById("viewNpwp").innerText = user.npwp || '-';
+                document.getElementById("viewIg").innerText = user.instagram || '-';
+                document.getElementById("viewFb").innerText = user.facebook || '-';
+                document.getElementById("viewLinkedIn").innerText = user.linkedin || '-';
                 document.getElementById("viewAlamat").innerText = user.alamat || '-';
-                document.getElementById("viewCabang").innerText = user.cabang || '-';
-                document.getElementById("viewKtp").innerText = user.ktp || '-';
+
+                let cover = user.cover || "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d";
+
+                document.querySelector(".profile-cover").style.backgroundImage = `url('${cover}')`;
 
                 document.getElementById("loadingView").style.display = "none";
                 document.getElementById("contentView").style.display = "block";
             }, 600);
         }
-
-        let cover = user.cover || "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d";
-
-        document.querySelector(".profile-cover").style.backgroundImage = `url('${cover}')`;
     </script>
 
     <script>

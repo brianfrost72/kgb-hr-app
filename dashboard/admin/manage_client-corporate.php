@@ -7,7 +7,7 @@
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Manage Client Perusahaan - Dashboard | Konig Guard Bureau</title>
+    <title>Manage Klien Korporat - Dashboard | Konig Guard Bureau</title>
 
     <!-- Prevent the demo from appearing in search engines -->
     <meta name="robots" content="noindex" />
@@ -84,11 +84,11 @@
                                 <ol class="breadcrumb mb-0">
                                     <li class="breadcrumb-item"><a href="#">Beranda</a></li>
                                     <li class="breadcrumb-item active" aria-current="page">
-                                        Manage Klien Perusahaan
+                                        Manage Klien Korporat
                                     </li>
                                 </ol>
                             </nav>
-                            <h1 class="m-0">Manage Klien Perusahaan</h1>
+                            <h1 class="m-0">Manage Klien Korporat</h1>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                 <div class="container mt-4">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between">
-                            <h4 class="card-title">Manage Klien Perusahaan</h4>
+                            <h4 class="card-title">Manage Klien Korporat</h4>
                         </div>
 
                         <div class="card-body">
@@ -125,6 +125,7 @@
                                     <thead>
                                         <tr>
                                             <th><input type="checkbox" id="checkAll"></th>
+                                            <th>No.</th>
                                             <th>ID Klien</th>
                                             <th>Nama</th>
                                             <th>Email</th>
@@ -193,9 +194,6 @@
                         <!-- BODY -->
                         <div class="profile-body text-center">
 
-                            <!-- AVATAR -->
-                            <!-- <img id="viewPhoto" class="profile-avatar"> -->
-
                             <!-- NAME -->
                             <h4 id="viewNama" class="mt-2 mb-1"></h4>
                             <span id="viewRoles" class="badge badge-pill badge-primary px-3 py-1"></span>
@@ -204,38 +202,58 @@
                             <div class="profile-grid mt-4">
 
                                 <div>
-                                    <small>Email</small>
-                                    <p id="viewEmail"></p>
+                                    <small>ID Klien</small>
+                                    <p id="viewClientID"></p>
                                 </div>
 
                                 <div>
-                                    <small>Departemen</small>
-                                    <p id="viewDepartment"></p>
+                                    <small>PIC</small>
+                                    <p id="viewPic"></p>
                                 </div>
 
                                 <div>
-                                    <small>Jabatan</small>
-                                    <p id="viewJabatan"></p>
+                                    <small>No. Telepon PIC</small>
+                                    <p id="viewPictelepon"></p>
                                 </div>
 
                                 <div>
-                                    <small>Gender</small>
-                                    <p id="viewGender"></p>
+                                    <small>Email Perusahaan</small>
+                                    <p id="viewEmailcorporate"></p>
+                                </div>
+
+                                <div>
+                                    <small>No. Telepon Perusahaan</small>
+                                    <p id="viewTeleponCorporate"></p>
+                                </div>
+
+                                <div>
+                                    <small>NPWP</small>
+                                    <p id="viewNpwp"></p>
+                                </div>
+
+                                <div>
+                                    <small>Instagram</small>
+                                    <p id="viewIg"></p>
+                                </div>
+
+                                <div>
+                                    <small>Facebook</small>
+                                    <p id="viewFb"></p>
+                                </div>
+
+                                <div>
+                                    <small>LinkedIn</small>
+                                    <p id="viewLinkedIn"></p>
+                                </div>
+
+                                <div>
+                                    <small>Link Perusahaan</small>
+                                    <p id="viewCorporateLink"></p>
                                 </div>
 
                                 <div>
                                     <small>Alamat</small>
                                     <p id="viewAlamat"></p>
-                                </div>
-
-                                <div>
-                                    <small>Cabang</small>
-                                    <p id="viewCabang"></p>
-                                </div>
-
-                                <div>
-                                    <small>No KTP</small>
-                                    <p id="viewKtp"></p>
                                 </div>
                             </div>
 
@@ -307,15 +325,31 @@
 
     <script>
         let data = [{
-                nama: "Brian",
+                clientID: "C0001",
+                nama: "PT. BRIAN CORPORATE",
+                pic: "Peter",
+                picTelepon: "081234567891",
                 email: "brian@mail.com",
-                no_tlp: "081234567890",
+                telepon: "081234567890",
+                npwp: "1234567890",
+                instagram: "@brian72",
+                facebook: "brian72",
+                linkedin: "brian72",
+                corporatelink: "www.wow.com",
                 status: "Aktif"
             },
             {
-                nama: "Steven",
+                clientID: "C0002",
+                nama: "PT. Steven CORPORATE",
+                pic: "Steven",
+                picTelepon: "081234567891",
                 email: "steven@mail.com",
-                no_tlp: "081234567891",
+                telepon: "081234567891",
+                npwp: "1234567890",
+                instagram: "@steven72",
+                facebook: "steven72",
+                linkedin: "steven72",
+                corporatelink: "www.wow.com",
                 status: "Aktif"
             }
         ];
@@ -343,6 +377,8 @@
 <tr>
     <td><input type="checkbox" class="rowCheck" data-index="${start + index}"></td>
     <td>${start + index + 1}</td>
+
+    <td>${item.clientID}</td>
 
     <td class="d-flex align-items-center">
         <img src="${item.photo || 'assets/images/avatars/foto-sushi-128246.jpg'}" alt="Photo"
@@ -533,24 +569,27 @@
                 let user = data[index];
 
                 document.getElementById("viewPhoto").src = user.photo || 'assets/images/avatars/foto-sushi-128246.jpg';
+                document.getElementById("viewClientID").innerText = user.clientID;
+                document.getElementById("viewPic").innerText = user.pic;
+                document.getElementById("viewPictelepon").innerText = user.picTelepon;
                 document.getElementById("viewNama").innerText = user.nama;
-                document.getElementById("viewEmail").innerText = user.email;
-                document.getElementById("viewRoles").innerText = user.roles;
-                document.getElementById("viewDepartment").innerText = user.department || '-';
-                document.getElementById("viewJabatan").innerText = user.jabatan || '-';
-                document.getElementById("viewGender").innerText = user.gender || '-';
+                document.getElementById("viewEmailcorporate").innerText = user.email;
+                document.getElementById("viewTeleponCorporate").innerText = user.telepon || '-';
+                document.getElementById("viewNpwp").innerText = user.npwp || '-';
+                document.getElementById("viewIg").innerText = user.instagram || '-';
+                document.getElementById("viewFb").innerText = user.facebook || '-';
+                document.getElementById("viewLinkedIn").innerText = user.linkedin || '-';
+                document.getElementById("viewCorporateLink").innerText = user.corporatelink || '-';
                 document.getElementById("viewAlamat").innerText = user.alamat || '-';
-                document.getElementById("viewCabang").innerText = user.cabang || '-';
-                document.getElementById("viewKtp").innerText = user.ktp || '-';
+
+                let cover = user.cover || "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d";
+
+                document.querySelector(".profile-cover").style.backgroundImage = `url('${cover}')`;
 
                 document.getElementById("loadingView").style.display = "none";
                 document.getElementById("contentView").style.display = "block";
             }, 600);
         }
-
-        let cover = user.cover || "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d";
-
-        document.querySelector(".profile-cover").style.backgroundImage = `url('${cover}')`;
     </script>
 
     <script>

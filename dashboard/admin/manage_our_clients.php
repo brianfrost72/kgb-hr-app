@@ -186,6 +186,68 @@
     <?php include 'includes/drawer_menu.php'; ?>
     <!-- ********************************** //END MENU-drawer ********************************** -->
 
+    <!-- =========================
+    MODAL VALIDASI
+========================= -->
+
+    <div class="modal fade" id="modalSuccess" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+
+            <div class="modal-content border-0"
+                style="
+                border-radius:18px;
+                overflow:hidden;
+            ">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:90px;
+                        height:90px;
+                        border-radius:50%;
+                        background:#ecfdf3;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:50px;
+                            color:#16a34a;
+                        ">
+                            check_circle
+                        </span>
+
+                    </div>
+
+                    <!-- TITLE -->
+                    <h4 class="font-weight-bold mb-2" id="successTitle">
+                        Berhasil
+                    </h4>
+
+                    <!-- TEXT -->
+                    <p class="text-muted mb-4" id="successText">
+                        Data berhasil disimpan
+                    </p>
+
+                    <!-- BUTTON -->
+                    <button type="button"
+                        class="btn btn-success px-4"
+                        data-dismiss="modal"
+                        style="
+                        min-width:120px;
+                        height:45px;
+                        border-radius:10px;
+                    ">
+                        Okay
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
 
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
@@ -318,6 +380,14 @@
 
             // RESET FORM
             form.reset();
+
+            // MODAL TAMBAH
+            document.getElementById("successTitle").innerText = "Tambah Berhasil";
+
+            document.getElementById("successText").innerHTML =
+                `<b>${nama}</b> berhasil ditambahkan`;
+
+            $('#modalSuccess').modal('show');
         });
 
         // HAPUS ROW
@@ -476,6 +546,7 @@
         }
 
         // SIMPAN EDIT
+        // SIMPAN EDIT
         function simpanEdit(btn) {
 
             const editRow = btn.closest(".edit-row");
@@ -490,7 +561,7 @@
             mainRow.cells[1].innerText = nama;
             mainRow.cells[3].innerText = deskripsi;
 
-            // UPDATE GAMBAR JIKA ADA
+            // UPDATE GAMBAR
             if (fileInput.files.length > 0) {
 
                 const newImage = URL.createObjectURL(fileInput.files[0]);
@@ -500,6 +571,14 @@
 
             // HAPUS FORM EDIT
             editRow.remove();
+
+            // MODAL EDIT
+            document.getElementById("successTitle").innerText = "Edit Berhasil";
+
+            document.getElementById("successText").innerHTML =
+                `<b>${nama}</b> berhasil di edit`;
+
+            $('#modalSuccess').modal('show');
         }
 
         // BATAL EDIT

@@ -202,6 +202,116 @@
     </div>
     <!-- ********************************** // MODAL ********************************** -->
 
+    <!-- MODAL VALIDASI -->
+    <div class="modal fade" id="modalValidasi">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg"
+                style="
+                border-radius:22px;
+                overflow:hidden;
+            ">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:90px;
+                        height:90px;
+                        border-radius:50%;
+                        background:#fff4e5;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:50px;
+                            color:#ff9800;
+                        ">
+                            error_outline
+                        </span>
+
+                    </div>
+
+                    <h3 class="font-weight-bold mb-2">
+                        Validasi Gagal
+                    </h3>
+
+                    <p class="text-muted mb-4" id="validasiText">
+                        Data wajib diisi
+                    </p>
+
+                    <button class="btn btn-warning px-4"
+                        data-dismiss="modal"
+                        style="
+                        border-radius:12px;
+                        height:45px;
+                        min-width:130px;
+                        color:white;
+                    ">
+                        Mengerti
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUKSES -->
+    <div class="modal fade" id="modalSuccess">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg"
+                style="
+                border-radius:22px;
+                overflow:hidden;
+            ">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:95px;
+                        height:95px;
+                        border-radius:50%;
+                        background:#eafaf1;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:55px;
+                            color:#28a745;
+                        ">
+                            check_circle
+                        </span>
+
+                    </div>
+
+                    <h3 class="font-weight-bold mb-2">
+                        Role Berhasil Ditambahkan
+                    </h3>
+
+                    <p class="text-muted mb-4"
+                        id="successText">
+                        Role berhasil dibuat
+                    </p>
+
+                    <button class="btn btn-success px-4"
+                        data-dismiss="modal"
+                        style="
+                        border-radius:12px;
+                        height:45px;
+                        min-width:130px;
+                    ">
+                        OK
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
             <div class="row align-items-center">
@@ -373,16 +483,56 @@
         }
 
         function tambahData() {
-            let nama = document.getElementById("namaTambah").value;
+
+            let nama = document.getElementById("namaTambah").value.trim();
+
+            // VALIDASI
             if (!nama) {
-                alert("Harus diisi!");
+
+                document.getElementById("validasiText").innerHTML =
+                    "Nama role wajib diisi!";
+
+                $('#modalValidasi').modal('show');
+
                 return;
             }
 
+            // DUPLIKAT ROLE
+            let exists = data.some(d =>
+                d.nama.toLowerCase() === nama.toLowerCase()
+            );
+
+            if (exists) {
+
+                document.getElementById("validasiText").innerHTML =
+                    `Role <strong>${nama}</strong> sudah tersedia`;
+
+                $('#modalValidasi').modal('show');
+
+                return;
+            }
+
+            // PUSH DATA
             data.push({
-                nama,
+                nama
             });
+
+            // RENDER TABLE
             renderTable();
+
+            // CLOSE MODAL TAMBAH
+            $('#modalTambah').modal('hide');
+
+            // SUCCESS TEXT
+            document.getElementById("successText").innerHTML = `
+        Role <strong>${nama}</strong> berhasil ditambahkan
+    `;
+
+            // SHOW SUCCESS
+            $('#modalSuccess').modal('show');
+
+            // RESET INPUT
+            document.getElementById("namaTambah").value = "";
         }
 
         function editData(index) {
@@ -393,10 +543,64 @@
         }
 
         function updateData() {
-            let index = document.getElementById("editIndex").value;
-            data[index].nama = document.getElementById("namaEdit").value;
 
+            let index = document.getElementById("editIndex").value;
+
+            // DATA LAMA
+            let namaLama = data[index].nama;
+
+            // DATA BARU
+            let namaBaru = document.getElementById("namaEdit").value.trim();
+
+            // VALIDASI KOSONG
+            if (!namaBaru) {
+
+                document.getElementById("validasiText").innerHTML =
+                    "Nama role edit wajib diisi!";
+
+                $('#modalValidasi').modal('show');
+
+                return;
+            }
+
+            // VALIDASI DUPLIKAT
+            let exists = data.some((d, i) =>
+                i != index &&
+                d.nama.toLowerCase() === namaBaru.toLowerCase()
+            );
+
+            if (exists) {
+
+                document.getElementById("validasiText").innerHTML =
+                    `Role <strong>${namaBaru}</strong> sudah tersedia`;
+
+                $('#modalValidasi').modal('show');
+
+                return;
+            }
+
+            // UPDATE DATA
+            data[index].nama = namaBaru;
+
+            // RENDER TABLE
             renderTable();
+
+            // CLOSE MODAL EDIT
+            $('#modalEdit').modal('hide');
+
+            // TITLE SUCCESS
+            document.querySelector("#modalSuccess h3").innerHTML =
+                "Role Berhasil Diedit";
+
+            // SUCCESS TEXT
+            document.getElementById("successText").innerHTML = `
+        Role <strong>${namaLama}</strong>
+        telah diedit menjadi
+        <strong>${namaBaru}</strong>
+    `;
+
+            // SHOW SUCCESS MODAL
+            $('#modalSuccess').modal('show');
         }
 
         function hapusData(index) {

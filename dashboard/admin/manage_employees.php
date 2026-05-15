@@ -106,36 +106,84 @@
 
                         <div class="card-body">
                             <!-- FILTER -->
-                            <div class="d-flex justify-content-between mb-3">
-                                <div>
-                                    Show
-                                    <select id="showEntries" class="form-control d-inline w-auto">
+                            <div class="row align-items-end mb-4">
+
+                                <!-- SHOW ENTRIES -->
+                                <div class="col-lg-2 col-md-3 mb-2">
+                                    <label class="small text-muted d-block mb-1">
+                                        Show Entries
+                                    </label>
+
+                                    <select id="showEntries" class="form-control">
                                         <option>5</option>
                                         <option>10</option>
                                         <option>20</option>
                                     </select>
-                                    entries
                                 </div>
 
                                 <!-- FILTER DEPARTEMEN -->
-                                <select id="filterDepartment" class="form-control filter-select">
-                                    <option value="">Semua Departemen</option>
-                                    <option>HR</option>
-                                    <option>Admin</option>
-                                    <option>IT</option>
-                                    <option>Akuntansi</option>
-                                </select>
+                                <div class="col-lg-2 col-md-3 mb-2">
+                                    <label class="small text-muted d-block mb-1">
+                                        Departemen
+                                    </label>
+
+                                    <select id="filterDepartment" class="form-control">
+                                        <option value="">Semua</option>
+                                        <option>HR</option>
+                                        <option>Admin</option>
+                                        <option>IT</option>
+                                        <option>Akuntansi</option>
+                                    </select>
+                                </div>
 
                                 <!-- FILTER JABATAN -->
-                                <select id="filterJabatan" class="form-control filter-select">
-                                    <option value="">Semua Jabatan</option>
-                                    <option>Manager</option>
-                                    <option>Supervisor</option>
-                                    <option>Staff</option>
-                                    <option>Admin</option>
-                                </select>
+                                <div class="col-lg-2 col-md-3 mb-2">
+                                    <label class="small text-muted d-block mb-1">
+                                        Jabatan
+                                    </label>
 
-                                <input type="text" id="searchInput" class="form-control w-25" placeholder="Search...">
+                                    <select id="filterJabatan" class="form-control">
+                                        <option value="">Semua</option>
+                                        <option>Manager</option>
+                                        <option>Supervisor</option>
+                                        <option>Staff</option>
+                                        <option>Admin</option>
+                                    </select>
+                                </div>
+
+                                <!-- FILTER GENDER -->
+                                <div class="col-lg-2 col-md-3 mb-2">
+                                    <label class="small text-muted d-block mb-1">
+                                        Jenis Kelamin
+                                    </label>
+
+                                    <select id="filterGender" class="form-control">
+                                        <option value="">Semua</option>
+                                        <option value="l">Laki-laki</option>
+                                        <option value="p">Perempuan</option>
+                                    </select>
+                                </div>
+
+                                <!-- SEARCH -->
+                                <div class="col-lg-4 col-md-12 mb-2">
+                                    <label class="small text-muted d-block mb-1">
+                                        Search
+                                    </label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">search</span>
+                                            </span>
+                                        </div>
+
+                                        <input type="text"
+                                            id="searchInput"
+                                            class="form-control"
+                                            placeholder="Cari personel...">
+                                    </div>
+                                </div>
+
                             </div>
 
                             <!-- TABLE -->
@@ -145,6 +193,7 @@
                                         <tr>
                                             <th><input type="checkbox" id="checkAll"></th>
                                             <th>No</th>
+                                            <th>NIK Karyawan</th>
                                             <th>Nama</th>
                                             <th>Jenis Kelamin (L/P)</th>
                                             <th>Departemen</th>
@@ -194,47 +243,358 @@
                     <h5>Tambah Personel</h5>
                 </div>
 
-                <div class="modal-body row">
-                    <div class="col-md-6">
-                        <input type="text" id="namaTambah" class="form-control mb-2" placeholder="Nama">
-                        <input type="email" id="emailTambah" class="form-control mb-2" placeholder="Email">
+                <div class="modal-body">
+                    <div class="row">
 
-                        <select id="genderTambah" class="form-control mb-2">
-                            <option value="">Jenis Kelamin</option>
-                            <option>Laki-laki</option>
-                            <option>Perempuan</option>
-                        </select>
+                        <!-- LEFT -->
+                        <div class="col-md-6">
 
-                        <select id="statusTambah" class="form-control mb-2">
-                            <option value="">Pilih Status</option>
-                            <option>Belum Nikah</option>
-                            <option>Menikah</option>
-                        </select>
+                            <!-- NAMA -->
+                            <div class="form-group">
+                                <label>Nama Lengkap</label>
 
-                        <select id="departmentTambah" class="form-control mb-2">
-                            <option value="">Pilih Departemen</option>
-                            <option>HR</option>
-                            <option>Admin</option>
-                            <option>Akuntansi</option>
-                        </select>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">person</span>
+                                        </span>
+                                    </div>
 
-                        <select id="jabatanTambah" class="form-control mb-2">
-                            <option value="">Pilih Jabatan</option>
-                            <option>Manager</option>
-                            <option>Supervisor</option>
-                            <option>Staff</option>
-                        </select>
+                                    <input type="text"
+                                        id="namaTambah"
+                                        class="form-control"
+                                        placeholder="Andy Lau">
+                                </div>
+                            </div>
 
-                        <input type="text" id="ktpTambah" class="form-control mb-2" placeholder="No KTP">
-                        <input type="text" id="ktaTambah" class="form-control mb-2" placeholder="No KTA">
-                    </div>
+                            <!-- TEMPAT LAHIR -->
+                            <div class="form-group">
+                                <label>Tempat Lahir</label>
 
-                    <div class="col-md-6">
-                        <textarea id="alamatTambah" class="form-control mb-2" placeholder="Alamat"></textarea>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">location_city</span>
+                                        </span>
+                                    </div>
 
-                        <input type="file" id="photoTambah" class="form-control mb-2">
+                                    <input type="text"
+                                        id="tempatLahirTambah"
+                                        class="form-control"
+                                        placeholder="Jakarta">
+                                </div>
+                            </div>
 
-                        <img id="previewPhoto" class="rounded mt-2" width="100">
+                            <!-- TANGGAL LAHIR -->
+                            <div class="form-group">
+
+                                <label>Tanggal Lahir</label>
+
+                                <div class="input-group">
+
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">
+                                                date_range
+                                            </span>
+                                        </span>
+                                    </div>
+
+                                    <input type="date"
+                                        id="tanggalLahirTambah"
+                                        class="form-control">
+
+                                </div>
+
+                                <!-- TEXT UMUR -->
+                                <small id="umurText"
+                                    class="text-muted d-block mt-2"
+                                    style="
+            font-size:13px;
+        ">
+
+                                    Umur akan muncul di sini
+
+                                </small>
+
+                            </div>
+
+                            <!-- EMAIL -->
+                            <div class="form-group">
+                                <label>Email</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">email</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="email"
+                                        id="emailTambah"
+                                        class="form-control"
+                                        placeholder="email@gmail.com">
+                                </div>
+                            </div>
+
+                            <!-- TELEPON -->
+                            <div class="form-group">
+                                <label>No Telp / HP</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">call</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text"
+                                        id="teleponTambah"
+                                        class="form-control"
+                                        placeholder="081xxxxxxxx">
+                                </div>
+                            </div>
+
+                            <!-- GENDER -->
+                            <div class="form-group">
+                                <label>Jenis Kelamin</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">wc</span>
+                                        </span>
+                                    </div>
+
+                                    <select id="genderTambah" class="form-control">
+                                        <option value="">Pilih Jenis Kelamin</option>
+                                        <option>Laki-laki</option>
+                                        <option>Perempuan</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- STATUS -->
+                            <div class="form-group">
+                                <label>Status Perkawinan</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">favorite</span>
+                                        </span>
+                                    </div>
+
+                                    <select id="statusTambah" class="form-control">
+                                        <option value="">Pilih Status</option>
+                                        <option>Belum Nikah</option>
+                                        <option>Menikah</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- DEPARTEMEN -->
+                            <div class="form-group">
+                                <label>Departemen</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">domain</span>
+                                        </span>
+                                    </div>
+
+                                    <select id="departmentTambah" class="form-control">
+                                        <option value="">Pilih Departemen</option>
+                                        <option>HR</option>
+                                        <option>Admin</option>
+                                        <option>Akuntansi</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- JABATAN -->
+                            <div class="form-group">
+                                <label>Jabatan</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">work</span>
+                                        </span>
+                                    </div>
+
+                                    <select id="jabatanTambah" class="form-control">
+                                        <option value="">Pilih Jabatan</option>
+                                        <option>Manager</option>
+                                        <option>Supervisor</option>
+                                        <option>Staff</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- KTP -->
+                            <div class="form-group">
+                                <label>Nomor KTP</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text"
+                                        id="ktpTambah"
+                                        class="form-control"
+                                        placeholder="Nomor KTP">
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT -->
+                        <div class="col-md-6">
+
+                            <!-- NPWP -->
+                            <div class="form-group">
+                                <label>Nomor NPWP</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text"
+                                        id="npwpTambah"
+                                        class="form-control"
+                                        placeholder="Nomor NPWP">
+                                </div>
+                            </div>
+
+                            <!-- BPJS KESEHATAN -->
+                            <div class="form-group">
+                                <label>Nomor BPJS Kesehatan</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text"
+                                        id="bpjsTambah"
+                                        class="form-control"
+                                        placeholder="Nomor BPJS Kesehatan">
+                                </div>
+                            </div>
+
+                            <!-- BPJS TK -->
+                            <div class="form-group">
+                                <label>Nomor BPJS KetenagaKerjaan</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text"
+                                        id="bpjsTKTambah"
+                                        class="form-control"
+                                        placeholder="Nomor BPJS TK">
+                                </div>
+                            </div>
+
+                            <!-- KTA -->
+                            <div class="form-group">
+                                <label>Nomor KTA Petugas</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">assignment_ind</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text"
+                                        id="ktaTambah"
+                                        class="form-control"
+                                        placeholder="Nomor KTA">
+                                </div>
+                            </div>
+
+                            <!-- NO. REKENING -->
+                            <div class="form-group">
+                                <label>No Rekening</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">account_balance</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text"
+                                        id="rekeningTambah"
+                                        class="form-control"
+                                        placeholder="BCA 123456789">
+                                </div>
+                            </div>
+
+                            <!-- ALAMAT -->
+                            <div class="form-group">
+                                <label>Alamat</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend align-items-stretch">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">home</span>
+                                        </span>
+                                    </div>
+
+                                    <textarea id="alamatTambah"
+                                        class="form-control"
+                                        rows="5"
+                                        placeholder="Masukkan alamat lengkap"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- FOTO -->
+                            <div class="form-group">
+                                <label>Upload Foto</label>
+
+                                <div class="custom-file">
+                                    <input type="file"
+                                        id="photoTambah"
+                                        class="custom-file-input">
+
+                                    <label class="custom-file-label">
+                                        Pilih Foto
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- PREVIEW -->
+                            <div class="mt-4 text-center">
+
+                                <img id="previewPhoto"
+                                    src=""
+                                    class="rounded-circle shadow-sm border"
+                                    style="
+                        width:120px;
+                        height:120px;
+                        object-fit:cover;
+                    ">
+
+                            </div>
+
+                        </div>
+
                     </div>
                 </div>
 
@@ -256,45 +616,336 @@
                     <input type="hidden" id="editIndex">
 
                     <div class="col-md-6">
-                        <input type="text" id="namaEdit" class="form-control mb-2">
-                        <input type="email" id="emailEdit" class="form-control mb-2">
+                        <!-- NAMA -->
+                        <div class="form-group">
+                            <label>Nama Lengkap</label>
 
-                        <select id="genderEdit" class="form-control mb-2">
-                            <option value="">Jenis Kelamin</option>
-                            <option>Laki-laki</option>
-                            <option>Perempuan</option>
-                        </select>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">person</span>
+                                    </span>
+                                </div>
 
-                        <select id="statusEdit" class="form-control mb-2">
-                            <option value="">Pilih Status</option>
-                            <option>Belum Nikah</option>
-                            <option>Menikah</option>
-                        </select>
+                                <input type="text"
+                                    id="namaEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
 
-                        <select id="departmentEdit" class="form-control mb-2">
-                            <option value="">Pilih Departemen</option>
-                            <option>HR</option>
-                            <option>Admin</option>
-                            <option>Akuntansi</option>
-                        </select>
+                        <!-- TEMPAT LAHIR -->
+                        <div class="form-group">
+                            <label>Tempat Lahir</label>
 
-                        <select id="jabatanEdit" class="form-control mb-2">
-                            <option value="">Pilih Jabatan</option>
-                            <option>Manager</option>
-                            <option>Supervisor</option>
-                            <option>Staff</option>
-                        </select>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">location_city</span>
+                                    </span>
+                                </div>
 
-                        <input type="text" id="ktpEdit" class="form-control mb-2">
-                        <input type="text" id="ktaEdit" class="form-control mb-2">
+                                <input type="text"
+                                    id="tempatLahirEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- TANGGAL LAHIR -->
+                        <div class="form-group">
+
+                            <label>Tanggal Lahir</label>
+
+                            <div class="input-group">
+
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">
+                                            date_range
+                                        </span>
+                                    </span>
+                                </div>
+
+                                <input type="date"
+                                    id="tanggalLahirEdit"
+                                    class="form-control">
+
+                            </div>
+
+                            <!-- TEXT UMUR -->
+                            <small id="umurTextEdit"
+                                class="text-muted d-block mt-2"
+                                style="
+            font-size:13px;
+        ">
+
+                                Umur akan muncul di sini
+
+                            </small>
+
+                        </div>
+
+                        <!-- EMAIL -->
+                        <div class="form-group">
+                            <label>Email</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">email</span>
+                                    </span>
+                                </div>
+
+                                <input type="email"
+                                    id="emailEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- TELEPON -->
+                        <div class="form-group">
+                            <label>No Telp / HP</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">call</span>
+                                    </span>
+                                </div>
+
+                                <input type="text"
+                                    id="teleponEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- GENDER -->
+                        <div class="form-group">
+                            <label>Jenis Kelamin</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">wc</span>
+                                    </span>
+                                </div>
+
+                                <select id="genderEdit" class="form-control">
+                                    <option value="">Pilih Jenis Kelamin</option>
+                                    <option>Laki-laki</option>
+                                    <option>Perempuan</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- STATUS -->
+                        <div class="form-group">
+                            <label>Status Perkawinan</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">favorite</span>
+                                    </span>
+                                </div>
+
+                                <select id="statusEdit" class="form-control">
+                                    <option value="">Pilih Status</option>
+                                    <option>Belum Nikah</option>
+                                    <option>Menikah</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- DEPARTEMEN -->
+                        <div class="form-group">
+                            <label>Departemen</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">domain</span>
+                                    </span>
+                                </div>
+
+                                <select id="departmentEdit" class="form-control">
+                                    <option value="">Pilih Departemen</option>
+                                    <option>HR</option>
+                                    <option>Admin</option>
+                                    <option>Akuntansi</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- JABATAN -->
+                        <div class="form-group">
+                            <label>Jabatan</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">work</span>
+                                    </span>
+                                </div>
+
+                                <select id="jabatanEdit" class="form-control">
+                                    <option value="">Pilih Jabatan</option>
+                                    <option>Manager</option>
+                                    <option>Supervisor</option>
+                                    <option>Staff</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- KTP -->
+                        <div class="form-group">
+                            <label>Nomor KTP</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">credit_card</span>
+                                    </span>
+                                </div>
+
+                                <input type="text"
+                                    id="ktpEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-md-6">
-                        <textarea id="alamatEdit" class="form-control mb-2"></textarea>
 
-                        <input type="file" id="photoEdit" class="form-control mb-2">
+                        <!-- NPWP -->
+                        <div class="form-group">
+                            <label>Nomor NPWP</label>
 
-                        <img id="previewPhotoEdit" class="rounded mt-2" width="100">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">credit_card</span>
+                                    </span>
+                                </div>
+
+                                <input type="text"
+                                    id="npwpEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- BPJS KESEHATAN -->
+                        <div class="form-group">
+                            <label>Nomor BPJS Kesehatan</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">credit_card</span>
+                                    </span>
+                                </div>
+
+                                <input type="text"
+                                    id="bpjsEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- BPJS TK -->
+                        <div class="form-group">
+                            <label>Nomor BPJS KetenagaKerjaan</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">credit_card</span>
+                                    </span>
+                                </div>
+
+                                <input type="text"
+                                    id="bpjsTKEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- KTA -->
+                        <div class="form-group">
+                            <label>Nomor KTA Petugas</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">assignment_ind</span>
+                                    </span>
+                                </div>
+
+                                <input type="text"
+                                    id="ktaEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- REKENING -->
+                        <div class="form-group">
+                            <label>No Rekening</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">account_balance</span>
+                                    </span>
+                                </div>
+
+                                <input type="text"
+                                    id="rekeningEdit"
+                                    class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- ALAMAT -->
+                        <div class="form-group">
+                            <label>Alamat</label>
+
+                            <div class="input-group">
+                                <div class="input-group-prepend align-items-stretch">
+                                    <span class="input-group-text bg-light">
+                                        <span class="material-icons">home</span>
+                                    </span>
+                                </div>
+
+                                <textarea id="alamatEdit"
+                                    class="form-control"
+                                    rows="5"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- FOTO -->
+                        <div class="form-group">
+                            <label>Upload Foto</label>
+
+                            <div class="custom-file">
+                                <input type="file"
+                                    id="photoEdit"
+                                    class="custom-file-input">
+
+                                <label class="custom-file-label">
+                                    Pilih Foto
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- PREVIEW -->
+                        <div class="mt-4 text-center">
+
+                            <img id="previewPhotoEdit"
+                                src=""
+                                class="rounded-circle shadow-sm border"
+                                style="
+                        width:120px;
+                        height:120px;
+                        object-fit:cover;
+                    ">
+
+                        </div>
                     </div>
                 </div>
 
@@ -305,6 +956,7 @@
         </div>
     </div>
 
+    <!-- ------------------------------------- MODAL VIEW ------------------------------------- -->
     <div class="modal fade" id="modalView">
         <div class="modal-dialog modal-md">
             <div class="modal-content border-0">
@@ -341,8 +993,23 @@
                             <div class="profile-grid mt-4">
 
                                 <div>
+                                    <small>Tempat Lahir</small>
+                                    <p id="viewTempatlahir"></p>
+                                </div>
+
+                                <div>
+                                    <small>Tanggal Lahir</small>
+                                    <p id="viewTanggallahir"></p>
+                                </div>
+
+                                <div>
                                     <small>Email</small>
                                     <p id="viewEmail"></p>
+                                </div>
+
+                                <div>
+                                    <small>No. Telepon/HP</small>
+                                    <p id="viewTelp"></p>
                                 </div>
 
                                 <div>
@@ -361,7 +1028,7 @@
                                 </div>
 
                                 <div>
-                                    <small>Gender</small>
+                                    <small>Jenis Kelamin</small>
                                     <p id="viewGender"></p>
                                 </div>
 
@@ -371,13 +1038,33 @@
                                 </div>
 
                                 <div>
-                                    <small>No KTP</small>
+                                    <small>No. KTP</small>
                                     <p id="viewKtp"></p>
                                 </div>
 
                                 <div>
-                                    <small>No KTA</small>
+                                    <small>No. KTA</small>
                                     <p id="viewKta"></p>
+                                </div>
+
+                                <div>
+                                    <small>No. NPWP</small>
+                                    <p id="viewNpwp"></p>
+                                </div>
+
+                                <div>
+                                    <small>No. BPJS Kesehatan</small>
+                                    <p id="viewBpjs"></p>
+                                </div>
+
+                                <div>
+                                    <small>No. BPJS TK</small>
+                                    <p id="viewBpjsTK"></p>
+                                </div>
+
+                                <div>
+                                    <small>No. Rekening</small>
+                                    <p id="viewRekening"></p>
                                 </div>
                             </div>
 
@@ -387,6 +1074,122 @@
 
                 </div>
 
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VALIDASI -->
+    <div class="modal fade" id="modalValidasi">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg"
+                style="
+                border-radius:22px;
+                overflow:hidden;
+            ">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:90px;
+                        height:90px;
+                        border-radius:50%;
+                        background:#fff4e5;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:50px;
+                            color:#ff9800;
+                        ">
+                            error_outline
+                        </span>
+
+                    </div>
+
+                    <h3 class="font-weight-bold mb-2">
+                        Validasi
+                    </h3>
+
+                    <p class="text-muted mb-4"
+                        id="validasiText">
+
+                        Data wajib diisi
+
+                    </p>
+
+                    <button class="btn btn-warning px-4"
+                        data-dismiss="modal"
+                        style="
+                        border-radius:12px;
+                        height:45px;
+                        min-width:130px;
+                        color:white;
+                    ">
+                        Mengerti
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUKSES -->
+    <div class="modal fade" id="modalSuccess">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg"
+                style="
+                border-radius:22px;
+                overflow:hidden;
+            ">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:95px;
+                        height:95px;
+                        border-radius:50%;
+                        background:#eafaf1;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:55px;
+                            color:#28a745;
+                        ">
+                            check_circle
+                        </span>
+
+                    </div>
+
+                    <h3 class="font-weight-bold mb-2"
+                        id="successTitle">
+
+                        Berhasil
+
+                    </h3>
+
+                    <p class="text-muted mb-4"
+                        id="successText">
+
+                        Data berhasil disimpan
+
+                    </p>
+
+                    <button class="btn btn-success px-4"
+                        data-dismiss="modal"
+                        style="
+                        border-radius:12px;
+                        height:45px;
+                        min-width:130px;
+                    ">
+                        OK
+                    </button>
+
+                </div>
             </div>
         </div>
     </div>
@@ -449,25 +1252,43 @@
 
     <script>
         let data = [{
+                nik: "1234567890",
                 nama: "Brian",
+                tempatlahir: "Jakarta",
+                tanggallahir: "1990-01-01",
                 email: "brian@mail.com",
-                gender: "L",
+                telepon: "08123456789",
+                gender: "Laki-laki",
+                status: "Sudah Menikah",
                 department: "HR",
                 jabatan: "Admin",
-                alamat: "Jakarta",
                 ktp: "1234567890123456",
                 kta: "987654321",
+                npwp: "1234567890",
+                bpjs: "1234567890",
+                bpjsTK: "1234567890",
+                rekening: "1234567890",
+                alamat: "Jakarta",
                 photo: ""
             },
             {
+                nik: "1234567891",
                 nama: "Steven",
+                tempatlahir: "Bandung",
+                tanggallahir: "1990-01-01",
                 email: "steven@mail.com",
-                gender: "L",
+                telepon: "08123456789",
+                gender: "Laki-laki",
+                status: "Belum Menikah",
                 department: "IT",
                 jabatan: "HR",
-                alamat: "Bandung",
                 ktp: "0987654321098765",
                 kta: "123456789",
+                npwp: "0987654321",
+                bpjs: "0987654321",
+                bpjsTK: "0987654321",
+                rekening: "0987654321",
+                alamat: "Bandung",
                 photo: ""
             }
         ];
@@ -482,6 +1303,7 @@
             let search = document.getElementById("searchInput").value.toLowerCase();
             let filterDept = document.getElementById("filterDepartment").value.toLowerCase();
             let filterJabatan = document.getElementById("filterJabatan").value.toLowerCase();
+            let filterGender = document.getElementById("filterGender").value.toLowerCase();
 
             // FILTER DATA
             let filtered = data.filter(d => {
@@ -506,7 +1328,17 @@
                 let matchJabatan =
                     filterJabatan === "" || jabatan === filterJabatan;
 
-                return matchSearch && matchDept && matchJabatan;
+                // FILTER GENDER
+                let matchGender =
+                    filterGender === "" || gender.includes(filterGender);
+
+                return (
+                    matchSearch &&
+                    matchDept &&
+                    matchJabatan &&
+                    matchGender
+                );
+
             });
 
             // PAGINATION
@@ -522,6 +1354,8 @@
     </td>
 
     <td>${start + index + 1}</td>
+
+    <td>${item.nik || '-'}</td>
 
     <td class="d-flex align-items-center">
         <img src="${item.photo || 'assets/images/avatars/foto-sushi-128246.jpg'}"
@@ -561,6 +1395,11 @@
         };
 
         document.getElementById("filterJabatan").onchange = function() {
+            currentPage = 1;
+            renderTable();
+        };
+
+        document.getElementById("filterGender").onchange = function() {
             currentPage = 1;
             renderTable();
         };
@@ -639,32 +1478,78 @@
 
         function tambahData() {
             let nama = document.getElementById("namaTambah").value;
+            let tempatlahir = document.getElementById("tempatLahirTambah").value;
+            let tanggalLahir = document.getElementById("tanggalLahirTambah").value;
             let email = document.getElementById("emailTambah").value;
+            let telepon = document.getElementById("teleponTambah").value;
             let gender = document.getElementById("genderTambah").value;
+            let status = document.getElementById("statusTambah").value;
             let department = document.getElementById("departmentTambah").value;
             let jabatan = document.getElementById("jabatanTambah").value;
-            let alamat = document.getElementById("alamatTambah").value;
             let ktp = document.getElementById("ktpTambah").value;
             let kta = document.getElementById("ktaTambah").value;
+            let npwp = document.getElementById("npwpTambah").value;
+            let bpjs = document.getElementById("bpjsTambah").value;
+            let bpjsTK = document.getElementById("bpjsTKTambah").value;
+            let rekening = document.getElementById("rekeningTambah").value;
+            let alamat = document.getElementById("alamatTambah").value;
+            let photo = document.getElementById("photoTambah").files[0];
 
-            if (!nama || !email || !gender || !department || !jabatan || !alamat || !ktp || !kta) {
-                alert("Wajib isi data!");
+            let photoBase64 = "";
+            if (photo) {
+                photoBase64 = URL.createObjectURL(photo);
+            }
+
+            if (
+                !nama || !tempatlahir || !tanggalLahir ||
+                !email || !telepon || !gender ||
+                !status || !department || !jabatan ||
+                !ktp || !npwp || !bpjs ||
+                !bpjsTK || !rekening || !alamat || !photo
+            ) {
+
+                document.getElementById("validasiText").innerHTML =
+                    "Semua data personel wajib diisi";
+
+                $('#modalValidasi').modal('show');
+
                 return;
             }
 
             data.push({
                 nama,
+                tempatlahir,
+                tanggalLahir,
                 email,
+                telepon,
                 gender,
+                status,
                 department,
                 jabatan,
-                alamat,
                 ktp,
-                kta,
+                npwp,
+                bpjs,
+                bpjsTK,
+                rekening,
+                alamat,
                 photo: photoBase64
             });
 
+            $('#modalTambah').modal('hide');
+
             renderTable();
+
+            // TITLE
+            document.getElementById("successTitle").innerHTML =
+                "Tambah Berhasil";
+
+            // TEXT
+            document.getElementById("successText").innerHTML = `
+    <strong>${nama}</strong> berhasil ditambahkan
+`;
+
+            // SHOW
+            $('#modalSuccess').modal('show');
         }
 
         function editData(index) {
@@ -673,13 +1558,51 @@
             document.getElementById("editIndex").value = index;
 
             document.getElementById("namaEdit").value = user.nama || "";
+            document.getElementById("tempatLahirEdit").value = user.tempatlahir || "";
+            document.getElementById("tanggalLahirEdit").value = user.tanggallahir || "";
+            // HITUNG UMUR SAAT EDIT
+            if (user.tanggallahir) {
+
+                const tanggalLahir = new Date(user.tanggallahir);
+                const today = new Date();
+
+                let umur = today.getFullYear() - tanggalLahir.getFullYear();
+
+                const bulan = today.getMonth() - tanggalLahir.getMonth();
+
+                if (
+                    bulan < 0 ||
+                    (
+                        bulan === 0 &&
+                        today.getDate() < tanggalLahir.getDate()
+                    )
+                ) {
+                    umur--;
+                }
+
+                document.getElementById("umurTextEdit").innerHTML =
+                    '<span class="material-icons align-middle mr-1" style="font-size:16px;">cake</span>' +
+                    'Umur saat ini <b>' + umur + ' Tahun</b>';
+
+            } else {
+
+                document.getElementById("umurTextEdit").innerHTML =
+                    'Umur akan muncul di sini';
+
+            }
             document.getElementById("emailEdit").value = user.email || "";
+            document.getElementById("teleponEdit").value = user.telepon || "";
             document.getElementById("genderEdit").value = user.gender || "";
+            document.getElementById("statusEdit").value = user.status || "";
             document.getElementById("departmentEdit").value = user.department || "";
             document.getElementById("jabatanEdit").value = user.jabatan || "";
-            document.getElementById("alamatEdit").value = user.alamat || "";
             document.getElementById("ktpEdit").value = user.ktp || "";
+            document.getElementById("npwpEdit").value = user.npwp || "";
+            document.getElementById("bpjsEdit").value = user.bpjs || "";
+            document.getElementById("bpjsTKEdit").value = user.bpjsTK || "";
+            document.getElementById("rekeningEdit").value = user.rekening || "";
             document.getElementById("ktaEdit").value = user.kta || "";
+            document.getElementById("alamatEdit").value = user.alamat || "";
 
             document.getElementById("previewPhotoEdit").src = user.photo || 'https://via.placeholder.com/100';
 
@@ -692,34 +1615,74 @@
             let index = document.getElementById("editIndex").value;
 
             let nama = document.getElementById("namaEdit").value;
+            let tempatlahir = document.getElementById("tempatLahirEdit").value;
+            let tanggalLahir = document.getElementById("tanggalLahirEdit").value;
             let email = document.getElementById("emailEdit").value;
+            let telepon = document.getElementById("teleponEdit").value;
             let gender = document.getElementById("genderEdit").value;
+            let status = document.getElementById("statusEdit").value;
             let department = document.getElementById("departmentEdit").value;
             let jabatan = document.getElementById("jabatanEdit").value;
-            let alamat = document.getElementById("alamatEdit").value;
             let ktp = document.getElementById("ktpEdit").value;
             let kta = document.getElementById("ktaEdit").value;
+            let npwp = document.getElementById("npwpEdit").value;
+            let bpjs = document.getElementById("bpjsEdit").value;
+            let bpjsTK = document.getElementById("bpjsTKEdit").value;
+            let rekening = document.getElementById("rekeningEdit").value;
+            let alamat = document.getElementById("alamatEdit").value;
 
-            if (!nama || !email || !gender || !department || !jabatan || !alamat || !ktp || !kta) {
-                alert("Data wajib diisi!");
+            if (
+                !nama || !tempatlahir || !tanggalLahir ||
+                !email || !telepon || !gender ||
+                !status || !department || !jabatan ||
+                !ktp || !npwp || !bpjs ||
+                !bpjsTK || !rekening || !alamat
+            ) {
+
+                document.getElementById("validasiText").innerHTML =
+                    "Data edit personel wajib diisi";
+
+                $('#modalValidasi').modal('show');
+
                 return;
             }
 
             data[index] = {
                 ...data[index],
                 nama,
+                tempatlahir,
+                tanggalLahir,
                 email,
+                telepon,
                 gender,
+                status,
                 department,
                 jabatan,
-                alamat,
                 ktp,
                 kta,
+                npwp,
+                bpjs,
+                bpjsTK,
+                rekening,
+                alamat,
                 photo: photoEditBase64 || data[index].photo
             };
 
             $('#modalEdit').modal('hide');
+
             renderTable();
+
+            // TITLE
+            document.getElementById("successTitle").innerHTML =
+                "Edit Berhasil";
+
+            // TEXT
+            document.getElementById("successText").innerHTML = `
+    <strong>${nama}</strong> berhasil di edit
+`;
+
+            // SHOW
+            $('#modalSuccess').modal('show');
         }
 
         function hapusData(index) {
@@ -791,38 +1754,47 @@
     </script>
 
     <script>
-        function togglePassword() {
-            let input = document.getElementById("passwordTambah");
-            input.type = input.type === "password" ? "text" : "password";
-        }
-    </script>
-
-    <script>
         function viewData(index) {
+
             $('#modalView').modal('show');
 
             document.getElementById("loadingView").style.display = "block";
             document.getElementById("contentView").style.display = "none";
 
-            setTimeout(() => {
-                let user = data[index];
+            let user = data[index];
 
-                document.getElementById("viewPhoto").src = user.photo || 'assets/images/avatars/foto-sushi-128246.jpg';
+            setTimeout(() => {
+
+                document.getElementById("viewPhoto").src =
+                    user.photo || 'assets/images/avatars/foto-sushi-128246.jpg';
+
                 document.getElementById("viewNama").innerText = user.nama;
+                document.getElementById("viewTempatlahir").innerText = user.tempatlahir || '-';
+                document.getElementById("viewTanggallahir").innerText = user.tanggalLahir || '-';
                 document.getElementById("viewEmail").innerText = user.email;
+                document.getElementById("viewTelp").innerText = user.telepon;
                 document.getElementById("viewDepartment").innerText = user.department || '-';
                 document.getElementById("viewJabatan").innerText = user.jabatan || '-';
                 document.getElementById("viewGender").innerText = user.gender || '-';
-                document.getElementById("viewAlamat").innerText = user.alamat || '-';
+                document.getElementById("viewStatus").innerText = user.status || '-';
                 document.getElementById("viewKtp").innerText = user.ktp || '-';
                 document.getElementById("viewKta").innerText = user.kta || '-';
+                document.getElementById("viewNpwp").innerText = user.npwp || '-';
+                document.getElementById("viewBpjs").innerText = user.bpjs || '-';
+                document.getElementById("viewBpjsTK").innerText = user.bpjsTK || '-';
+                document.getElementById("viewRekening").innerText = user.rekening || '-';
+                document.getElementById("viewAlamat").innerText = user.alamat || '-';
+
+                let cover = user.cover ||
+                    "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d";
+
+                document.querySelector(".profile-cover").style.backgroundImage =
+                    `url('${cover}')`;
 
                 document.getElementById("loadingView").style.display = "none";
                 document.getElementById("contentView").style.display = "block";
-            }, 600);
-            let cover = user.cover || "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d";
 
-            document.querySelector(".profile-cover").style.backgroundImage = `url('${cover}')`;
+            }, 600);
         }
     </script>
 
@@ -858,13 +1830,6 @@
     </script>
 
     <script>
-        function togglePasswordEdit() {
-            let input = document.getElementById("passwordEdit");
-            input.type = input.type === "password" ? "text" : "password";
-        }
-    </script>
-
-    <script>
         // TIDAK AUTO FILL SEARCH INPUT OLEH BROWSER
         document.addEventListener("DOMContentLoaded", function() {
             const input = document.getElementById("searchInput");
@@ -878,6 +1843,78 @@
             setTimeout(() => {
                 input.removeAttribute("readonly");
             }, 100);
+        });
+    </script>
+
+    <script>
+        $('#tanggalLahirTambah').on('change', function() {
+
+            const tanggalLahir = new Date($(this).val());
+
+            if (!$(this).val()) {
+
+                $('#umurText').html('Umur akan muncul di sini');
+                return;
+
+            }
+
+            const today = new Date();
+
+            let umur = today.getFullYear() - tanggalLahir.getFullYear();
+
+            const bulan = today.getMonth() - tanggalLahir.getMonth();
+
+            if (
+                bulan < 0 ||
+                (
+                    bulan === 0 &&
+                    today.getDate() < tanggalLahir.getDate()
+                )
+            ) {
+                umur--;
+            }
+
+            $('#umurText').html(
+                '<span class="material-icons align-middle mr-1" style="font-size:16px;">cake</span>' +
+                'Umur saat ini <b>' + umur + ' Tahun</b>'
+            );
+
+        });
+    </script>
+
+    <script>
+        $('#tanggalLahirEdit').on('change', function() {
+
+            const tanggalLahir = new Date($(this).val());
+
+            if (!$(this).val()) {
+
+                $('#umurTextEdit').html('Umur akan muncul di sini');
+                return;
+
+            }
+
+            const today = new Date();
+
+            let umur = today.getFullYear() - tanggalLahir.getFullYear();
+
+            const bulan = today.getMonth() - tanggalLahir.getMonth();
+
+            if (
+                bulan < 0 ||
+                (
+                    bulan === 0 &&
+                    today.getDate() < tanggalLahir.getDate()
+                )
+            ) {
+                umur--;
+            }
+
+            $('#umurTextEdit').html(
+                '<span class="material-icons align-middle mr-1" style="font-size:16px;">cake</span>' +
+                'Umur saat ini <b>' + umur + ' Tahun</b>'
+            );
+
         });
     </script>
 </body>

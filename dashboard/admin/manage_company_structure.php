@@ -262,6 +262,62 @@
     <?php include 'includes/drawer_menu.php'; ?>
     <!-- ********************************** //END MENU-drawer ********************************** -->
 
+    <!-- =========================
+    MODAL VALIDASI
+========================= -->
+
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0" style="border-radius:18px; overflow:hidden;">
+
+                <div class="modal-body text-center p-5">
+
+                    <!-- ICON -->
+                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
+                        style="
+                        width:90px;
+                        height:90px;
+                        border-radius:50%;
+                        background:#ecfdf3;
+                    ">
+
+                        <span class="material-icons"
+                            style="
+                            font-size:50px;
+                            color:#16a34a;
+                        ">
+                            check_circle
+                        </span>
+
+                    </div>
+
+                    <!-- TITLE -->
+                    <h4 class="font-weight-bold mb-2" id="modalTitle">
+                        Berhasil
+                    </h4>
+
+                    <!-- TEXT -->
+                    <p class="text-muted mb-4" id="modalText">
+                        Data berhasil disimpan
+                    </p>
+
+                    <!-- BUTTON -->
+                    <button type="button"
+                        class="btn btn-success px-4"
+                        data-dismiss="modal"
+                        style="
+                        border-radius:10px;
+                        min-width:120px;
+                        height:45px;
+                    ">
+                        Okay
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
@@ -779,7 +835,7 @@ id="nama-${start+i}" value="${d.nama}" disabled>
                 return;
             }
 
-            // SOCIAL (array)
+            // SOCIAL
             let socialData = socials.map(s => ({
                 name: s.name,
                 platform: s.platform
@@ -789,10 +845,10 @@ id="nama-${start+i}" value="${d.nama}" disabled>
             let imgPath = "assets/images/default.png";
 
             if (selectedFile) {
-                imgPath = URL.createObjectURL(selectedFile); // sementara (preview)
+                imgPath = URL.createObjectURL(selectedFile);
             }
 
-            // PUSH KE DATA
+            // PUSH DATA
             data.push({
                 dept,
                 jabatan,
@@ -804,8 +860,15 @@ id="nama-${start+i}" value="${d.nama}" disabled>
             // RESET
             resetForm();
 
-            // REFRESH TABLE
+            // REFRESH
             renderTable();
+
+            // MODAL TAMBAH
+            document.getElementById("modalTitle").innerText = "Tambah Berhasil";
+            document.getElementById("modalText").innerHTML =
+                `<b>${nama}</b> berhasil ditambahkan`;
+
+            $('#successModal').modal('show');
         }
     </script>
 
@@ -837,6 +900,7 @@ id="nama-${start+i}" value="${d.nama}" disabled>
 
         // toggle edit → simpan
         function toggleEdit(index) {
+
             let isEdit = document.getElementById(`nama-${index}`).disabled;
 
             let fields = [
@@ -858,22 +922,36 @@ id="nama-${start+i}" value="${d.nama}" disabled>
             let cancelBtn = document.getElementById(`cancelBtn-${index}`);
 
             if (isEdit) {
+
                 btn.innerText = "Simpan";
                 btn.style.background = "var(--primary)";
                 btn.style.color = "white";
+
                 cancelBtn.style.display = "inline-block";
+
             } else {
+
                 // SIMPAN DATA
                 data[index].dept = document.getElementById(`dept-${index}`).value;
                 data[index].jabatan = document.getElementById(`jabatan-${index}`).value;
                 data[index].nama = document.getElementById(`nama-${index}`).value;
 
+                let nama = data[index].nama;
+
                 btn.innerText = "Edit";
                 btn.style.background = "transparent";
                 btn.style.color = "var(--primary)";
+
                 cancelBtn.style.display = "none";
 
                 renderTable();
+
+                // MODAL EDIT
+                document.getElementById("modalTitle").innerText = "Edit Berhasil";
+                document.getElementById("modalText").innerHTML =
+                    `<b>${nama}</b> berhasil di edit`;
+
+                $('#successModal').modal('show');
             }
         }
 
