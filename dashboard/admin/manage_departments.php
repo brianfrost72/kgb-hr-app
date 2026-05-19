@@ -1,67 +1,289 @@
+<?php
+session_start();
+
+require_once __DIR__ . "/../koneksi.php";
+
+/*
+|--------------------------------------------------------------------------
+| TAMBAH DATA
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['tambah_department'])) {
+
+    $department_name = trim($_POST['department_name']);
+
+    if ($department_name != '') {
+
+        /*
+        |--------------------------------------------------------------------------
+        | CEK DUPLIKAT
+        |--------------------------------------------------------------------------
+        */
+
+        $check = mysqli_prepare($conn, "
+            SELECT id
+            FROM department
+            WHERE LOWER(TRIM(department_name)) = LOWER(TRIM(?))
+        ");
+
+        mysqli_stmt_bind_param(
+            $check,
+            "s",
+            $department_name
+        );
+
+        mysqli_stmt_execute($check);
+
+        $result = mysqli_stmt_get_result($check);
+
+        if (mysqli_num_rows($result) > 0) {
+
+            $_SESSION['error'] = "Nama departemen sudah digunakan.";
+
+            header("Location:manage_departments.php");
+            exit;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | INSERT DATA
+        |--------------------------------------------------------------------------
+        */
+
+        $stmt = mysqli_prepare($conn, "
+            INSERT INTO department (
+                department_name,
+                created_at
+            ) VALUES (?, NOW())
+        ");
+
+        mysqli_stmt_bind_param(
+            $stmt,
+            "s",
+            $department_name
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+
+            $_SESSION['success'] = "Departemen berhasil ditambahkan.";
+        } else {
+
+            $_SESSION['error'] = "Departemen gagal ditambahkan.";
+        }
+    } else {
+
+        $_SESSION['error'] = "Nama departemen wajib diisi.";
+    }
+
+    header("Location:manage_departments.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE DATA
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['update_department'])) {
+
+    $id = (int) $_POST['id'];
+    $department_name = trim($_POST['department_name']);
+
+    if ($id > 0 && $department_name != '') {
+
+        /*
+        |--------------------------------------------------------------------------
+        | CEK DUPLIKAT SAAT EDIT
+        |--------------------------------------------------------------------------
+        */
+
+        $check = mysqli_prepare($conn, "
+            SELECT id
+            FROM department
+            WHERE LOWER(TRIM(department_name)) = LOWER(TRIM(?))
+            AND id != ?
+        ");
+
+        mysqli_stmt_bind_param(
+            $check,
+            "si",
+            $department_name,
+            $id
+        );
+
+        mysqli_stmt_execute($check);
+
+        $result = mysqli_stmt_get_result($check);
+
+        if (mysqli_num_rows($result) > 0) {
+
+            $_SESSION['error'] = "Nama departemen sudah digunakan.";
+
+            header("Location:manage_departments.php");
+            exit;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE DATA
+        |--------------------------------------------------------------------------
+        */
+
+        $stmt = mysqli_prepare($conn, "
+            UPDATE department
+            SET department_name = ?
+            WHERE id = ?
+        ");
+
+        mysqli_stmt_bind_param(
+            $stmt,
+            "si",
+            $department_name,
+            $id
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+
+            $_SESSION['success'] = "Departemen berhasil diupdate.";
+        } else {
+
+            $_SESSION['error'] = "Departemen gagal diupdate.";
+        }
+    } else {
+
+        $_SESSION['error'] = "Data tidak valid.";
+    }
+
+    header("Location:manage_departments.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| HAPUS SINGLE
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['delete_single'])) {
+
+    $id = (int) $_POST['id'];
+
+    if ($id > 0) {
+
+        $delete = mysqli_query($conn, "
+            DELETE FROM department
+            WHERE id = '$id'
+        ");
+
+        if ($delete) {
+
+            $_SESSION['success'] = "Departemen berhasil dihapus.";
+        } else {
+
+            $_SESSION['error'] = "Departemen gagal dihapus.";
+        }
+    }
+
+    header("Location:manage_departments.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| HAPUS TERPILIH
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['delete_selected'])) {
+
+    if (!empty($_POST['selected_id'])) {
+
+        $ids = [];
+
+        foreach ($_POST['selected_id'] as $id) {
+
+            $ids[] = (int) $id;
+        }
+
+        $implode = implode(",", $ids);
+
+        $delete = mysqli_query($conn, "
+            DELETE FROM department
+            WHERE id IN ($implode)
+        ");
+
+        if ($delete) {
+
+            $_SESSION['success'] = "Data terpilih berhasil dihapus.";
+        } else {
+
+            $_SESSION['error'] = "Data terpilih gagal dihapus.";
+        }
+    } else {
+
+        $_SESSION['error'] = "Pilih data terlebih dahulu.";
+    }
+
+    header("Location:manage_departments.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| AMBIL DATA
+|--------------------------------------------------------------------------
+*/
+$departments = mysqli_query($conn, "
+    SELECT *
+    FROM department
+    ORDER BY id ASC
+");
+?>
+
 <!doctype html>
 <html lang="id">
 
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="" />
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Departemen - Dashboard | Konig Guard Bureau</title>
 
-    <!-- Prevent the demo from appearing in search engines -->
-    <meta name="robots" content="noindex" />
-
     <!-- Perfect Scrollbar -->
     <link
         type="text/css"
-        href="assets/vendor/perfect-scrollbar.css"
+        href="../assets/vendor/perfect-scrollbar.css"
         rel="stylesheet" />
 
     <!-- App CSS -->
-    <link type="text/css" href="assets/css/app.css" rel="stylesheet" />
-    <link type="text/css" href="assets/css/app.rtl.css" rel="stylesheet" />
+    <link type="text/css" href="../assets/css/app.css" rel="stylesheet" />
 
     <!-- Material Design Icons -->
     <link
         type="text/css"
-        href="assets/css/vendor-material-icons.css"
+        href="../assets/css/vendor-material-icons.css"
         rel="stylesheet" />
 
     <!-- Font Awesome FREE Icons -->
     <link
         type="text/css"
-        href="assets/css/vendor-fontawesome-free.css"
+        href="../assets/css/vendor-fontawesome-free.css"
         rel="stylesheet" />
-
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=UA-133433427-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag("js", new Date());
-        gtag("config", "UA-133433427-1");
-    </script>
 
     <!-- Flatpickr -->
     <link
         type="text/css"
-        href="assets/css/vendor-flatpickr.css"
+        href="../assets/css/vendor-flatpickr.css"
         rel="stylesheet" />
     <link
         type="text/css"
-        href="assets/css/vendor-flatpickr-airbnb.css"
+        href="../assets/css/vendor-flatpickr-airbnb.css"
         rel="stylesheet" />
 
     <!-- Vector Maps -->
     <link
         type="text/css"
-        href="assets/vendor/jqvmap/jqvmap.min.css"
+        href="../assets/vendor/jqvmap/jqvmap.min.css"
         rel="stylesheet" />
 </head>
 
@@ -98,6 +320,50 @@
             <!-- ********************************// START page__content //******************************* -->
             <div class="container-fluid page__container">
                 <div class="container mt-4">
+                    <?php if (isset($_SESSION['success'])) : ?>
+
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0">
+
+                            <i class="fa fa-check-circle mr-2"></i>
+
+                            <?= $_SESSION['success']; ?>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert">
+
+                                <span>&times;</span>
+
+                            </button>
+
+                        </div>
+
+                    <?php unset($_SESSION['success']);
+                    endif; ?>
+
+
+                    <?php if (isset($_SESSION['error'])) : ?>
+
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0">
+
+                            <i class="fa fa-times-circle mr-2"></i>
+
+                            <?= $_SESSION['error']; ?>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert">
+
+                                <span>&times;</span>
+
+                            </button>
+
+                        </div>
+
+                    <?php unset($_SESSION['error']);
+                    endif; ?>
                     <div class="card">
                         <div class="card-header d-flex justify-content-between">
                             <h4 class="card-title">Manage Departemen</h4>
@@ -120,26 +386,89 @@
                                 <input type="text" id="searchInput" class="form-control w-25" placeholder="Search...">
                             </div>
 
-                            <!-- TABLE -->
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover" id="dataTable">
-                                    <thead>
-                                        <tr>
-                                            <th><input type="checkbox" id="checkAll"></th>
-                                            <th>No</th>
-                                            <th>Nama Departemen</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBody"></tbody>
-                                </table>
-                            </div>
+                            <form method="POST">
+                                <!-- TABLE -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="dataTable">
+                                        <thead>
+                                            <tr>
+                                                <th><input type="checkbox" id="checkAll"></th>
+                                                <th>No</th>
+                                                <th>Nama Departemen</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
 
-                            <!-- PAGINATION -->
-                            <div class="d-flex justify-content-between mt-3">
-                                <button class="btn btn-danger" id="deleteSelected">Hapus Terpilih</button>
-                                <ul class="pagination" id="pagination"></ul>
-                            </div>
+                                            <?php if (mysqli_num_rows($departments) > 0): ?>
+
+                                                <?php $no = 1; ?>
+                                                <?php while ($row = mysqli_fetch_assoc($departments)): ?>
+
+                                                    <tr>
+
+                                                        <td>
+                                                            <input
+                                                                type="checkbox"
+                                                                name="selected_id[]"
+                                                                value="<?= $row['id']; ?>"
+                                                                class="rowCheck">
+                                                        </td>
+
+                                                        <td><?= $no++; ?></td>
+
+                                                        <td><?= htmlspecialchars($row['department_name']); ?></td>
+
+                                                        <td>
+
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-warning btn-sm"
+                                                                data-toggle="modal"
+                                                                data-target="#modalEdit<?= $row['id']; ?>">
+
+                                                                Edit
+
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-danger btn-sm"
+                                                                data-toggle="modal"
+                                                                data-target="#modalDelete<?= $row['id']; ?>">
+
+                                                                Hapus
+
+                                                            </button>
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                <?php endwhile; ?>
+
+                                            <?php else: ?>
+
+                                                <tr>
+                                                    <td colspan="4" class="text-center">
+                                                        Tidak ada data
+                                                    </td>
+                                                </tr>
+
+                                            <?php endif; ?>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- PAGINATION -->
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button type="submit"
+                                        name="delete_selected"
+                                        class="btn btn-danger">Hapus Terpilih</button>
+                                    <ul class="pagination" id="pagination"></ul>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -153,14 +482,7 @@
 
     <!-- App Settings FAB -->
     <div id="app-settings" style="display: none">
-        <app-settings
-            layout-active="fluid"
-            :layout-location="{
-      'default': 'index.html',
-      'fixed': 'fixed-dashboard.html',
-      'fluid': 'fluid-dashboard.html',
-      'mini': 'mini-dashboard.html'
-    }"></app-settings>
+        <app-settings layout-active="fluid"></app-settings>
     </div>
 
     <!-- ********************************** // MENU-Drawer ********************************** -->
@@ -168,154 +490,177 @@
     <!-- ********************************** //END MENU-drawer ********************************** -->
 
     <!-- ********************************** // MODAL ********************************** -->
-    <div class="modal fade" id="modalTambah">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Tambah Data</h5>
-                </div>
-                <div class="modal-body">
-                    <input type="text" id="departemenTambah" class="form-control mb-2" placeholder="Nama Departemen">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="tambahData()">Simpan</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <form method="POST">
 
-    <div class="modal fade" id="modalEdit">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Edit Data</h5>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="editIndex">
-                    <input type="text" id="departemenEdit" class="form-control mb-2" placeholder="Nama Departemen">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-success" onclick="updateData()">Update</button>
-                </div>
-            </div>
-        </div>
-    </div>
+        <div class="modal fade" id="modalTambah">
+            <div class="modal-dialog">
+                <div class="modal-content">
 
-    <!-- MODAL VALIDASI -->
-    <div class="modal fade" id="modalValidasi">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg"
-                style="
-                border-radius:22px;
-                overflow:hidden;
-            ">
+                    <div class="modal-header">
+                        <h5>Tambah Data</h5>
+                    </div>
 
-                <div class="modal-body text-center p-5">
+                    <div class="modal-body">
 
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#fff4e5;
-                    ">
+                        <div class="form-group mb-0">
 
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#ff9800;
-                        ">
-                            error_outline
-                        </span>
+                            <label>Nama Departemen</label>
+
+                            <input
+                                type="text"
+                                name="department_name"
+                                class="form-control"
+                                placeholder="Nama Departemen"
+                                required>
+
+                        </div>
 
                     </div>
 
-                    <h3 class="font-weight-bold mb-2">
-                        Validasi
-                    </h3>
+                    <div class="modal-footer">
 
-                    <p class="text-muted mb-4"
-                        id="validasiText">
+                        <button
+                            type="submit"
+                            name="tambah_department"
+                            class="btn btn-primary">
 
-                        Nama departemen wajib diisi
+                            Simpan
 
-                    </p>
-
-                    <button class="btn btn-warning px-4"
-                        data-dismiss="modal"
-                        style="
-                        border-radius:12px;
-                        height:45px;
-                        min-width:130px;
-                        color:white;
-                    ">
-                        Mengerti
-                    </button>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL SUKSES -->
-    <div class="modal fade" id="modalSuccess">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg"
-                style="
-                border-radius:22px;
-                overflow:hidden;
-            ">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:95px;
-                        height:95px;
-                        border-radius:50%;
-                        background:#eafaf1;
-                    ">
-
-                        <span class="material-icons"
-                            style="
-                            font-size:55px;
-                            color:#28a745;
-                        ">
-                            check_circle
-                        </span>
+                        </button>
 
                     </div>
 
-                    <h3 class="font-weight-bold mb-2"
-                        id="successTitle">
-
-                        Berhasil
-
-                    </h3>
-
-                    <p class="text-muted mb-4"
-                        id="successText">
-
-                        Data berhasil disimpan
-
-                    </p>
-
-                    <button class="btn btn-success px-4"
-                        data-dismiss="modal"
-                        style="
-                        border-radius:12px;
-                        height:45px;
-                        min-width:130px;
-                    ">
-                        OK
-                    </button>
-
                 </div>
             </div>
         </div>
-    </div>
+
+    </form>
+
+    <?php
+    mysqli_data_seek($departments, 0);
+    while ($row = mysqli_fetch_assoc($departments)):
+    ?>
+
+        <form method="POST">
+
+            <div class="modal fade" id="modalEdit<?= $row['id']; ?>">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5>Edit Data</h5>
+                        </div>
+
+                        <div class="modal-body">
+
+                            <input
+                                type="hidden"
+                                name="id"
+                                value="<?= $row['id']; ?>">
+
+                            <div class="form-group mb-0">
+
+                                <label>Nama Departemen</label>
+
+                                <input
+                                    type="text"
+                                    name="department_name"
+                                    class="form-control"
+                                    value="<?= htmlspecialchars($row['department_name']); ?>"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+                        <div class="modal-footer">
+
+                            <button
+                                type="submit"
+                                name="update_department"
+                                class="btn btn-success">
+
+                                Update
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </form>
+
+    <?php endwhile; ?>
+
+    <?php
+    mysqli_data_seek($departments, 0);
+    while ($row = mysqli_fetch_assoc($departments)):
+    ?>
+
+        <form method="POST">
+
+            <div class="modal fade" id="modalDelete<?= $row['id']; ?>">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5>Hapus Data</h5>
+                        </div>
+
+                        <div class="modal-body text-center">
+
+                            <input
+                                type="hidden"
+                                name="id"
+                                value="<?= $row['id']; ?>">
+
+                            <p class="mb-0">
+
+                                Yakin ingin menghapus
+                                <br>
+
+                                <strong>
+                                    <?= htmlspecialchars($row['department_name']); ?>
+                                </strong>
+
+                                ?
+
+                            </p>
+
+                        </div>
+
+                        <div class="modal-footer">
+
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-dismiss="modal">
+
+                                Batal
+
+                            </button>
+
+                            <button
+                                type="submit"
+                                name="delete_single"
+                                class="btn btn-danger">
+
+                                Hapus
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </form>
+
+    <?php endwhile; ?>
+
     <!-- ********************************** // MODAL ********************************** -->
 
     <footer class="dashboard-footer mt-4">
@@ -332,326 +677,82 @@
     </footer>
 
     <!-- jQuery -->
-    <script src="assets/vendor/jquery.min.js"></script>
+    <script src="../assets/vendor/jquery.min.js"></script>
 
     <!-- Bootstrap -->
-    <script src="assets/vendor/popper.min.js"></script>
-    <script src="assets/vendor/bootstrap.min.js"></script>
+    <script src="../assets/vendor/popper.min.js"></script>
+    <script src="../assets/vendor/bootstrap.min.js"></script>
 
     <!-- Perfect Scrollbar -->
-    <script src="assets/vendor/perfect-scrollbar.min.js"></script>
+    <script src="../assets/vendor/perfect-scrollbar.min.js"></script>
 
     <!-- DOM Factory -->
-    <script src="assets/vendor/dom-factory.js"></script>
+    <script src="../assets/vendor/dom-factory.js"></script>
+    <script src="../assets/js/pagination.js"></script>
 
     <!-- MDK -->
-    <script src="assets/vendor/material-design-kit.js"></script>
+    <script src="../assets/vendor/material-design-kit.js"></script>
 
     <!-- App -->
-    <script src="assets/js/toggle-check-all.js"></script>
-    <script src="assets/js/check-selected-row.js"></script>
-    <script src="assets/js/dropdown.js"></script>
-    <script src="assets/js/sidebar-mini.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="../assets/js/toggle-check-all.js"></script>
+    <script src="../assets/js/check-selected-row.js"></script>
+    <script src="../assets/js/dropdown.js"></script>
+    <script src="../assets/js/sidebar-mini.js"></script>
+    <script src="../assets/js/app.js"></script>
 
     <!-- App Settings (safe to remove) -->
-    <script src="assets/js/app-settings.js"></script>
+    <script src="../assets/js/app-settings.js"></script>
 
     <!-- Flatpickr -->
-    <script src="assets/vendor/flatpickr/flatpickr.min.js"></script>
-    <script src="assets/js/flatpickr.js"></script>
-
-    <!-- Global Settings -->
-    <script src="assets/js/settings.js"></script>
+    <script src="../assets/vendor/flatpickr/flatpickr.min.js"></script>
+    <script src="../assets/js/flatpickr.js"></script>
 
     <!-- Moment.js -->
-    <script src="assets/vendor/moment.min.js"></script>
-    <script src="assets/vendor/moment-range.js"></script>
-
-
-    <!-- Vector Maps -->
-    <script src="assets/vendor/jqvmap/jquery.vmap.min.js"></script>
-    <script src="assets/vendor/jqvmap/maps/jquery.vmap.world.js"></script>
-    <script src="assets/js/vector-maps.js"></script>
+    <script src="../assets/vendor/moment.min.js"></script>
+    <script src="../assets/vendor/moment-range.js"></script>
 
     <script>
-        let data = [{
-                nama: "HR"
-            },
-            {
-                nama: "Admin"
-            }
-        ];
+        $(document).ready(function() {
 
-        let currentPage = 1;
-        let rowsPerPage = 5;
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK ALL
+            |--------------------------------------------------------------------------
+            */
 
-        function renderTable() {
-            let tbody = document.getElementById("tableBody");
-            tbody.innerHTML = "";
+            $('#checkAll').on('click', function() {
 
-            let search = document.getElementById("searchInput").value.toLowerCase();
+                $('.rowCheck').prop(
+                    'checked',
+                    $(this).prop('checked')
+                );
 
-            let filtered = data.filter(d =>
-                d.nama.toLowerCase().includes(search)
-            );
-
-            let start = (currentPage - 1) * rowsPerPage;
-            let paginated = filtered.slice(start, start + rowsPerPage);
-
-            paginated.forEach((item, index) => {
-                tbody.innerHTML += `
-            <tr>
-                <td><input type="checkbox" class="rowCheck" data-index="${start + index}"></td>
-                <td>${start + index + 1}</td>
-                <td>${item.nama}</td>
-                <td>
-                    <button class="btn btn-warning btn-sm" onclick="editData(${start + index})">Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="hapusData(${start + index})">Hapus</button>
-                </td>
-            </tr>
-        `;
             });
 
-            renderPagination(filtered.length);
-        }
+            /*
+            |--------------------------------------------------------------------------
+            | JIKA SEMUA TERCENTANG
+            |--------------------------------------------------------------------------
+            */
 
-        function renderPagination(total) {
-            let pageCount = Math.ceil(total / rowsPerPage);
-            let pagination = document.getElementById("pagination");
-            pagination.innerHTML = "";
+            $('.rowCheck').on('click', function() {
 
-            if (pageCount <= 1) return;
+                if (
+                    $('.rowCheck:checked').length ==
+                    $('.rowCheck').length
+                ) {
 
-            // PREV BUTTON
-            pagination.innerHTML += `
-        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" onclick="changePage(${currentPage - 1})">Prev</a>
-        </li>
-    `;
+                    $('#checkAll').prop('checked', true);
 
-            let maxVisible = 5;
-            let start = Math.max(1, currentPage - 2);
-            let end = Math.min(pageCount, currentPage + 2);
+                } else {
 
-            // FIX kalau di awal
-            if (currentPage <= 3) {
-                start = 1;
-                end = Math.min(pageCount, maxVisible);
-            }
+                    $('#checkAll').prop('checked', false);
 
-            // FIX kalau di akhir
-            if (currentPage >= pageCount - 2) {
-                start = Math.max(1, pageCount - (maxVisible - 1));
-                end = pageCount;
-            }
-
-            // FIRST PAGE + DOTS
-            if (start > 1) {
-                pagination.innerHTML += `
-            <li class="page-item"><a class="page-link" onclick="changePage(1)">1</a></li>
-        `;
-                if (start > 2) {
-                    pagination.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
                 }
-            }
 
-            // PAGE NUMBERS
-            for (let i = start; i <= end; i++) {
-                pagination.innerHTML += `
-            <li class="page-item ${i === currentPage ? 'active' : ''}">
-                <a class="page-link" onclick="changePage(${i})">${i}</a>
-            </li>
-        `;
-            }
-
-            // LAST PAGE + DOTS
-            if (end < pageCount) {
-                if (end < pageCount - 1) {
-                    pagination.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                }
-                pagination.innerHTML += `
-            <li class="page-item"><a class="page-link" onclick="changePage(${pageCount})">${pageCount}</a></li>
-        `;
-            }
-
-            // NEXT BUTTON
-            pagination.innerHTML += `
-        <li class="page-item ${currentPage === pageCount ? 'disabled' : ''}">
-            <a class="page-link" onclick="changePage(${currentPage + 1})">Next</a>
-        </li>
-    `;
-        }
-
-        function changePage(page) {
-            currentPage = page;
-            renderTable();
-        }
-
-        function tambahData() {
-
-            let input = document.getElementById("departemenTambah");
-            let nama = input.value.trim();
-
-            // VALIDASI
-            if (nama === "") {
-
-                document.getElementById("validasiText").innerHTML =
-                    "Nama departemen wajib diisi";
-
-                $('#modalValidasi').modal('show');
-
-                input.focus();
-
-                return;
-            }
-
-            // DUPLIKAT
-            let exists = data.some(d =>
-                d.nama.toLowerCase() === nama.toLowerCase()
-            );
-
-            if (exists) {
-
-                document.getElementById("validasiText").innerHTML =
-                    `Departemen <strong>${nama}</strong> sudah tersedia`;
-
-                $('#modalValidasi').modal('show');
-
-                return;
-            }
-
-            // TAMBAH DATA
-            data.push({
-                nama
             });
 
-            // REFRESH TABLE
-            renderTable();
-
-            // CLOSE MODAL
-            $('#modalTambah').modal('hide');
-
-            // SUCCESS TITLE
-            document.getElementById("successTitle").innerHTML =
-                "Tambah Berhasil";
-
-            // SUCCESS TEXT
-            document.getElementById("successText").innerHTML = `
-        <strong>${nama}</strong> berhasil ditambahkan
-    `;
-
-            // SHOW MODAL
-            $('#modalSuccess').modal('show');
-
-            // RESET
-            input.value = "";
-
-            document.getElementById("checkAll").checked = false;
-        }
-
-        function editData(index) {
-            document.getElementById("editIndex").value = index;
-            document.getElementById("departemenEdit").value = data[index].nama;
-
-            $('#modalEdit').modal('show');
-        }
-
-        function updateData() {
-
-            let index = document.getElementById("editIndex").value;
-
-            let input = document.getElementById("departemenEdit");
-            let nama = input.value.trim();
-
-            // VALIDASI
-            if (nama === "") {
-
-                document.getElementById("validasiText").innerHTML =
-                    "Nama departemen edit wajib diisi";
-
-                $('#modalValidasi').modal('show');
-
-                input.focus();
-
-                return;
-            }
-
-            // DUPLIKAT
-            let exists = data.some((d, i) =>
-                i != index &&
-                d.nama.toLowerCase() === nama.toLowerCase()
-            );
-
-            if (exists) {
-
-                document.getElementById("validasiText").innerHTML =
-                    `Departemen <strong>${nama}</strong> sudah tersedia`;
-
-                $('#modalValidasi').modal('show');
-
-                return;
-            }
-
-            // UPDATE
-            data[index].nama = nama;
-
-            // REFRESH TABLE
-            renderTable();
-
-            // CLOSE
-            $('#modalEdit').modal('hide');
-
-            // TITLE
-            document.getElementById("successTitle").innerHTML =
-                "Edit Berhasil";
-
-            // TEXT
-            document.getElementById("successText").innerHTML = `
-        <strong>${nama}</strong> berhasil di edit
-    `;
-
-            // SHOW
-            $('#modalSuccess').modal('show');
-
-            document.getElementById("checkAll").checked = false;
-        }
-
-        function hapusData(index) {
-            if (confirm("Yakin hapus data ini?")) {
-                data.splice(index, 1);
-                renderTable();
-            }
-        }
-
-        document.getElementById("deleteSelected").onclick = function() {
-            let checks = document.querySelectorAll(".rowCheck:checked");
-
-            if (checks.length === 0) {
-                alert("Pilih data dulu!");
-                return;
-            }
-
-            if (confirm("Hapus data terpilih?")) {
-                let indexes = [...checks].map(c => c.dataset.index).sort((a, b) => b - a);
-                indexes.forEach(i => data.splice(i, 1));
-                renderTable();
-            }
-        };
-
-        document.getElementById("checkAll").onclick = function() {
-            document.querySelectorAll(".rowCheck").forEach(c => c.checked = this.checked);
-        };
-
-        document.getElementById("searchInput").onkeyup = renderTable;
-
-        document.getElementById("showEntries").onchange = function() {
-            rowsPerPage = parseInt(this.value);
-            currentPage = 1;
-            renderTable();
-        };
-
-        renderTable();
+        });
     </script>
 </body>
 

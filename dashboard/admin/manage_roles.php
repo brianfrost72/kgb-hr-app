@@ -1,3 +1,503 @@
+<?php
+session_start();
+
+require_once __DIR__ . "/../koneksi.php";
+
+/*
+|--------------------------------------------------------------------------
+| TAMBAH USER
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['tambah_user'])) {
+
+    $email          = trim($_POST['email']);
+    $password       = password_hash($_POST['password'], PASSWORD_DEFAULT);
+
+    $role_id        = (int) $_POST['role_id'];
+    $region_id      = (int) $_POST['region_id'];
+    $department_id  = (int) $_POST['department_id'];
+    $position_id    = (int) $_POST['position_id'];
+
+    $full_name      = trim($_POST['full_name']);
+    $phone_number   = trim($_POST['phone_number']);
+
+    if (
+        $email != '' &&
+        $_POST['password'] != '' &&
+        $role_id > 0 &&
+        $full_name != ''
+    ) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | CEK EMAIL DUPLIKAT
+        |--------------------------------------------------------------------------
+        */
+
+        $check = mysqli_query($conn, "
+            SELECT id
+            FROM users
+            WHERE email = '$email'
+        ");
+
+        if (mysqli_num_rows($check) > 0) {
+
+            $_SESSION['error'] = "Email sudah digunakan.";
+            header("Location:manage_roles.php");
+            exit;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPLOAD FOTO
+        |--------------------------------------------------------------------------
+        */
+
+        $photo_profile = 'default.png';
+
+        if (!empty($_FILES['photo_profile']['name'])) {
+
+            $file      = $_FILES['photo_profile'];
+
+            $tmp       = $file['tmp_name'];
+
+            $ext       = strtolower(
+                pathinfo($file['name'], PATHINFO_EXTENSION)
+            );
+
+            $allowed   = ['jpg', 'jpeg', 'png'];
+
+            if (!in_array($ext, $allowed)) {
+
+                $_SESSION['error'] =
+                    "Format foto harus JPG JPEG PNG";
+
+                header("Location:manage_roles.php");
+
+                exit;
+            }
+
+            // AUTO NAMA FILE DARI FULL NAME
+            $clean_name = strtolower($full_name);
+
+            $clean_name = preg_replace(
+                '/[^a-z0-9]/',
+                '_',
+                $clean_name
+            );
+
+            $clean_name = preg_replace(
+                '/_+/',
+                '_',
+                $clean_name
+            );
+
+            $photo_name =
+                $clean_name . '.' . $ext;
+
+            $upload_path =
+                "../assets/images/profile/users/" . $photo_name;
+
+            move_uploaded_file($tmp, $upload_path);
+
+            $photo_profile = $photo_name;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | INSERT USERS
+        |--------------------------------------------------------------------------
+        */
+
+        $insertUser = mysqli_query($conn, "
+            INSERT INTO users (
+                email,
+                password,
+                role_id,
+                region_id,
+                department_id,
+                position_id,
+                user_type,
+                created_at,
+                update_at
+            ) VALUES (
+                '$email',
+                '$password',
+                '$role_id',
+                '$region_id',
+                '$department_id',
+                '$position_id',
+                'internal',
+                NOW(),
+                NOW()
+            )
+        ");
+
+        if ($insertUser) {
+
+            $user_id = mysqli_insert_id($conn);
+
+            /*
+            |--------------------------------------------------------------------------
+            | INSERT USER PROFILE
+            |--------------------------------------------------------------------------
+            */
+
+            mysqli_query($conn, "
+                INSERT INTO user_profile (
+                    user_id,
+                    full_name,
+                    tempat_lahir,
+                    tanggal_lahir,
+                    jenis_kelamin,
+                    status_kawin,
+                    address,
+                    phone_number,
+                    ktp_number,
+                    npwp,
+                    bpjs_kesehatan,
+                    bpjstk,
+                    no_rekening,
+                    id_department,
+                    id_position,
+                    id_region,
+                    id_roles,
+                    photo_profile,
+                    status
+                ) VALUES (
+                    '$user_id',
+                    '" . mysqli_real_escape_string($conn, $_POST['full_name']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['tempat_lahir']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['tanggal_lahir']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['jenis_kelamin']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['status_kawin']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['address']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['phone_number']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['ktp_number']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['npwp']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['bpjs_kesehatan']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['bpjstk']) . "',
+                    '" . mysqli_real_escape_string($conn, $_POST['no_rekening']) . "',
+                    '$department_id',
+                    '$position_id',
+                    '$region_id',
+                    '$role_id',
+                    '$photo_profile',
+                    'active'
+                )
+            ");
+
+            $_SESSION['success'] = "User berhasil ditambahkan.";
+        } else {
+
+            $_SESSION['error'] = "User gagal ditambahkan.";
+        }
+    } else {
+
+        $_SESSION['error'] = "Field wajib belum lengkap.";
+    }
+
+    header("Location:manage_roles.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE USER
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['update_user'])) {
+
+    $id             = (int) $_POST['id'];
+    $profile_id     = (int) $_POST['profile_id'];
+
+    $email          = trim($_POST['email']);
+    $role_id        = (int) $_POST['role_id'];
+    $region_id      = (int) $_POST['region_id'];
+    $department_id  = (int) $_POST['department_id'];
+    $position_id    = (int) $_POST['position_id'];
+
+    $full_name      = trim($_POST['full_name']);
+
+    if ($id > 0 && $full_name != '') {
+
+        $password_sql = "";
+
+        if (!empty($_POST['password'])) {
+
+            $new_password = password_hash(
+                $_POST['password'],
+                PASSWORD_DEFAULT
+            );
+
+            $password_sql = ", password = '$new_password'";
+        }
+
+        /*
+|--------------------------------------------------------------------------
+| UPDATE FOTO
+|--------------------------------------------------------------------------
+*/
+
+        $photo_sql = '';
+        if (!empty($_FILES['photo_profile']['name'])) {
+
+            $file = $_FILES['photo_profile'];
+
+            $tmp  = $file['tmp_name'];
+
+            $ext  = strtolower(
+                pathinfo($file['name'], PATHINFO_EXTENSION)
+            );
+
+            $allowed = ['jpg', 'jpeg', 'png'];
+
+            if (in_array($ext, $allowed)) {
+
+                // HAPUS FOTO LAMA
+                $old = mysqli_query($conn, "
+            SELECT photo_profile
+            FROM user_profile
+            WHERE id = '$profile_id'
+        ");
+
+                $oldData = mysqli_fetch_assoc($old);
+
+                if (
+                    !empty($oldData['photo_profile']) &&
+                    $oldData['photo_profile'] != 'default.png'
+                ) {
+
+                    $oldPath =
+                        "../assets/images/profile/users/" .
+                        $oldData['photo_profile'];
+
+                    if (file_exists($oldPath)) {
+
+                        unlink($oldPath);
+                    }
+                }
+
+                // AUTO NAMA FILE
+                $clean_name = strtolower($full_name);
+
+                $clean_name = preg_replace(
+                    '/[^a-z0-9]/',
+                    '_',
+                    $clean_name
+                );
+
+                $clean_name = preg_replace(
+                    '/_+/',
+                    '_',
+                    $clean_name
+                );
+
+                $photo_name =
+                    $clean_name . '.' . $ext;
+
+                $upload_path =
+                    "../assets/images/profile/users/" .
+                    $photo_name;
+
+                move_uploaded_file($tmp, $upload_path);
+
+                $photo_sql =
+                    ", photo_profile = '$photo_name'";
+            }
+        }
+
+        mysqli_query($conn, "
+    UPDATE users
+    SET
+        email = '$email',
+        role_id = '$role_id',
+        region_id = '$region_id',
+        department_id = '$department_id',
+        position_id = '$position_id'
+        $password_sql,
+        update_at = NOW()
+    WHERE id = '$id'
+");
+
+        mysqli_query($conn, "
+            UPDATE user_profile
+            SET
+                full_name = '" . mysqli_real_escape_string($conn, $_POST['full_name']) . "',
+                tempat_lahir = '" . mysqli_real_escape_string($conn, $_POST['tempat_lahir']) . "',
+                tanggal_lahir = '" . mysqli_real_escape_string($conn, $_POST['tanggal_lahir']) . "',
+                jenis_kelamin = '" . mysqli_real_escape_string($conn, $_POST['jenis_kelamin']) . "',
+                status_kawin = '" . mysqli_real_escape_string($conn, $_POST['status_kawin']) . "',
+                address = '" . mysqli_real_escape_string($conn, $_POST['address']) . "',
+                phone_number = '" . mysqli_real_escape_string($conn, $_POST['phone_number']) . "',
+                ktp_number = '" . mysqli_real_escape_string($conn, $_POST['ktp_number']) . "',
+                npwp = '" . mysqli_real_escape_string($conn, $_POST['npwp']) . "',
+                bpjs_kesehatan = '" . mysqli_real_escape_string($conn, $_POST['bpjs_kesehatan']) . "',
+                bpjstk = '" . mysqli_real_escape_string($conn, $_POST['bpjstk']) . "',
+                no_rekening = '" . mysqli_real_escape_string($conn, $_POST['no_rekening']) . "',
+                id_department = '$department_id',
+                id_position = '$position_id',
+                id_region = '$region_id',
+                id_roles = '$role_id'
+$photo_sql
+WHERE id = '$profile_id'
+        ");
+
+        $_SESSION['success'] = "User berhasil diupdate.";
+    } else {
+
+        $_SESSION['error'] = "Data tidak valid.";
+    }
+
+    header("Location:manage_roles.php");
+    exit;
+}
+
+
+
+/*
+|--------------------------------------------------------------------------
+| DELETE SINGLE
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['delete_single'])) {
+
+    $id = (int) $_POST['id'];
+
+    $get = mysqli_query($conn, "
+        SELECT *
+        FROM user_profile
+        WHERE user_id = '$id'
+    ");
+
+    $profile = mysqli_fetch_assoc($get);
+
+    if (!empty($profile['photo_profile'])) {
+
+        $path = "../assets/images/profile/users/" . $profile['photo_profile'];
+
+        if (file_exists($path)) {
+
+            unlink($path);
+        }
+    }
+
+    mysqli_query($conn, "
+        DELETE FROM user_profile
+        WHERE user_id = '$id'
+    ");
+
+    mysqli_query($conn, "
+        DELETE FROM users
+        WHERE id = '$id'
+    ");
+
+    $_SESSION['success'] = "User berhasil dihapus.";
+
+    header("Location:manage_roles.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| DELETE SELECTED
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['delete_selected'])) {
+
+    if (!empty($_POST['selected_id'])) {
+
+        foreach ($_POST['selected_id'] as $id) {
+
+            $id = (int) $id;
+
+            mysqli_query($conn, "
+                DELETE FROM user_profile
+                WHERE user_id = '$id'
+            ");
+
+            mysqli_query($conn, "
+                DELETE FROM users
+                WHERE id = '$id'
+            ");
+        }
+
+        $_SESSION['success'] = "Data terpilih berhasil dihapus.";
+    } else {
+
+        $_SESSION['error'] = "Pilih data terlebih dahulu.";
+    }
+
+    header("Location:manage_roles.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| DATA USERS
+|--------------------------------------------------------------------------
+*/
+$users = mysqli_query($conn, "
+    SELECT
+        users.*,
+        user_profile.*,
+        user_profile.id AS profile_id,
+        roles.role_name,
+        department.department_name,
+        positions.position_name,
+        regions.region_name
+
+    FROM users
+
+    LEFT JOIN user_profile
+        ON user_profile.user_id = users.id
+
+    LEFT JOIN roles
+        ON roles.id = users.role_id
+
+    LEFT JOIN department
+        ON department.id = users.department_id
+
+    LEFT JOIN positions
+        ON positions.id = users.position_id
+
+    LEFT JOIN regions
+        ON regions.id = users.region_id
+
+    ORDER BY users.id ASC
+");
+
+/*
+|--------------------------------------------------------------------------
+| MASTER DATA SELECT
+|--------------------------------------------------------------------------
+*/
+$roles = mysqli_query($conn, "
+    SELECT *
+    FROM roles
+    ORDER BY role_name ASC
+");
+
+$departments = mysqli_query($conn, "
+    SELECT *
+    FROM department
+    ORDER BY department_name ASC
+");
+
+$positions = mysqli_query($conn, "
+    SELECT *
+    FROM positions
+    ORDER BY position_name ASC
+");
+
+$regions = mysqli_query($conn, "
+    SELECT *
+    FROM regions
+    ORDER BY region_name ASC
+");
+
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -9,59 +509,35 @@
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage User Role - Dashboard | Konig Guard Bureau</title>
 
-    <!-- Prevent the demo from appearing in search engines -->
-    <meta name="robots" content="noindex" />
-
     <!-- Perfect Scrollbar -->
     <link
         type="text/css"
-        href="assets/vendor/perfect-scrollbar.css"
+        href="../assets/vendor/perfect-scrollbar.css"
         rel="stylesheet" />
 
     <!-- App CSS -->
-    <link type="text/css" href="assets/css/app.css" rel="stylesheet" />
-    <link type="text/css" href="assets/css/app.rtl.css" rel="stylesheet" />
+    <link type="text/css" href="../assets/css/app.css" rel="stylesheet" />
 
     <!-- Material Design Icons -->
     <link
         type="text/css"
-        href="assets/css/vendor-material-icons.css"
+        href="../assets/css/vendor-material-icons.css"
         rel="stylesheet" />
 
     <!-- Font Awesome FREE Icons -->
     <link
         type="text/css"
-        href="assets/css/vendor-fontawesome-free.css"
+        href="../assets/css/vendor-fontawesome-free.css"
         rel="stylesheet" />
-
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=UA-133433427-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag("js", new Date());
-        gtag("config", "UA-133433427-1");
-    </script>
 
     <!-- Flatpickr -->
     <link
         type="text/css"
-        href="assets/css/vendor-flatpickr.css"
+        href="../assets/css/vendor-flatpickr.css"
         rel="stylesheet" />
     <link
         type="text/css"
-        href="assets/css/vendor-flatpickr-airbnb.css"
-        rel="stylesheet" />
-
-    <!-- Vector Maps -->
-    <link
-        type="text/css"
-        href="assets/vendor/jqvmap/jqvmap.min.css"
+        href="../assets/css/vendor-flatpickr-airbnb.css"
         rel="stylesheet" />
 </head>
 
@@ -98,6 +574,50 @@
             <!-- ********************************// START page__content //******************************* -->
             <div class="container-fluid page__container">
                 <div class="container mt-4">
+                    <?php if (isset($_SESSION['success'])) : ?>
+
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0">
+
+                            <i class="fa fa-check-circle mr-2"></i>
+
+                            <?= $_SESSION['success']; ?>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert">
+
+                                <span>&times;</span>
+
+                            </button>
+
+                        </div>
+
+                    <?php unset($_SESSION['success']);
+                    endif; ?>
+
+
+                    <?php if (isset($_SESSION['error'])) : ?>
+
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0">
+
+                            <i class="fa fa-times-circle mr-2"></i>
+
+                            <?= $_SESSION['error']; ?>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert">
+
+                                <span>&times;</span>
+
+                            </button>
+
+                        </div>
+
+                    <?php unset($_SESSION['error']);
+                    endif; ?>
                     <div class="card">
                         <div class="card-header d-flex justify-content-between">
                             <h4 class="card-title">Manage Roles</h4>
@@ -106,44 +626,229 @@
 
                         <div class="card-body">
                             <!-- FILTER -->
-                            <div class="d-flex justify-content-between mb-3">
-                                <div>
-                                    Show
-                                    <select id="showEntries" class="form-control d-inline w-auto">
-                                        <option>5</option>
-                                        <option>10</option>
-                                        <option>20</option>
-                                    </select>
-                                    entries
+                            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+
+                                <div class="d-flex align-items-center flex-wrap">
+
+                                    <!-- SHOW ENTRIES -->
+                                    <div class="mr-3 mb-2">
+
+                                        <label class="mr-2 mb-0">
+                                            Show
+                                        </label>
+
+                                        <select
+                                            id="showEntries"
+                                            class="form-control d-inline-block"
+                                            style="width:90px;">
+
+                                            <option value="5">5</option>
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="50">50</option>
+
+                                        </select>
+
+                                    </div>
+
+                                    <!-- FILTER ROLE -->
+                                    <div class="mr-3 mb-2">
+
+                                        <select
+                                            id="filterRole"
+                                            class="form-control">
+
+                                            <option value="">
+                                                Semua Roles
+                                            </option>
+
+                                            <?php
+                                            mysqli_data_seek($roles, 0);
+                                            while ($role = mysqli_fetch_assoc($roles)):
+                                            ?>
+
+                                                <option value="<?= strtolower($role['role_name']); ?>">
+
+                                                    <?= htmlspecialchars($role['role_name']); ?>
+
+                                                </option>
+
+                                            <?php endwhile; ?>
+
+                                        </select>
+
+                                    </div>
+
+                                    <!-- FILTER CABANG -->
+                                    <div class="mr-3 mb-2">
+
+                                        <select
+                                            id="filterCabang"
+                                            class="form-control">
+
+                                            <option value="">
+                                                Semua Cabang
+                                            </option>
+
+                                            <?php
+                                            mysqli_data_seek($regions, 0);
+                                            while ($region = mysqli_fetch_assoc($regions)):
+                                            ?>
+
+                                                <option value="<?= strtolower($region['region_name']); ?>">
+
+                                                    <?= htmlspecialchars($region['region_name']); ?>
+
+                                                </option>
+
+                                            <?php endwhile; ?>
+
+                                        </select>
+
+                                    </div>
+
                                 </div>
 
-                                <input type="text" id="searchInput" class="form-control w-25" placeholder="Search...">
+                                <!-- SEARCH -->
+                                <div class="mb-2">
+
+                                    <input
+                                        type="text"
+                                        id="searchInput"
+                                        class="form-control"
+                                        placeholder="Search..."
+                                        style="width:250px;">
+
+                                </div>
+
                             </div>
 
-                            <!-- TABLE -->
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover" id="dataTable">
-                                    <thead>
-                                        <tr>
-                                            <th><input type="checkbox" id="checkAll"></th>
-                                            <th>No</th>
-                                            <th>Role ID</th>
-                                            <th>Nama</th>
-                                            <th>Email</th>
-                                            <th>Roles</th>
-                                            <th>Cabang</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBody"></tbody>
-                                </table>
-                            </div>
+                            <form method="POST">
+                                <!-- TABLE -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="dataTable">
+                                        <thead>
+                                            <tr>
+                                                <th><input type="checkbox" id="checkAll"></th>
+                                                <th>No</th>
+                                                <th>Role ID</th>
+                                                <th>Nama</th>
+                                                <th>Email</th>
+                                                <th>Roles</th>
+                                                <th>Cabang</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
 
-                            <!-- PAGINATION -->
-                            <div class="d-flex justify-content-between mt-3">
-                                <button class="btn btn-danger" id="deleteSelected">Hapus Terpilih</button>
-                                <ul class="pagination" id="pagination"></ul>
-                            </div>
+                                            <?php $no = 1; ?>
+                                            <?php while ($row = mysqli_fetch_assoc($users)): ?>
+
+                                                <tr>
+
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            name="selected_id[]"
+                                                            value="<?= $row['id']; ?>"
+                                                            class="rowCheck">
+                                                    </td>
+
+                                                    <td><?= $no++; ?></td>
+
+                                                    <td>
+                                                        <?= date('y', strtotime($row['created_at'])) . sprintf('%03d', $row['id']); ?>
+                                                    </td>
+
+                                                    <td class="d-flex align-items-center">
+
+                                                        <img
+                                                            src="../assets/images/profile/users/<?= !empty($row['photo_profile'])
+                                                                                                    ? $row['photo_profile']
+                                                                                                    : 'default.png'; ?>"
+                                                            class="rounded-circle mr-2"
+                                                            width="40"
+                                                            height="40"
+                                                            style="object-fit:cover;">
+
+                                                        <?= htmlspecialchars($row['full_name']); ?>
+
+                                                    </td>
+
+                                                    <td><?= htmlspecialchars($row['email']); ?></td>
+
+                                                    <td><?= htmlspecialchars($row['role_name']); ?></td>
+
+                                                    <td><?= htmlspecialchars($row['region_name']); ?></td>
+
+                                                    <td>
+
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-info btn-sm"
+                                                            onclick='viewData(<?= json_encode([
+                                                                                    "photo" => !empty($row['photo_profile']) ? $row['photo_profile'] : 'default.png',
+                                                                                    "nama" => $row['full_name'],
+                                                                                    "role" => $row['role_name'],
+                                                                                    "tempat_lahir" => $row['tempat_lahir'],
+                                                                                    "tanggal_lahir" => $row['tanggal_lahir'],
+                                                                                    "telepon" => $row['phone_number'],
+                                                                                    "email" => $row['email'],
+                                                                                    "gender" => $row['jenis_kelamin'],
+                                                                                    "department" => $row['department_name'],
+                                                                                    "jabatan" => $row['position_name'],
+                                                                                    "npwp" => $row['npwp'],
+                                                                                    "bpjs" => $row['bpjs_kesehatan'],
+                                                                                    "bpjstk" => $row['bpjstk'],
+                                                                                    "rekening" => $row['no_rekening'],
+                                                                                    "alamat" => $row['address'],
+                                                                                    "cabang" => $row['region_name'],
+                                                                                    "ktp" => $row['ktp_number']
+                                                                                ]); ?>)'>
+
+                                                            <i class="material-icons">remove_red_eye</i>
+
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-warning btn-sm"
+                                                            data-toggle="modal"
+                                                            data-target="#modalEdit<?= $row['id']; ?>">
+
+                                                            <i class="material-icons">edit</i>
+
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-danger btn-sm"
+                                                            data-toggle="modal"
+                                                            data-target="#modalDelete<?= $row['id']; ?>">
+
+                                                            <i class="material-icons">delete</i>
+
+                                                        </button>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            <?php endwhile; ?>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- PAGINATION -->
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button
+                                        type="submit"
+                                        name="delete_selected"
+                                        class="btn btn-danger">Hapus Terpilih</button>
+                                    <ul class="pagination" id="pagination"></ul>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -156,740 +861,949 @@
 
     <!-- App Settings FAB -->
     <div id="app-settings" style="display: none">
-        <app-settings
-            layout-active="fluid"
-            :layout-location="{
-      'default': 'index.html',
-      'fixed': 'fixed-dashboard.html',
-      'fluid': 'fluid-dashboard.html',
-      'mini': 'mini-dashboard.html'
-    }"></app-settings>
+        <app-settings layout-active="fluid"></app-settings>
     </div>
 
     <!-- ********************************** // MENU-Drawer ********************************** -->
     <?php include 'includes/drawer_menu.php'; ?>
     <!-- ********************************** //END MENU-drawer ********************************** -->
 
-    <div class="modal fade" id="modalTambah">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Tambah User</h5>
-                </div>
+    <!-- BAGIAN INI DIAMBIL DARI TABEL USER_PROFILE, TABEL REGIONS (SELECT CABANG), ROLES (SELECT ROLE), DEPARTMENTS (SELECT DEPARTEMEN), POSITION (SELECT JABATAN) -->
+    <form method="POST" enctype="multipart/form-data">
+        <div class="modal fade" id="modalTambah">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>Tambah User</h5>
+                    </div>
 
-                <div class="modal-body row">
-                    <div class="col-md-6">
+                    <div class="modal-body row">
+                        <div class="col-md-6">
 
-                        <!-- NAMA -->
-                        <div class="form-group">
-                            <label>Nama Lengkap</label>
+                            <!-- NAMA -->
+                            <div class="form-group">
+                                <label>Nama Lengkap</label>
 
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">person</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="namaTambah"
-                                    class="form-control"
-                                    placeholder="Andy Lau">
-                            </div>
-                        </div>
-
-                        <!-- EMAIL -->
-                        <div class="form-group">
-                            <label>Email</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">email</span>
-                                    </span>
-                                </div>
-
-                                <input type="email"
-                                    id="emailTambah"
-                                    class="form-control"
-                                    placeholder="contoh@gmail.com">
-                            </div>
-                        </div>
-
-                        <!-- PASSWORD -->
-                        <div class="form-group">
-                            <label>Password</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">person</span>
-                                    </span>
-                                </div>
-
-                                <input type="password"
-                                    id="passwordTambah"
-                                    class="form-control"
-                                    placeholder="Password">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" onclick="togglePassword()"><span class="material-icons">remove_red_eye</span></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TEMPAT LAHIR -->
-                        <div class="form-group">
-                            <label>Tempat Lahir</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">location_city</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="tempatLahirTambah"
-                                    class="form-control"
-                                    placeholder="Jakarta">
-                            </div>
-                        </div>
-
-                        <!-- TANGGAL LAHIR -->
-                        <div class="form-group">
-
-                            <label>Tanggal Lahir</label>
-
-                            <div class="input-group">
-
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">
-                                            date_range
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">person</span>
                                         </span>
-                                    </span>
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        name="full_name"
+                                        class="form-control"
+                                        placeholder="Andy Lau">
                                 </div>
-
-                                <input type="date"
-                                    id="tanggalLahirTambah"
-                                    class="form-control">
-
                             </div>
 
-                            <!-- TEXT UMUR -->
-                            <small id="umurText"
-                                class="text-muted d-block mt-2"
-                                style="
-            font-size:13px;
+                            <!-- EMAIL -->
+                            <div class="form-group">
+                                <label>Email</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">email</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="email" name="email"
+                                        class="form-control"
+                                        placeholder="contoh@gmail.com">
+                                </div>
+                            </div>
+
+                            <!-- PASSWORD -->
+                            <div class="form-group">
+                                <label>Password</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">person</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="password" name="password"
+                                        id="passwordTambah"
+                                        class="form-control"
+                                        placeholder="Password">
+                                    <div class="input-group-append">
+                                        <button
+                                            type="button"
+                                            class="btn btn-outline-secondary"
+                                            onclick="togglePassword()"><span class="material-icons">remove_red_eye</span></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TEMPAT LAHIR -->
+                            <div class="form-group">
+                                <label>Tempat Lahir</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">location_city</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text" name="tempat_lahir"
+                                        class="form-control"
+                                        placeholder="Jakarta">
+                                </div>
+                            </div>
+
+                            <!-- TANGGAL LAHIR -->
+                            <div class="form-group">
+
+                                <label>Tanggal Lahir</label>
+
+                                <div class="input-group">
+
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">
+                                                date_range
+                                            </span>
+                                        </span>
+                                    </div>
+
+                                    <input type="date"
+                                        id="tanggalLahirTambah" name="tanggal_lahir"
+                                        class="form-control">
+
+                                </div>
+
+                                <!-- TEXT UMUR -->
+                                <small id="umurText"
+                                    class="text-muted d-block mt-2"
+                                    style="font-size:13px;
         ">
 
-                                Umur akan muncul di sini
+                                    Umur akan muncul di sini
 
-                            </small>
+                                </small>
 
-                        </div>
-
-                        <!-- TELEPON -->
-                        <div class="form-group">
-                            <label>No Telp / HP</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">call</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="teleponTambah"
-                                    class="form-control"
-                                    placeholder="081xxxxxxxx">
                             </div>
-                        </div>
 
-                        <!-- GENDER -->
-                        <div class="form-group">
-                            <label>Jenis Kelamin</label>
+                            <!-- TELEPON -->
+                            <div class="form-group">
+                                <label>No Telp / HP</label>
 
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">wc</span>
-                                    </span>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">call</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text" name="phone_number"
+                                        class="form-control"
+                                        placeholder="081xxxxxxxx">
                                 </div>
-
-                                <select id="genderTambah" class="form-control">
-                                    <option value="">Pilih Jenis Kelamin</option>
-                                    <option>Laki-laki</option>
-                                    <option>Perempuan</option>
-                                </select>
                             </div>
-                        </div>
 
-                        <!-- STATUS -->
-                        <div class="form-group">
-                            <label>Status Perkawinan</label>
+                            <!-- GENDER -->
+                            <div class="form-group">
+                                <label>Jenis Kelamin</label>
 
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">favorite</span>
-                                    </span>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">wc</span>
+                                        </span>
+                                    </div>
+
+                                    <select name="jenis_kelamin" class="form-control">
+                                        <option value="">Pilih Jenis Kelamin</option>
+                                        <option>Laki-laki</option>
+                                        <option>Perempuan</option>
+                                    </select>
                                 </div>
-
-                                <select id="statusTambah" class="form-control">
-                                    <option value="">Pilih Status</option>
-                                    <option>Belum Nikah</option>
-                                    <option>Menikah</option>
-                                </select>
                             </div>
-                        </div>
 
-                        <!-- ROLES -->
-                        <div class="form-group">
-                            <label>Role</label>
+                            <!-- STATUS -->
+                            <div class="form-group">
+                                <label>Status Perkawinan</label>
 
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">group</span>
-                                    </span>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">favorite</span>
+                                        </span>
+                                    </div>
+
+                                    <select name="status_kawin" class="form-control">
+                                        <option value="">Pilih Status</option>
+                                        <option>Belum Nikah</option>
+                                        <option>Menikah</option>
+                                    </select>
                                 </div>
-
-                                <select id="rolesTambah" class="form-control">
-                                    <option value="">Pilih Roles</option>
-                                    <option>Super Admin</option>
-                                    <option>Admin</option>
-                                    <option>User</option>
-                                </select>
                             </div>
+
+                            <!-- ROLES -->
+                            <div class="form-group">
+                                <label>Role</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">group</span>
+                                        </span>
+                                    </div>
+
+                                    <select name="role_id" class="form-control">
+                                        <option value="">Pilih Roles</option>
+                                        <?php
+                                        mysqli_data_seek($roles, 0);
+                                        while ($role = mysqli_fetch_assoc($roles)):
+                                        ?>
+
+                                            <option value="<?= $role['id']; ?>">
+
+                                                <?= htmlspecialchars($role['role_name']); ?>
+
+                                            </option>
+
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                            </div>
+
                         </div>
 
+                        <div class="col-md-6">
+
+                            <!-- DEPARTEMEN -->
+                            <div class="form-group">
+                                <label>Departemen</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">domain</span>
+                                        </span>
+                                    </div>
+
+                                    <select name="department_id" class="form-control">
+                                        <option value="">Pilih Departemen</option>
+                                        <?php
+                                        mysqli_data_seek($departments, 0);
+                                        while ($department = mysqli_fetch_assoc($departments)):
+                                        ?>
+
+                                            <option value="<?= $department['id']; ?>">
+
+                                                <?= htmlspecialchars($department['department_name']); ?>
+
+                                            </option>
+
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- JABATAN -->
+                            <div class="form-group">
+                                <label>Jabatan</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">work</span>
+                                        </span>
+                                    </div>
+
+                                    <select name="position_id" class="form-control mb-2">
+                                        <option value="">Pilih Jabatan</option>
+                                        <?php
+                                        mysqli_data_seek($positions, 0);
+                                        while ($position = mysqli_fetch_assoc($positions)):
+                                        ?>
+
+                                            <option value="<?= $position['id']; ?>">
+
+                                                <?= htmlspecialchars($position['position_name']); ?>
+
+                                            </option>
+
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- CABANG -->
+                            <div class="form-group">
+                                <label>Cabang</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">location_city</span>
+                                        </span>
+                                    </div>
+
+                                    <select name="region_id" class="form-control mb-2">
+                                        <option value="">Pilih Cabang</option>
+                                        <?php
+                                        mysqli_data_seek($regions, 0);
+                                        while ($region = mysqli_fetch_assoc($regions)):
+                                        ?>
+
+                                            <option value="<?= $region['id']; ?>">
+
+                                                <?= htmlspecialchars($region['region_name']); ?>
+
+                                            </option>
+
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- KTP -->
+                            <div class="form-group">
+                                <label>KTP</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text" name="ktp_number"
+                                        class="form-control"
+                                        placeholder="3216221235646354">
+                                </div>
+                            </div>
+
+                            <!-- NPWP -->
+                            <div class="form-group">
+                                <label>NPWP</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text" name="npwp"
+                                        class="form-control"
+                                        placeholder="3216221235646354">
+                                </div>
+                            </div>
+
+                            <!-- BPJS KESEHATAN -->
+                            <div class="form-group">
+                                <label>BPJS Kesehatan</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text" name="bpjs_kesehatan"
+                                        class="form-control"
+                                        placeholder="3216221235646354">
+                                </div>
+                            </div>
+
+                            <!-- BPJS TK -->
+                            <div class="form-group">
+                                <label>BPJS KetenagaKerjaan</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text" name="bpjstk"
+                                        class="form-control"
+                                        placeholder="3216221235646354">
+                                </div>
+                            </div>
+
+                            <!-- REKENING -->
+                            <div class="form-group">
+                                <label>Rekening (WAJIB BCA)</label>
+
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light">
+                                            <span class="material-icons">credit_card</span>
+                                        </span>
+                                    </div>
+
+                                    <input type="text" name="no_rekening"
+                                        class="form-control"
+                                        placeholder="3216221235646354">
+                                </div>
+                            </div>
+
+                            <textarea name="address" class="form-control mb-2" placeholder="Alamat"></textarea>
+
+                            <input
+                                type="file"
+                                id="photoTambah"
+                                name="photo_profile"
+                                class="form-control mb-2"
+                                accept=".jpg,.jpeg,.png">
+
+                            <img
+                                id="previewPhoto"
+                                class="rounded mt-2"
+                                style=" width:80px; height:80px; object-fit:cover; display:none;">
+                        </div>
                     </div>
 
-                    <div class="col-md-6">
-
-                        <!-- DEPARTEMEN -->
-                        <div class="form-group">
-                            <label>Departemen</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">domain</span>
-                                    </span>
-                                </div>
-
-                                <select id="departmentTambah" class="form-control">
-                                    <option value="">Pilih Departemen</option>
-                                    <option>HR</option>
-                                    <option>Admin</option>
-                                    <option>Akuntansi</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- JABATAN -->
-                        <div class="form-group">
-                            <label>Jabatan</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">work</span>
-                                    </span>
-                                </div>
-
-                                <select id="jabatanTambah" class="form-control mb-2">
-                                    <option value="">Pilih Jabatan</option>
-                                    <option>Manager</option>
-                                    <option>Supervisor</option>
-                                    <option>Staff</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- CABANG -->
-                        <div class="form-group">
-                            <label>Cabang</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">location_city</span>
-                                    </span>
-                                </div>
-
-                                <select id="cabangTambah" class="form-control mb-2">
-                                    <option value="">Pilih Cabang</option>
-                                    <option>Jakarta</option>
-                                    <option>Medan</option>
-                                    <option>Surabaya</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- KTP -->
-                        <div class="form-group">
-                            <label>KTP</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="ktpTambah"
-                                    class="form-control"
-                                    placeholder="3216221235646354">
-                            </div>
-                        </div>
-
-                        <!-- NPWP -->
-                        <div class="form-group">
-                            <label>NPWP</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="npwpTambah"
-                                    class="form-control"
-                                    placeholder="3216221235646354">
-                            </div>
-                        </div>
-
-                        <!-- BPJS KESEHATAN -->
-                        <div class="form-group">
-                            <label>BPJS Kesehatan</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="bpjsTambah"
-                                    class="form-control"
-                                    placeholder="3216221235646354">
-                            </div>
-                        </div>
-
-                        <!-- BPJS TK -->
-                        <div class="form-group">
-                            <label>BPJS KetenagaKerjaan</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="bpjstkTambah"
-                                    class="form-control"
-                                    placeholder="3216221235646354">
-                            </div>
-                        </div>
-
-                        <!-- REKENING -->
-                        <div class="form-group">
-                            <label>Rekening (WAJIB BCA)</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="rekeningTambah"
-                                    class="form-control"
-                                    placeholder="3216221235646354">
-                            </div>
-                        </div>
-
-                        <textarea id="alamatTambah" class="form-control mb-2" placeholder="Alamat"></textarea>
-
-                        <input type="file" id="photoTambah" class="form-control mb-2">
-
-                        <img id="previewPhoto" class="rounded mt-2" width="100">
+                    <div class="modal-footer">
+                        <button
+                            type="submit"
+                            name="tambah_user"
+                            class="btn btn-primary">Simpan</button>
                     </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="tambahData()">Simpan</button>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 
-    <div class="modal fade" id="modalEdit">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Edit User</h5>
-                </div>
 
-                <div class="modal-body row">
-                    <input type="hidden" id="editIndex">
+    <?php
+    mysqli_data_seek($users, 0);
+    while ($row = mysqli_fetch_assoc($users)):
+    ?>
 
-                    <div class="col-md-6">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="modal fade" id="modalEdit<?= $row['id']; ?>">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5>Edit User</h5>
+                        </div>
 
-                        <!-- NAMA -->
-                        <div class="form-group">
-                            <label>Nama Lengkap</label>
+                        <div class="modal-body row">
+                            <input
+                                type="hidden"
+                                name="id"
+                                value="<?= $row['id']; ?>">
 
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">person</span>
-                                    </span>
+                            <input
+                                type="hidden"
+                                name="profile_id"
+                                value="<?= $row['profile_id']; ?>">
+
+                            <div class="col-md-6">
+
+                                <!-- NAMA -->
+                                <div class="form-group">
+                                    <label>Nama Lengkap</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">person</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            name="full_name"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['full_name']); ?>">
+                                    </div>
                                 </div>
 
-                                <input type="text"
-                                    id="namaEdit"
-                                    class="form-control">
+                                <!-- EMAIL -->
+                                <div class="form-group">
+                                    <label>Email</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">email</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['email']); ?>">
+                                    </div>
+                                </div>
+
+                                <!-- PASSWORD -->
+                                <div class="form-group">
+                                    <label>Password</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">person</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="password"
+                                            id="passwordEdit<?= $row['id']; ?>"
+                                            name="password"
+                                            class="form-control"
+                                            placeholder="Kosongkan jika tidak diganti">
+                                        <div class="input-group-append">
+                                            <button
+                                                type="button"
+                                                class="btn btn-outline-secondary"
+                                                onclick="togglePasswordEdit(<?= $row['id']; ?>)"><span class="material-icons">remove_red_eye</span></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TEMPAT LAHIR -->
+                                <div class="form-group">
+                                    <label>Tempat Lahir</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">location_city</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            name="tempat_lahir"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['tempat_lahir']); ?>">
+                                    </div>
+                                </div>
+
+                                <!-- TANGGAL LAHIR -->
+                                <div class="form-group">
+
+                                    <label>Tanggal Lahir</label>
+
+                                    <div class="input-group">
+
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">
+                                                    date_range
+                                                </span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="date"
+                                            id="tanggalLahirEdit"
+                                            name="tanggal_lahir"
+                                            class="form-control"
+                                            value="<?= $row['tanggal_lahir']; ?>">
+
+                                    </div>
+
+                                    <!-- TEXT UMUR -->
+                                    <small id="umurTextEdit"
+                                        class="text-muted d-block mt-2"
+                                        style="font-size:13px;">
+
+                                        Umur akan muncul di sini
+
+                                    </small>
+
+                                </div>
+
+                                <!-- TELEPON -->
+                                <div class="form-group">
+                                    <label>No Telp / HP</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">call</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            name="phone_number"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['phone_number']); ?>">
+                                    </div>
+                                </div>
+
+                                <!-- GENDER -->
+                                <div class="form-group">
+                                    <label>Jenis Kelamin</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">wc</span>
+                                            </span>
+                                        </div>
+
+                                        <select
+                                            name="jenis_kelamin" id="genderEdit" class="form-control">
+                                            <option value="">Pilih Jenis Kelamin</option>
+                                            <<option
+                                                value="Laki-laki"
+                                                <?= ($row['jenis_kelamin'] == 'Laki-laki') ? 'selected' : ''; ?>>
+                                                Laki-laki
+                                                </option>
+                                                <option
+                                                    value="Perempuan"
+                                                    <?= ($row['jenis_kelamin'] == 'Perempuan') ? 'selected' : ''; ?>>
+                                                    Perempuan
+                                                </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- STATUS -->
+                                <div class="form-group">
+                                    <label>Status Perkawinan</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">favorite</span>
+                                            </span>
+                                        </div>
+
+                                        <select
+                                            name="status_kawin"
+                                            id="statusEdit" class="form-control">
+                                            <option value="">Pilih Status</option>
+                                            <option
+                                                value="Belum Menikah"
+                                                <?= ($row['status_kawin'] == 'Belum Menikah') ? 'selected' : ''; ?>>
+                                                Belum Nikah
+                                            </option>
+                                            <option
+                                                value="Menikah"
+                                                <?= ($row['status_kawin'] == 'Menikah') ? 'selected' : ''; ?>>
+                                                Menikah
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- ROLES -->
+                                <div class="form-group">
+                                    <label>Role</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">group</span>
+                                            </span>
+                                        </div>
+
+                                        <select
+                                            name="role_id"
+                                            class="form-control">
+
+                                            <?php
+                                            mysqli_data_seek($roles, 0);
+                                            while ($role = mysqli_fetch_assoc($roles)):
+                                            ?>
+
+                                                <option
+                                                    value="<?= $role['id']; ?>"
+                                                    <?= ($role['id'] == $row['role_id']) ? 'selected' : ''; ?>>
+
+                                                    <?= htmlspecialchars($role['role_name']); ?>
+
+                                                </option>
+
+                                            <?php endwhile; ?>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+
+                                <!-- DEPARTEMEN -->
+                                <div class="form-group">
+                                    <label>Departemen</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">domain</span>
+                                            </span>
+                                        </div>
+
+                                        <select
+                                            name="department_id"
+                                            class="form-control">
+
+                                            <?php
+                                            mysqli_data_seek($departments, 0);
+                                            while ($department = mysqli_fetch_assoc($departments)):
+                                            ?>
+
+                                                <option
+                                                    value="<?= $department['id']; ?>"
+                                                    <?= ($department['id'] == $row['department_id']) ? 'selected' : ''; ?>>
+
+                                                    <?= htmlspecialchars($department['department_name']); ?>
+
+                                                </option>
+
+                                            <?php endwhile; ?>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- JABATAN -->
+                                <div class="form-group">
+                                    <label>Jabatan</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">work</span>
+                                            </span>
+                                        </div>
+
+                                        <select
+                                            name="position_id"
+                                            class="form-control">
+
+                                            <?php
+                                            mysqli_data_seek($positions, 0);
+                                            while ($position = mysqli_fetch_assoc($positions)):
+                                            ?>
+
+                                                <option
+                                                    value="<?= $position['id']; ?>"
+                                                    <?= ($position['id'] == $row['position_id']) ? 'selected' : ''; ?>>
+
+                                                    <?= htmlspecialchars($position['position_name']); ?>
+
+                                                </option>
+
+                                            <?php endwhile; ?>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- CABANG -->
+                                <div class="form-group">
+                                    <label>Cabang</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">location_city</span>
+                                            </span>
+                                        </div>
+
+                                        <select
+                                            name="region_id"
+                                            class="form-control">
+
+                                            <?php
+                                            mysqli_data_seek($regions, 0);
+                                            while ($region = mysqli_fetch_assoc($regions)):
+                                            ?>
+
+                                                <option
+                                                    value="<?= $region['id']; ?>"
+                                                    <?= ($region['id'] == $row['region_id']) ? 'selected' : ''; ?>>
+
+                                                    <?= htmlspecialchars($region['region_name']); ?>
+
+                                                </option>
+
+                                            <?php endwhile; ?>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- KTP -->
+                                <div class="form-group">
+                                    <label>No. KTP</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">credit_card</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            name="ktp_number"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['ktp_number']); ?>">
+                                    </div>
+                                </div>
+
+                                <!-- NPWP -->
+                                <div class="form-group">
+                                    <label>No. NPWP</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">credit_card</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            name="npwp"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['npwp']); ?>">
+                                    </div>
+                                </div>
+
+                                <!-- BPJS KESEHATAN -->
+                                <div class="form-group">
+                                    <label>No. BPJS Kesehatan</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">credit_card</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            name="bpjs_kesehatan"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['bpjs_kesehatan']); ?>">
+                                    </div>
+                                </div>
+
+                                <!-- BPJS TK -->
+                                <div class="form-group">
+                                    <label>No. BPJSTK</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">credit_card</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            name="bpjstk"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['bpjstk']); ?>">
+                                    </div>
+                                </div>
+
+                                <!-- REKENING -->
+                                <div class="form-group">
+                                    <label>No. Rekening (BCA)</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">credit_card</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            name="no_rekening"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($row['no_rekening']); ?>">
+                                    </div>
+                                </div>
+
+                                <textarea
+                                    name="address"
+                                    id="alamatEdit"
+                                    class="form-control mb-2"><?= htmlspecialchars($row['address']); ?></textarea>
+
+                                <label class="mt-2">
+                                    Upload Gambar Baru
+                                </label>
+
+                                <input
+                                    type="file"
+                                    id="photoEdit<?= $row['id']; ?>"
+                                    name="photo_profile"
+                                    class="form-control mb-3"
+                                    accept=".jpg,.jpeg,.png">
+
+                                <div class="d-flex align-items-center mt-2">
+
+                                    <!-- FOTO AKTIF -->
+                                    <div class="mr-3 text-center">
+
+                                        <small class="d-block mb-1">
+                                            Foto Aktif
+                                        </small>
+
+                                        <img
+                                            src="../assets/images/profile/users/<?= !empty($row['photo_profile'])
+                                                                                    ? $row['photo_profile']
+                                                                                    : 'default.png'; ?>"
+                                            class="rounded border"
+                                            style="
+                width:80px;
+                height:80px;
+                object-fit:cover;
+            ">
+                                    </div>
+
+                                    <!-- FOTO UPDATE -->
+                                    <div class="text-center">
+
+                                        <small class="d-block mb-1">
+                                            Preview Baru
+                                        </small>
+
+                                        <img
+                                            id="previewPhotoEdit<?= $row['id']; ?>"
+                                            src="../assets/images/profile/users/default.png"
+                                            class="rounded border"
+                                            style="
+                width:80px;
+                height:80px;
+                object-fit:cover;
+            ">
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
 
-                        <!-- EMAIL -->
-                        <div class="form-group">
-                            <label>Email</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">email</span>
-                                    </span>
-                                </div>
-
-                                <input type="email"
-                                    id="emailEdit"
-                                    class="form-control">
-                            </div>
+                        <div class="modal-footer">
+                            <button
+                                type="submit"
+                                name="update_user"
+                                class="btn btn-success">Update</button>
                         </div>
-
-                        <!-- PASSWORD -->
-                        <div class="form-group">
-                            <label>Password</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">person</span>
-                                    </span>
-                                </div>
-
-                                <input type="password"
-                                    id="passwordEdit"
-                                    class="form-control">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" onclick="togglePasswordEdit()"><span class="material-icons">remove_red_eye</span></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TEMPAT LAHIR -->
-                        <div class="form-group">
-                            <label>Tempat Lahir</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">location_city</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="tempatLahirEdit"
-                                    class="form-control">
-                            </div>
-                        </div>
-
-                        <!-- TANGGAL LAHIR -->
-                        <div class="form-group">
-
-                            <label>Tanggal Lahir</label>
-
-                            <div class="input-group">
-
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">
-                                            date_range
-                                        </span>
-                                    </span>
-                                </div>
-
-                                <input type="date"
-                                    id="tanggalLahirEdit"
-                                    class="form-control">
-
-                            </div>
-
-                            <!-- TEXT UMUR -->
-                            <small id="umurTextEdit"
-                                class="text-muted d-block mt-2"
-                                style="
-            font-size:13px;
-        ">
-
-                                Umur akan muncul di sini
-
-                            </small>
-
-                        </div>
-
-                        <!-- TELEPON -->
-                        <div class="form-group">
-                            <label>No Telp / HP</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">call</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="teleponEdit"
-                                    class="form-control">
-                            </div>
-                        </div>
-
-                        <!-- GENDER -->
-                        <div class="form-group">
-                            <label>Jenis Kelamin</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">wc</span>
-                                    </span>
-                                </div>
-
-                                <select id="genderEdit" class="form-control">
-                                    <option value="">Pilih Jenis Kelamin</option>
-                                    <option>Laki-laki</option>
-                                    <option>Perempuan</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- STATUS -->
-                        <div class="form-group">
-                            <label>Status Perkawinan</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">favorite</span>
-                                    </span>
-                                </div>
-
-                                <select id="statusEdit" class="form-control">
-                                    <option value="">Pilih Status</option>
-                                    <option>Belum Nikah</option>
-                                    <option>Menikah</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- ROLES -->
-                        <div class="form-group">
-                            <label>Role</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">group</span>
-                                    </span>
-                                </div>
-
-                                <select id="rolesEdit" class="form-control">
-                                    <option value="">Pilih Roles</option>
-                                    <option>Super Admin</option>
-                                    <option>Admin</option>
-                                    <option>User</option>
-                                </select>
-                            </div>
-                        </div>
-
                     </div>
-
-                    <div class="col-md-6">
-
-
-                        <!-- DEPARTEMEN -->
-                        <div class="form-group">
-                            <label>Departemen</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">domain</span>
-                                    </span>
-                                </div>
-
-                                <select id="departmentEdit" class="form-control">
-                                    <option value="">Pilih Departemen</option>
-                                    <option>HR</option>
-                                    <option>Admin</option>
-                                    <option>Akuntansi</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- JABATAN -->
-                        <div class="form-group">
-                            <label>Jabatan</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">work</span>
-                                    </span>
-                                </div>
-
-                                <select id="jabatanEdit" class="form-control mb-2">
-                                    <option value="">Pilih Jabatan</option>
-                                    <option>Manager</option>
-                                    <option>Supervisor</option>
-                                    <option>Staff</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- CABANG -->
-                        <div class="form-group">
-                            <label>Cabang</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">location_city</span>
-                                    </span>
-                                </div>
-
-                                <select id="cabangEdit" class="form-control mb-2">
-                                    <option value="">Pilih Cabang</option>
-                                    <option>Jakarta</option>
-                                    <option>Medan</option>
-                                    <option>Surabaya</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- KTP -->
-                        <div class="form-group">
-                            <label>KTP</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="ktpEdit"
-                                    class="form-control">
-                            </div>
-                        </div>
-
-                        <!-- NPWP -->
-                        <div class="form-group">
-                            <label>NPWP</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="npwpEdit"
-                                    class="form-control">
-                            </div>
-                        </div>
-
-                        <!-- BPJS KESEHATAN -->
-                        <div class="form-group">
-                            <label>BPJS Kesehatan</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="bpjsEdit"
-                                    class="form-control">
-                            </div>
-                        </div>
-
-                        <!-- BPJS TK -->
-                        <div class="form-group">
-                            <label>BPJS KetenagaKerjaan</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="bpjstkEdit"
-                                    class="form-control">
-                            </div>
-                        </div>
-
-                        <!-- REKENING -->
-                        <div class="form-group">
-                            <label>Rekening (WAJIB BCA)</label>
-
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light">
-                                        <span class="material-icons">credit_card</span>
-                                    </span>
-                                </div>
-
-                                <input type="text"
-                                    id="rekeningEdit"
-                                    class="form-control">
-                            </div>
-                        </div>
-
-                        <textarea id="alamatEdit" class="form-control mb-2"></textarea>
-
-                        <input type="file" id="photoEdit" class="form-control mb-2">
-
-                        <img id="previewPhotoEdit" class="rounded mt-2" width="100">
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-success" onclick="updateData()">Update</button>
                 </div>
             </div>
-        </div>
-    </div>
+        </form>
+    <?php endwhile ?>
 
     <div class="modal fade" id="modalView">
         <div class="modal-dialog modal-md">
@@ -918,7 +1832,11 @@
 
                             <!-- NAME -->
                             <h4 id="viewNama" class="mt-2 mb-1"></h4>
-                            <span id="viewRoles" class="badge badge-pill badge-primary px-3 py-1"></span>
+
+                            <span
+                                id="viewRoles"
+                                class="badge badge-pill badge-primary px-3 py-1">
+                            </span>
 
                             <!-- INFO GRID -->
                             <div class="profile-grid mt-4">
@@ -959,11 +1877,6 @@
                                 </div>
 
                                 <div>
-                                    <small>Status</small>
-                                    <p id="viewStatus"></p>
-                                </div>
-
-                                <div>
                                     <small>NPWP</small>
                                     <p id="viewNpwp"></p>
                                 </div>
@@ -997,6 +1910,7 @@
                                     <small>No KTP</small>
                                     <p id="viewKtp"></p>
                                 </div>
+
                             </div>
 
                         </div>
@@ -1009,118 +1923,72 @@
         </div>
     </div>
 
-    <!-- MODAL SUKSES -->
-    <div class="modal fade" id="modalSuccess">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg"
-                style="border-radius:22px; overflow:hidden;">
+    <?php
+    mysqli_data_seek($users, 0);
+    while ($row = mysqli_fetch_assoc($users)):
+    ?>
 
-                <div class="modal-body text-center p-5">
+        <form method="POST">
 
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:95px;
-                        height:95px;
-                        border-radius:50%;
-                        background:#eafaf1;
-                    ">
+            <div class="modal fade" id="modalDelete<?= $row['id']; ?>">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
 
-                        <span class="material-icons"
-                            style="
-                            font-size:55px;
-                            color:#28a745;
-                        ">
-                            check_circle
-                        </span>
+                        <div class="modal-header">
+                            <h5>Hapus User</h5>
+                        </div>
 
-                    </div>
+                        <div class="modal-body text-center">
 
-                    <!-- TITLE -->
-                    <h3 class="font-weight-bold mb-2">
-                        User Berhasil Ditambahkan
-                    </h3>
+                            <input
+                                type="hidden"
+                                name="id"
+                                value="<?= $row['id']; ?>">
 
-                    <!-- TEXT -->
-                    <p class="text-muted mb-4" id="successText">
-                        Nama dan role user berhasil ditambahkan
-                    </p>
+                            <p>
 
-                    <!-- BUTTON -->
-                    <button class="btn btn-success px-4"
-                        data-dismiss="modal"
-                        style="
-                        border-radius:12px;
-                        height:45px;
-                        min-width:130px;
-                    ">
-                        OK
-                    </button>
+                                Yakin ingin menghapus
+                                <br>
 
-                </div>
+                                <strong>
+                                    <?= htmlspecialchars($row['full_name']); ?>
+                                </strong>
 
-            </div>
-        </div>
-    </div>
+                                ?
 
-    <!-- MODAL VALIDASI EDIT -->
-    <div class="modal fade" id="modalEditSuccess">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg"
-                style="
-                border-radius:22px;
-                overflow:hidden;
-            ">
+                            </p>
 
-                <div class="modal-body text-center p-5">
+                        </div>
 
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:95px;
-                        height:95px;
-                        border-radius:50%;
-                        background:#eafaf1;
-                    ">
+                        <div class="modal-footer">
 
-                        <span class="material-icons"
-                            style="
-                            font-size:55px;
-                            color:#28a745;
-                        ">
-                            check_circle
-                        </span>
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-dismiss="modal">
+
+                                Batal
+
+                            </button>
+
+                            <button
+                                type="submit"
+                                name="delete_single"
+                                class="btn btn-danger">
+
+                                Hapus
+
+                            </button>
+
+                        </div>
 
                     </div>
-
-                    <!-- TITLE -->
-                    <h3 class="font-weight-bold mb-2">
-                        Edit Berhasil
-                    </h3>
-
-                    <!-- TEXT -->
-                    <p class="text-muted mb-4"
-                        id="editSuccessText">
-
-                        Steven berhasil di edit
-
-                    </p>
-
-                    <!-- BUTTON -->
-                    <button class="btn btn-success px-4"
-                        data-dismiss="modal"
-                        style="
-                        border-radius:12px;
-                        height:45px;
-                        min-width:130px;
-                    ">
-                        OK
-                    </button>
-
                 </div>
             </div>
-        </div>
-    </div>
+
+        </form>
+
+    <?php endwhile; ?>
 
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
@@ -1136,685 +2004,458 @@
     </footer>
 
     <!-- jQuery -->
-    <script src="assets/vendor/jquery.min.js"></script>
+    <script src="../assets/vendor/jquery.min.js"></script>
 
     <!-- Bootstrap -->
-    <script src="assets/vendor/popper.min.js"></script>
-    <script src="assets/vendor/bootstrap.min.js"></script>
+    <script src="../assets/vendor/popper.min.js"></script>
+    <script src="../assets/vendor/bootstrap.min.js"></script>
 
     <!-- Perfect Scrollbar -->
-    <script src="assets/vendor/perfect-scrollbar.min.js"></script>
+    <script src="../assets/vendor/perfect-scrollbar.min.js"></script>
 
     <!-- DOM Factory -->
-    <script src="assets/vendor/dom-factory.js"></script>
+    <script src="../assets/vendor/dom-factory.js"></script>
+    <script src="../assets/js/pagination.js"></script>
 
     <!-- MDK -->
-    <script src="assets/vendor/material-design-kit.js"></script>
+    <script src="../assets/vendor/material-design-kit.js"></script>
 
     <!-- App -->
-    <script src="assets/js/toggle-check-all.js"></script>
-    <script src="assets/js/check-selected-row.js"></script>
-    <script src="assets/js/dropdown.js"></script>
-    <script src="assets/js/sidebar-mini.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="../assets/js/toggle-check-all.js"></script>
+    <script src="../assets/js/check-selected-row.js"></script>
+    <script src="../assets/js/dropdown.js"></script>
+    <script src="../assets/js/sidebar-mini.js"></script>
+    <script src="../assets/js/app.js"></script>
 
     <!-- App Settings (safe to remove) -->
-    <script src="assets/js/app-settings.js"></script>
+    <script src="../assets/js/app-settings.js"></script>
 
     <!-- Flatpickr -->
-    <script src="assets/vendor/flatpickr/flatpickr.min.js"></script>
+    <script src="../assets/vendor/flatpickr/flatpickr.min.js"></script>
     <script src="assets/js/flatpickr.js"></script>
 
     <!-- Global Settings -->
-    <script src="assets/js/settings.js"></script>
+    <script src="../assets/js/settings.js"></script>
 
     <!-- Moment.js -->
-    <script src="assets/vendor/moment.min.js"></script>
-    <script src="assets/vendor/moment-range.js"></script>
-
-
-    <!-- Vector Maps -->
-    <script src="assets/vendor/jqvmap/jquery.vmap.min.js"></script>
-    <script src="assets/vendor/jqvmap/maps/jquery.vmap.world.js"></script>
-    <script src="assets/js/vector-maps.js"></script>
+    <script src="../assets/vendor/moment.min.js"></script>
+    <script src="../assets/vendor/moment-range.js"></script>
 
     <script>
-        let data = [{
-                roleID: 1702261,
-                nama: "Brian",
-                email: "brian@mail.com",
-                tempatLahir: "Jakarta",
-                tanggalLahir: "01-01-1990",
-                telepon: "08123456789",
-                gender: "Laki-laki",
-                status: "Menikah",
-                roles: "Super Admin",
-                department: "HR",
-                jabatan: "Admin",
-                cabang: "Jakarta",
-                ktp: "1234567890123456",
-                npwp: "1234567890",
-                bpjs: "1234567890",
-                bpjsTK: "1234567890",
-                rekening: "1234567890",
-                alamat: "Jakarta"
-            },
-            {
-                roleID: 1702262,
-                nama: "Steven",
-                email: "steven@mail.com",
-                tempatLahir: "Bandung",
-                tanggalLahir: "01-01-1990",
-                telepon: "08123456789",
-                gender: "Laki-laki",
-                status: "Belum Menikah",
-                roles: "Admin",
-                department: "IT",
-                jabatan: "HR",
-                cabang: "Bandung",
-                ktp: "1234567890123456",
-                npwp: "1234567890",
-                bpjs: "1234567890",
-                bpjsTK: "1234567890",
-                rekening: "1234567890",
-                alamat: "Bandung"
-            }
-        ];
+        // ====================================== TAMBAH FOTO PROFILE =======================================
 
-        let currentPage = 1;
-        let rowsPerPage = 5;
-
-        function renderTable() {
-            let tbody = document.getElementById("tableBody");
-            tbody.innerHTML = "";
-
-            let search = document.getElementById("searchInput").value.toLowerCase();
-
-            let filtered = data.filter(d =>
-                d.nama.toLowerCase().includes(search) ||
-                d.email.toLowerCase().includes(search) ||
-                d.cabang.toLowerCase().includes(search)
-            );
-
-            let start = (currentPage - 1) * rowsPerPage;
-            let paginated = filtered.slice(start, start + rowsPerPage);
-
-            paginated.forEach((item, index) => {
-                tbody.innerHTML += `
-<tr>
-    <td><input type="checkbox" class="rowCheck" data-index="${start + index}"></td>
-    <td>${start + index + 1}</td>
-
-    <td>${item.roleID}</td>
-
-    <td class="d-flex align-items-center">
-        <img src="${item.photo || 'assets/images/avatars/foto-sushi-128246.jpg'}" alt="Photo"
-             class="rounded-circle mr-2" width="40" height="40"
-             style="object-fit:cover;">
-        ${item.nama}
-    </td>
-
-    <td>${item.email}</td>
-    <td>${item.roles}</td>
-    <td>${item.cabang}</td>
-
-    <td>
-        <button class="btn btn-info btn-sm" onclick="viewData(${start + index})">
-            <i class="material-icons">remove_red_eye</i>
-        </button>
-        <button class="btn btn-warning btn-sm" onclick="editData(${start + index})">
-            <i class="material-icons">edit</i>
-        </button>
-        <button class="btn btn-danger btn-sm" onclick="hapusData(${start + index})">
-            <i class="material-icons">delete</i>
-        </button>
-    </td>
-</tr>
-`;
-            });
-
-            renderPagination(filtered.length);
-        }
-
-        function renderPagination(total) {
-            let pageCount = Math.ceil(total / rowsPerPage);
-            let pagination = document.getElementById("pagination");
-            pagination.innerHTML = "";
-
-            if (pageCount <= 1) return;
-
-            // PREV BUTTON
-            pagination.innerHTML += `
-        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" onclick="changePage(${currentPage - 1})">Prev</a>
-        </li>
-    `;
-
-            let maxVisible = 5;
-            let start = Math.max(1, currentPage - 2);
-            let end = Math.min(pageCount, currentPage + 2);
-
-            // FIX kalau di awal
-            if (currentPage <= 3) {
-                start = 1;
-                end = Math.min(pageCount, maxVisible);
-            }
-
-            // FIX kalau di akhir
-            if (currentPage >= pageCount - 2) {
-                start = Math.max(1, pageCount - (maxVisible - 1));
-                end = pageCount;
-            }
-
-            // FIRST PAGE + DOTS
-            if (start > 1) {
-                pagination.innerHTML += `
-            <li class="page-item"><a class="page-link" onclick="changePage(1)">1</a></li>
-        `;
-                if (start > 2) {
-                    pagination.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                }
-            }
-
-            // PAGE NUMBERS
-            for (let i = start; i <= end; i++) {
-                pagination.innerHTML += `
-            <li class="page-item ${i === currentPage ? 'active' : ''}">
-                <a class="page-link" onclick="changePage(${i})">${i}</a>
-            </li>
-        `;
-            }
-
-            // LAST PAGE + DOTS
-            if (end < pageCount) {
-                if (end < pageCount - 1) {
-                    pagination.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                }
-                pagination.innerHTML += `
-            <li class="page-item"><a class="page-link" onclick="changePage(${pageCount})">${pageCount}</a></li>
-        `;
-            }
-
-            // NEXT BUTTON
-            pagination.innerHTML += `
-        <li class="page-item ${currentPage === pageCount ? 'disabled' : ''}">
-            <a class="page-link" onclick="changePage(${currentPage + 1})">Next</a>
-        </li>
-    `;
-        }
-
-        function changePage(page) {
-            currentPage = page;
-            renderTable();
-        }
-
-        function tambahData() {
-
-            let nama = document.getElementById("namaTambah").value;
-            let tempatlahir = document.getElementById("tempatLahirTambah").value;
-            let tanggalLahir = document.getElementById("tanggalLahirTambah").value;
-            let telepon = document.getElementById("teleponTambah").value;
-            let email = document.getElementById("emailTambah").value;
-            let password = document.getElementById("passwordTambah").value;
-            let gender = document.getElementById("genderTambah").value;
-            let status = document.getElementById("statusTambah").value;
-            let jabatan = document.getElementById("jabatanTambah").value;
-            let roles = document.getElementById("rolesTambah").value;
-            let department = document.getElementById("departmentTambah").value;
-            let alamat = document.getElementById("alamatTambah").value;
-            let cabang = document.getElementById("cabangTambah").value;
-            let ktp = document.getElementById("ktpTambah").value;
-            let npwp = document.getElementById("npwpTambah").value;
-            let bpjs = document.getElementById("bpjsTambah").value;
-            let bpjstk = document.getElementById("bpjstkTambah").value;
-            let rekening = document.getElementById("rekeningTambah").value;
-            let photo = document.getElementById("photoTambah").files[0];
-
-            // VALIDASI
-            if (
-                !nama || !tempatlahir || !tanggalLahir ||
-                !telepon || !email || !password ||
-                !gender || !status || !jabatan ||
-                !roles || !department || !alamat ||
-                !cabang || !ktp || !npwp ||
-                !bpjs || !bpjstk || !rekening || !photo
-            ) {
-                alert("Wajib isi data!");
-                return;
-            }
-
-            // GENERATE ROLE ID
-            let roleId = "RL-" + Math.floor(Math.random() * 999999);
-
-            // PUSH DATA
-            data.push({
-                roleId,
-                nama,
-                tempatlahir,
-                tanggalLahir,
-                telepon,
-                email,
-                password,
-                gender,
-                status,
-                roles,
-                department,
-                jabatan,
-                npwp,
-                bpjs,
-                bpjstk,
-                rekening,
-                alamat,
-                cabang,
-                ktp,
-                photo: photoBase64
-            });
-
-            // RENDER TABLE
-            renderTable();
-
-            // CLOSE MODAL TAMBAH
-            $('#modalTambah').modal('hide');
-
-            // TEXT SUCCESS
-            document.getElementById("successText").innerHTML = `
-        <strong>${nama}</strong> berhasil ditambahkan sebagai
-        <strong>${roles}</strong>
-    `;
-
-            // SHOW SUCCESS MODAL
-            $('#modalSuccess').modal('show');
-
-            // RESET FORM
-            document.getElementById("namaTambah").value = "";
-            document.getElementById("tempatLahirTambah").value = "";
-            document.getElementById("tanggalLahirTambah").value = "";
-            document.getElementById("teleponTambah").value = "";
-            document.getElementById("emailTambah").value = "";
-            document.getElementById("passwordTambah").value = "";
-            document.getElementById("genderTambah").value = "";
-            document.getElementById("statusTambah").value = "";
-            document.getElementById("jabatanTambah").value = "";
-            document.getElementById("rolesTambah").value = "";
-            document.getElementById("departmentTambah").value = "";
-            document.getElementById("alamatTambah").value = "";
-            document.getElementById("cabangTambah").value = "";
-            document.getElementById("ktpTambah").value = "";
-            document.getElementById("npwpTambah").value = "";
-            document.getElementById("bpjsTambah").value = "";
-            document.getElementById("bpjstkTambah").value = "";
-            document.getElementById("rekeningTambah").value = "";
-            document.getElementById("photoTambah").value = "";
-
-            // RESET PREVIEW
-            document.getElementById("previewPhoto").src = "";
-
-            // RESET BASE64
-            photoBase64 = "";
-        }
-
-        function editData(index) {
-            let user = data[index];
-
-            document.getElementById("editIndex").value = index;
-
-            document.getElementById("namaEdit").value = user.nama;
-            document.getElementById("tempatLahirEdit").value = user.tempatlahir;
-            document.getElementById("tanggalLahirEdit").value = user.tanggalLahir;
-            // HITUNG UMUR SAAT EDIT
-            if (user.tanggallahir) {
-
-                const tanggalLahir = new Date(user.tanggallahir);
-                const today = new Date();
-
-                let umur = today.getFullYear() - tanggalLahir.getFullYear();
-
-                const bulan = today.getMonth() - tanggalLahir.getMonth();
-
-                if (
-                    bulan < 0 ||
-                    (
-                        bulan === 0 &&
-                        today.getDate() < tanggalLahir.getDate()
-                    )
-                ) {
-                    umur--;
-                }
-
-                document.getElementById("umurTextEdit").innerHTML =
-                    '<span class="material-icons align-middle mr-1" style="font-size:16px;">cake</span>' +
-                    'Umur saat ini <b>' + umur + ' Tahun</b>';
-
-            } else {
-
-                document.getElementById("umurTextEdit").innerHTML =
-                    'Umur akan muncul di sini';
-
-            }
-            document.getElementById("emailEdit").value = user.email;
-            document.getElementById("passwordEdit").value = user.password || "";
-            document.getElementById("genderEdit").value = user.gender || "";
-            document.getElementById("statusEdit").value = user.status || "";
-            document.getElementById("rolesEdit").value = user.roles || "";
-            document.getElementById("departmentEdit").value = user.department || "";
-            document.getElementById("jabatanEdit").value = user.jabatan || "";
-            document.getElementById("npwpEdit").value = user.npwp || "";
-            document.getElementById("bpjsEdit").value = user.bpjs || "";
-            document.getElementById("bpjstkEdit").value = user.bpjstk || "";
-            document.getElementById("rekeningEdit").value = user.rekening || "";
-            document.getElementById("alamatEdit").value = user.alamat || "";
-            document.getElementById("cabangEdit").value = user.cabang || "";
-            document.getElementById("ktpEdit").value = user.ktp || "";
-
-            document.getElementById("previewPhotoEdit").src = user.photo || 'https://via.placeholder.com/100';
-
-            photoEditBase64 = user.photo || "";
-
-            $('#modalEdit').modal('show');
-        }
-
-        function updateData() {
-            let index = document.getElementById("editIndex").value;
-
-            let nama = document.getElementById("namaEdit").value;
-            let tempatlahir = document.getElementById("tempatLahirEdit").value;
-            let tanggalLahir = document.getElementById("tanggalLahirEdit").value;
-            let telepon = document.getElementById("teleponEdit").value;
-            let email = document.getElementById("emailEdit").value;
-            let password = document.getElementById("passwordEdit").value;
-            let gender = document.getElementById("genderEdit").value;
-            let status = document.getElementById("statusEdit").value;
-            let roles = document.getElementById("rolesEdit").value;
-            let department = document.getElementById("departmentEdit").value;
-            let jabatan = document.getElementById("jabatanEdit").value;
-            let npwp = document.getElementById("npwpEdit").value;
-            let bpjs = document.getElementById("bpjsEdit").value;
-            let bpjstk = document.getElementById("bpjstkEdit").value;
-            let rekening = document.getElementById("rekeningEdit").value;
-            let alamat = document.getElementById("alamatEdit").value;
-            let cabang = document.getElementById("cabangEdit").value;
-            let ktp = document.getElementById("ktpEdit").value;
-
-            if (!nama || !tempatlahir || !tanggalLahir || !email || !password || !gender || !roles || !department || !jabatan || !npwp || !bpjs || !bpjstk || !rekening || !alamat || !cabang || !ktp) {
-                alert("Data wajib diisi!");
-                return;
-            }
-
-            data[index] = {
-                ...data[index],
-                nama,
-                tempatlahir,
-                tanggalLahir,
-                telepon,
-                email,
-                password,
-                gender,
-                status,
-                npwp,
-                bpjs,
-                bpjstk,
-                rekening,
-                roles,
-                department,
-                jabatan,
-                alamat,
-                cabang,
-                ktp,
-                photo: photoEditBase64 || data[index].photo
-            };
-
-            $('#modalEdit').modal('hide');
-
-            renderTable();
-
-            // TEXT VALIDASI EDIT
-            document.getElementById("editSuccessText").innerHTML = `
-    <strong>${nama}</strong> berhasil di edit
-`;
-
-            // SHOW MODAL
-            $('#modalEditSuccess').modal('show');
-        }
-
-        function hapusData(index) {
-            if (confirm("Yakin hapus data ini?")) {
-                data.splice(index, 1);
-                renderTable();
-            }
-        }
-
-        document.getElementById("deleteSelected").onclick = function() {
-            let checks = document.querySelectorAll(".rowCheck:checked");
-
-            if (checks.length === 0) {
-                alert("Pilih data dulu!");
-                return;
-            }
-
-            if (confirm("Hapus data terpilih?")) {
-                let indexes = [...checks].map(c => c.dataset.index).sort((a, b) => b - a);
-                indexes.forEach(i => data.splice(i, 1));
-                renderTable();
-            }
-        };
-
-        document.getElementById("checkAll").onclick = function() {
-            document.querySelectorAll(".rowCheck").forEach(c => c.checked = this.checked);
-        };
-
-        document.getElementById("searchInput").onkeyup = renderTable;
-
-        document.getElementById("showEntries").onchange = function() {
-            rowsPerPage = parseInt(this.value);
-            currentPage = 1;
-            renderTable();
-        };
-
-        renderTable();
-    </script>
-
-    <script>
         let photoBase64 = "";
 
         document.getElementById("photoTambah").onchange = function(e) {
             let file = e.target.files[0];
+
+            if (!file) return;
+
+            let allowed = ['image/png', 'image/jpeg', 'image/jpg'];
+
+            if (!allowed.includes(file.type)) {
+                alert("Format harus PNG JPG JPEG");
+
+                e.target.value = "";
+
+                return;
+            }
+
             let reader = new FileReader();
 
             reader.onload = function(event) {
                 let img = new Image();
+
                 img.src = event.target.result;
 
                 img.onload = function() {
                     let canvas = document.createElement("canvas");
+
                     let maxSize = 300;
 
-                    let scale = Math.min(maxSize / img.width, maxSize / img.height);
+                    let scale = Math.min(
+                        maxSize / img.width,
+                        maxSize / img.height
+                    );
+
                     canvas.width = img.width * scale;
+
                     canvas.height = img.height * scale;
 
                     let ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                    photoBase64 = canvas.toDataURL("image/jpeg");
+                    ctx.drawImage(
+                        img,
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
 
-                    document.getElementById("previewPhoto").src = photoBase64;
-                }
+                    photoBase64 =
+                        canvas.toDataURL("image/jpeg");
+
+                    let preview =
+                        document.getElementById("previewPhoto");
+
+                    preview.src = photoBase64;
+
+                    preview.style.display = "block";
+                };
             };
+
             reader.readAsDataURL(file);
         };
+
+        // ====================================== EDIT FOTO PROFILE =======================================
+
+        <?php
+        mysqli_data_seek($users, 0);
+        while ($row = mysqli_fetch_assoc($users)):
+        ?>
+
+            document.getElementById("photoEdit<?= $row['id']; ?>")
+                .onchange = function(e) {
+                    let file = e.target.files[0];
+
+                    if (!file) return;
+
+                    let allowed = ['image/png', 'image/jpeg', 'image/jpg'];
+
+                    if (!allowed.includes(file.type)) {
+                        alert("Format harus PNG JPG JPEG");
+
+                        e.target.value = "";
+
+                        return;
+                    }
+
+                    let reader = new FileReader();
+
+                    reader.onload = function(event) {
+                        let img = new Image();
+
+                        img.src = event.target.result;
+
+                        img.onload = function() {
+                            let canvas =
+                                document.createElement("canvas");
+
+                            let maxSize = 300;
+
+                            let scale = Math.min(
+                                maxSize / img.width,
+                                maxSize / img.height
+                            );
+
+                            canvas.width = img.width * scale;
+
+                            canvas.height = img.height * scale;
+
+                            let ctx = canvas.getContext("2d");
+
+                            ctx.drawImage(
+                                img,
+                                0,
+                                0,
+                                canvas.width,
+                                canvas.height
+                            );
+
+                            let photoEditBase64 =
+                                canvas.toDataURL("image/jpeg");
+
+                            document.getElementById(
+                                "previewPhotoEdit<?= $row['id']; ?>"
+                            ).src = photoEditBase64;
+                        };
+                    };
+
+                    reader.readAsDataURL(file);
+                };
+
+        <?php endwhile; ?>
     </script>
 
     <script>
-        function togglePassword() {
-            let input = document.getElementById("passwordTambah");
-            input.type = input.type === "password" ? "text" : "password";
-        }
+        $('#tanggalLahirTambah').on('change', function() {
+
+            const birth = new Date($(this).val());
+
+            const today = new Date();
+
+            let age = today.getFullYear() - birth.getFullYear();
+
+            $('#umurText').text(age + ' Tahun');
+
+        });
+
+        $('#tanggalLahirEdit').on('change', function() {
+
+            const birth = new Date($(this).val());
+
+            const today = new Date();
+
+            let age = today.getFullYear() - birth.getFullYear();
+
+            $('#umurTextEdit').text(age + ' Tahun');
+
+        });
     </script>
 
     <script>
-        function viewData(index) {
-            $('#modalView').modal('show');
+        function viewData(user) {
+            $("#modalView").modal("show");
 
             document.getElementById("loadingView").style.display = "block";
+
             document.getElementById("contentView").style.display = "none";
 
             setTimeout(() => {
-                let user = data[index];
 
-                document.getElementById("viewPhoto").src = user.photo || 'assets/images/avatars/foto-sushi-128246.jpg';
-                document.getElementById("viewNama").innerText = user.nama;
-                document.getElementById("viewTempatlahir").innerText = user.tempatlahir || '-';
-                document.getElementById("viewTanggalLahir").innerText = user.tanggalLahir || '-';
-                document.getElementById("viewTelepon").innerText = user.telepon;
-                document.getElementById("viewEmail").innerText = user.email;
-                document.getElementById("viewRoles").innerText = user.roles;
-                document.getElementById("viewDepartment").innerText = user.department || '-';
-                document.getElementById("viewJabatan").innerText = user.jabatan || '-';
-                document.getElementById("viewGender").innerText = user.gender || '-';
-                document.getElementById("viewStatus").innerText = user.status || '-';
-                document.getElementById("viewNpwp").innerText = user.npwp || '-';
-                document.getElementById("viewBpjs").innerText = user.bpjs || '-';
-                document.getElementById("viewBpjstk").innerText = user.bpjstk || '-';
-                document.getElementById("viewRekening").innerText = user.rekening || '-';
-                document.getElementById("viewAlamat").innerText = user.alamat || '-';
-                document.getElementById("viewCabang").innerText = user.cabang || '-';
-                document.getElementById("viewKtp").innerText = user.ktp || '-';
+                document.getElementById("viewPhoto").src =
+                    "../assets/images/profile/users/" +
+                    (user.photo ? user.photo : "default.png");
 
-                let cover = user.cover ||
+                document.getElementById("viewNama").innerHTML =
+                    user.nama;
+
+                document.getElementById("viewRoles").innerHTML =
+                    user.role;
+
+                document.getElementById("viewTempatlahir").innerHTML =
+                    user.tempat_lahir;
+
+                document.getElementById("viewTanggalLahir").innerHTML =
+                    user.tanggal_lahir;
+
+                document.getElementById("viewTelepon").innerHTML =
+                    user.telepon;
+
+                document.getElementById("viewEmail").innerHTML =
+                    user.email;
+
+                document.getElementById("viewGender").innerHTML =
+                    user.gender;
+
+                document.getElementById("viewDepartment").innerHTML =
+                    user.department;
+
+                document.getElementById("viewJabatan").innerHTML =
+                    user.jabatan;
+
+                document.getElementById("viewNpwp").innerHTML =
+                    user.npwp;
+
+                document.getElementById("viewBpjs").innerHTML =
+                    user.bpjs;
+
+                document.getElementById("viewBpjstk").innerHTML =
+                    user.bpjstk;
+
+                document.getElementById("viewRekening").innerHTML =
+                    user.rekening;
+
+                document.getElementById("viewAlamat").innerHTML =
+                    user.alamat;
+
+                document.getElementById("viewCabang").innerHTML =
+                    user.cabang;
+
+                document.getElementById("viewKtp").innerHTML =
+                    user.ktp;
+
+                document.getElementById("loadingView").style.display =
+                    "none";
+
+                let cover =
+                    user.cover ||
                     "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d";
 
                 document.querySelector(".profile-cover").style.backgroundImage =
                     `url('${cover}')`;
 
-                document.getElementById("loadingView").style.display = "none";
                 document.getElementById("contentView").style.display = "block";
             }, 600);
         }
     </script>
 
     <script>
-        let photoEditBase64 = "";
+        function togglePassword() {
+            let input =
+                document.getElementById("passwordTambah");
 
-        document.getElementById("photoEdit").onchange = function(e) {
-            let file = e.target.files[0];
-            let reader = new FileReader();
+            input.type =
+                input.type === "password" ?
+                "text" :
+                "password";
+        }
 
-            reader.onload = function(event) {
-                let img = new Image();
-                img.src = event.target.result;
+        function togglePasswordEdit(id) {
+            let input =
+                document.getElementById("passwordEdit" + id);
 
-                img.onload = function() {
-                    let canvas = document.createElement("canvas");
-                    let maxSize = 300;
-
-                    let scale = Math.min(maxSize / img.width, maxSize / img.height);
-                    canvas.width = img.width * scale;
-                    canvas.height = img.height * scale;
-
-                    let ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    photoEditBase64 = canvas.toDataURL("image/jpeg");
-
-                    document.getElementById("previewPhotoEdit").src = photoEditBase64;
-                }
-            };
-            reader.readAsDataURL(file);
-        };
-    </script>
-
-    <script>
-        function togglePasswordEdit() {
-            let input = document.getElementById("passwordEdit");
-            input.type = input.type === "password" ? "text" : "password";
+            input.type =
+                input.type === "password" ?
+                "text" :
+                "password";
         }
     </script>
 
     <script>
-        // TIDAK AUTO FILL SEARCH INPUT OLEH BROWSER
-        document.addEventListener("DOMContentLoaded", function() {
-            const input = document.getElementById("searchInput");
+        $(document).ready(function() {
 
-            // kosongkan paksa
-            input.value = "";
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK ALL
+            |--------------------------------------------------------------------------
+            */
 
-            // trick supaya chrome gak inject value
-            input.setAttribute("readonly", true);
+            $('#checkAll').on('click', function() {
 
-            setTimeout(() => {
-                input.removeAttribute("readonly");
-            }, 100);
-        });
-    </script>
+                $('.rowCheck').prop(
+                    'checked',
+                    $(this).prop('checked')
+                );
 
-    <script>
-        $('#tanggalLahirTambah').on('change', function() {
+            });
 
-            const tanggalLahir = new Date($(this).val());
+            /*
+            |--------------------------------------------------------------------------
+            | JIKA SEMUA TERCENTANG
+            |--------------------------------------------------------------------------
+            */
 
-            if (!$(this).val()) {
+            $('.rowCheck').on('click', function() {
 
-                $('#umurText').html('Umur akan muncul di sini');
-                return;
+                if (
+                    $('.rowCheck:checked').length ==
+                    $('.rowCheck').length
+                ) {
 
-            }
+                    $('#checkAll').prop('checked', true);
 
-            const today = new Date();
+                } else {
 
-            let umur = today.getFullYear() - tanggalLahir.getFullYear();
+                    $('#checkAll').prop('checked', false);
 
-            const bulan = today.getMonth() - tanggalLahir.getMonth();
+                }
 
-            if (
-                bulan < 0 ||
-                (
-                    bulan === 0 &&
-                    today.getDate() < tanggalLahir.getDate()
-                )
-            ) {
-                umur--;
-            }
-
-            $('#umurText').html(
-                '<span class="material-icons align-middle mr-1" style="font-size:16px;">cake</span>' +
-                'Umur saat ini <b>' + umur + ' Tahun</b>'
-            );
+            });
 
         });
     </script>
 
     <script>
-        $('#tanggalLahirEdit').on('change', function() {
+        $(document).ready(function() {
 
-            const tanggalLahir = new Date($(this).val());
+            let tableRows = $("#dataTable tbody tr");
 
-            if (!$(this).val()) {
+            /*
+            |--------------------------------------------------------------------------
+            | FILTER FUNCTION
+            |--------------------------------------------------------------------------
+            */
 
-                $('#umurTextEdit').html('Umur akan muncul di sini');
-                return;
+            function filterTable() {
+
+                let search =
+                    $("#searchInput").val().toLowerCase();
+
+                let role =
+                    $("#filterRole").val().toLowerCase();
+
+                let cabang =
+                    $("#filterCabang").val().toLowerCase();
+
+                let visibleRows = [];
+
+                tableRows.each(function() {
+
+                    let row = $(this);
+
+                    let text =
+                        row.text().toLowerCase();
+
+                    let roleText =
+                        row.find("td:eq(5)").text().toLowerCase();
+
+                    let cabangText =
+                        row.find("td:eq(6)").text().toLowerCase();
+
+                    let matchSearch =
+                        text.indexOf(search) > -1;
+
+                    let matchRole =
+                        role === "" ||
+                        roleText.indexOf(role) > -1;
+
+                    let matchCabang =
+                        cabang === "" ||
+                        cabangText.indexOf(cabang) > -1;
+
+                    if (
+                        matchSearch &&
+                        matchRole &&
+                        matchCabang
+                    ) {
+
+                        visibleRows.push(row);
+
+                    } else {
+
+                        row.hide();
+
+                    }
+
+                });
+
+                /*
+                |--------------------------------------------------------------------------
+                | SHOW ENTRIES
+                |--------------------------------------------------------------------------
+                */
+
+                let limit =
+                    parseInt($("#showEntries").val());
+
+                $.each(visibleRows, function(index, row) {
+
+                    if (index < limit) {
+
+                        row.show();
+
+                    } else {
+
+                        row.hide();
+
+                    }
+
+                });
 
             }
 
-            const today = new Date();
+            /*
+            |--------------------------------------------------------------------------
+            | EVENTS
+            |--------------------------------------------------------------------------
+            */
 
-            let umur = today.getFullYear() - tanggalLahir.getFullYear();
+            $("#searchInput").on("keyup", filterTable);
 
-            const bulan = today.getMonth() - tanggalLahir.getMonth();
+            $("#filterRole").on("change", filterTable);
 
-            if (
-                bulan < 0 ||
-                (
-                    bulan === 0 &&
-                    today.getDate() < tanggalLahir.getDate()
-                )
-            ) {
-                umur--;
-            }
+            $("#filterCabang").on("change", filterTable);
 
-            $('#umurTextEdit').html(
-                '<span class="material-icons align-middle mr-1" style="font-size:16px;">cake</span>' +
-                'Umur saat ini <b>' + umur + ' Tahun</b>'
-            );
+            $("#showEntries").on("change", filterTable);
+
+            /*
+            |--------------------------------------------------------------------------
+            | FIRST LOAD
+            |--------------------------------------------------------------------------
+            */
+
+            filterTable();
 
         });
     </script>

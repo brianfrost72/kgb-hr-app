@@ -1,3 +1,158 @@
+<?php
+session_start();
+require_once __DIR__ . "/../koneksi.php";
+
+/*
+|--------------------------------------------------------------------------
+| TAMBAH ROLE
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['tambah_role'])) {
+
+    $role_name = trim($_POST['role_name']);
+
+    // VALIDASI KOSONG
+    if (empty($role_name)) {
+
+        $_SESSION['error'] = "Nama role wajib diisi!";
+    } else {
+
+        // CEK DUPLIKAT
+        $check = mysqli_query($conn, "
+            SELECT id 
+            FROM roles 
+            WHERE role_name = '" . mysqli_real_escape_string($conn, $role_name) . "'
+        ");
+
+        if (mysqli_num_rows($check) > 0) {
+
+            $_SESSION['error'] = "Role sudah tersedia!";
+        } else {
+
+            // INSERT
+            mysqli_query($conn, "
+                INSERT INTO roles (
+                    role_name
+                ) VALUES (
+                    '" . mysqli_real_escape_string($conn, $role_name) . "'
+                )
+            ");
+
+            $_SESSION['success'] = "Role berhasil ditambahkan!";
+        }
+    }
+
+    header("Location: add_roles.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE ROLE
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['update_role'])) {
+
+    $id        = (int) $_POST['id'];
+    $role_name = trim($_POST['role_name']);
+
+    // VALIDASI
+    if (empty($role_name)) {
+
+        $_SESSION['error'] = "Nama role wajib diisi!";
+    } else {
+
+        // CEK DUPLIKAT
+        $check = mysqli_query($conn, "
+            SELECT id 
+            FROM roles 
+            WHERE role_name = '" . mysqli_real_escape_string($conn, $role_name) . "'
+            AND id != $id
+        ");
+
+        if (mysqli_num_rows($check) > 0) {
+
+            $_SESSION['error'] = "Role sudah tersedia!";
+        } else {
+
+            // UPDATE
+            mysqli_query($conn, "
+                UPDATE roles 
+                SET role_name = '" . mysqli_real_escape_string($conn, $role_name) . "'
+                WHERE id = $id
+            ");
+
+            $_SESSION['success'] = "Role berhasil diupdate!";
+        }
+    }
+
+    header("Location: add_roles.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| HAPUS SINGLE
+|--------------------------------------------------------------------------
+*/
+if (isset($_GET['hapus'])) {
+
+    $id = (int) $_GET['hapus'];
+
+    mysqli_query($conn, "
+        DELETE FROM roles
+        WHERE id = $id
+    ");
+
+    $_SESSION['success'] = "Role berhasil dihapus!";
+
+    header("Location: add_roles.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| HAPUS SELECTED
+|--------------------------------------------------------------------------
+*/
+if (isset($_POST['hapus_terpilih'])) {
+
+    if (!empty($_POST['selected'])) {
+
+        $ids = $_POST['selected'];
+
+        $filtered = [];
+
+        foreach ($ids as $id) {
+            $filtered[] = (int) $id;
+        }
+
+        $implode = implode(",", $filtered);
+
+        mysqli_query($conn, "
+            DELETE FROM roles
+            WHERE id IN ($implode)
+        ");
+
+        $_SESSION['success'] = "Data terpilih berhasil dihapus!";
+    }
+
+    header("Location: add_roles.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| AMBIL DATA
+|--------------------------------------------------------------------------
+*/
+$roles = mysqli_query($conn, "
+    SELECT *
+    FROM roles
+    ORDER BY id ASC
+");
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -9,59 +164,35 @@
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Tambah Role - Dashboard | Konig Guard Bureau</title>
 
-    <!-- Prevent the demo from appearing in search engines -->
-    <meta name="robots" content="noindex" />
-
     <!-- Perfect Scrollbar -->
     <link
         type="text/css"
-        href="assets/vendor/perfect-scrollbar.css"
+        href="../assets/vendor/perfect-scrollbar.css"
         rel="stylesheet" />
 
     <!-- App CSS -->
-    <link type="text/css" href="assets/css/app.css" rel="stylesheet" />
-    <link type="text/css" href="assets/css/app.rtl.css" rel="stylesheet" />
+    <link type="text/css" href="../assets/css/app.css" rel="stylesheet" />
 
     <!-- Material Design Icons -->
     <link
         type="text/css"
-        href="assets/css/vendor-material-icons.css"
+        href="../assets/css/vendor-material-icons.css"
         rel="stylesheet" />
 
     <!-- Font Awesome FREE Icons -->
     <link
         type="text/css"
-        href="assets/css/vendor-fontawesome-free.css"
+        href="../assets/css/vendor-fontawesome-free.css"
         rel="stylesheet" />
-
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=UA-133433427-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag("js", new Date());
-        gtag("config", "UA-133433427-1");
-    </script>
 
     <!-- Flatpickr -->
     <link
         type="text/css"
-        href="assets/css/vendor-flatpickr.css"
+        href="../assets/css/vendor-flatpickr.css"
         rel="stylesheet" />
     <link
         type="text/css"
-        href="assets/css/vendor-flatpickr-airbnb.css"
-        rel="stylesheet" />
-
-    <!-- Vector Maps -->
-    <link
-        type="text/css"
-        href="assets/vendor/jqvmap/jqvmap.min.css"
+        href="../assets/css/vendor-flatpickr-airbnb.css"
         rel="stylesheet" />
 </head>
 
@@ -97,7 +228,58 @@
 
             <!-- ********************************// START page__content //******************************* -->
             <div class="container-fluid page__container">
+
                 <div class="container mt-4">
+                    <?php if (isset($_SESSION['success'])) : ?>
+
+                        <div
+                            class="alert alert-success alert-dismissible fade show shadow-sm border-0 auto-close-alert"
+                            role="alert">
+
+                            <i class="fa fa-check-circle mr-2"></i>
+
+                            <?= $_SESSION['success']; ?>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert"
+                                aria-label="Close">
+
+                                <span aria-hidden="true">&times;</span>
+
+                            </button>
+
+                        </div>
+
+                    <?php unset($_SESSION['success']);
+                    endif; ?>
+
+
+                    <?php if (isset($_SESSION['error'])) : ?>
+
+                        <div
+                            class="alert alert-danger alert-dismissible fade show shadow-sm border-0 auto-close-alert"
+                            role="alert">
+
+                            <i class="fa fa-times-circle mr-2"></i>
+
+                            <?= $_SESSION['error']; ?>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert"
+                                aria-label="Close">
+
+                                <span aria-hidden="true">&times;</span>
+
+                            </button>
+
+                        </div>
+
+                    <?php unset($_SESSION['error']);
+                    endif; ?>
                     <div class="card">
                         <div class="card-header d-flex justify-content-between">
                             <h4 class="card-title">Tambah Roles</h4>
@@ -120,20 +302,73 @@
                                 <input type="text" id="searchInput" class="form-control w-25" placeholder="Search...">
                             </div>
 
-                            <!-- TABLE -->
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover" id="dataTable">
-                                    <thead>
-                                        <tr>
-                                            <th><input type="checkbox" id="checkAll"></th>
-                                            <th>No</th>
-                                            <th>Nama Roles</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBody"></tbody>
-                                </table>
-                            </div>
+                            <form method="POST">
+                                <!-- TABLE -->
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover" id="dataTable">
+                                        <thead>
+                                            <tr>
+                                                <th><input type="checkbox" id="checkAll"></th>
+                                                <th>No</th>
+                                                <th>Nama Roles</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+
+                                            <?php
+                                            $no = 1;
+
+                                            while ($row = mysqli_fetch_assoc($roles)) :
+                                            ?>
+                                                <tr>
+
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            name="selected[]"
+                                                            value="<?= $row['id']; ?>"
+                                                            class="rowCheck">
+                                                    </td>
+
+                                                    <td><?= $no++; ?></td>
+
+                                                    <td><?= htmlspecialchars($row['role_name']); ?></td>
+
+                                                    <td>
+
+                                                        <!-- BUTTON EDIT -->
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-warning btn-sm"
+                                                            data-toggle="modal"
+                                                            data-target="#modalEdit<?= $row['id']; ?>">
+
+                                                            Edit
+
+                                                        </button>
+
+                                                        <!-- BUTTON DELETE -->
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-danger btn-sm"
+                                                            data-toggle="modal"
+                                                            data-target="#modalDelete<?= $row['id']; ?>">
+
+                                                            Hapus
+
+                                                        </button>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            <?php endwhile; ?>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </form>
 
                             <!-- PAGINATION -->
                             <div class="d-flex justify-content-between mt-3">
@@ -153,14 +388,7 @@
 
     <!-- App Settings FAB -->
     <div id="app-settings" style="display: none">
-        <app-settings
-            layout-active="fluid"
-            :layout-location="{
-      'default': 'index.html',
-      'fixed': 'fixed-dashboard.html',
-      'fluid': 'fluid-dashboard.html',
-      'mini': 'mini-dashboard.html'
-    }"></app-settings>
+        <app-settings layout-active="fluid"></app-settings>
     </div>
 
     <!-- ********************************** // MENU-Drawer ********************************** -->
@@ -171,146 +399,218 @@
     <div class="modal fade" id="modalTambah">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Tambah Data</h5>
-                </div>
-                <div class="modal-body">
-                    <input type="text" id="namaTambah" class="form-control mb-2" placeholder="Nama Roles">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="tambahData()">Simpan</button>
-                </div>
+
+                <form method="POST">
+
+                    <div class="modal-header">
+                        <h5>Tambah Role</h5>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <input
+                            type="text"
+                            name="role_name"
+                            class="form-control"
+                            placeholder="Nama Role">
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button
+                            type="submit"
+                            name="tambah_role"
+                            class="btn btn-primary">
+                            Simpan
+                        </button>
+
+                    </div>
+
+                </form>
+
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modalEdit">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Edit Data</h5>
+    <!-- AREA MODAL EDIT DAN DELETE -->
+    <?php
+    mysqli_data_seek($roles, 0);
+
+    while ($row = mysqli_fetch_assoc($roles)) :
+    ?>
+
+        <!-- MODAL EDIT -->
+        <div
+            class="modal fade"
+            id="modalEdit<?= $row['id']; ?>"
+            tabindex="-1">
+
+            <div class="modal-dialog modal-dialog-centered">
+
+                <div class="modal-content">
+
+                    <form method="POST">
+
+                        <div class="modal-header">
+
+                            <h5 class="modal-title">
+                                Edit Role
+                            </h5>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="modal">
+
+                                <span>&times;</span>
+
+                            </button>
+
+                        </div>
+
+                        <div class="modal-body">
+
+                            <input
+                                type="hidden"
+                                name="id"
+                                value="<?= $row['id']; ?>">
+
+                            <div class="form-group">
+
+                                <label class="font-weight-bold">
+                                    Nama Role
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="role_name"
+                                    class="form-control"
+                                    value="<?= htmlspecialchars($row['role_name']); ?>"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+                        <div class="modal-footer">
+
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-dismiss="modal">
+
+                                Batal
+
+                            </button>
+
+                            <button
+                                type="submit"
+                                name="update_role"
+                                class="btn btn-success">
+
+                                Update
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
                 </div>
-                <div class="modal-body">
-                    <input type="hidden" id="editIndex">
-                    <input type="text" id="namaEdit" class="form-control mb-2">
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-success" onclick="updateData()">Update</button>
-                </div>
+
             </div>
+
         </div>
-    </div>
+
+        <!-- MODAL DELETE -->
+        <div
+            class="modal fade"
+            id="modalDelete<?= $row['id']; ?>"
+            tabindex="-1">
+
+            <div class="modal-dialog modal-dialog-centered">
+
+                <div class="modal-content">
+
+                    <div class="modal-header bg-danger text-white">
+
+                        <h5 class="modal-title">
+                            Hapus Role
+                        </h5>
+
+                        <button
+                            type="button"
+                            class="close text-white"
+                            data-dismiss="modal">
+
+                            <span>&times;</span>
+
+                        </button>
+
+                    </div>
+
+                    <div class="modal-body text-center">
+
+                        <span
+                            class="material-icons mb-3"
+                            style="
+                            font-size:70px;
+                            color:#dc3545;
+                        ">
+
+                            delete_forever
+
+                        </span>
+
+                        <h5 class="mb-3">
+                            Yakin ingin menghapus role ini?
+                        </h5>
+
+                        <div class="alert alert-danger">
+
+                            <strong>
+                                <?= htmlspecialchars($row['role_name']); ?>
+                            </strong>
+
+                        </div>
+
+                        <p class="text-muted mb-0">
+                            Data yang dihapus tidak dapat dikembalikan.
+                        </p>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-dismiss="modal">
+
+                            Batal
+
+                        </button>
+
+                        <a
+                            href="add_roles.php?hapus=<?= $row['id']; ?>"
+                            class="btn btn-danger">
+
+                            Ya, Hapus
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    <?php endwhile; ?>
+
     <!-- ********************************** // MODAL ********************************** -->
-
-    <!-- MODAL VALIDASI -->
-    <div class="modal fade" id="modalValidasi">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg"
-                style="
-                border-radius:22px;
-                overflow:hidden;
-            ">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#fff4e5;
-                    ">
-
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#ff9800;
-                        ">
-                            error_outline
-                        </span>
-
-                    </div>
-
-                    <h3 class="font-weight-bold mb-2">
-                        Validasi Gagal
-                    </h3>
-
-                    <p class="text-muted mb-4" id="validasiText">
-                        Data wajib diisi
-                    </p>
-
-                    <button class="btn btn-warning px-4"
-                        data-dismiss="modal"
-                        style="
-                        border-radius:12px;
-                        height:45px;
-                        min-width:130px;
-                        color:white;
-                    ">
-                        Mengerti
-                    </button>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL SUKSES -->
-    <div class="modal fade" id="modalSuccess">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg"
-                style="
-                border-radius:22px;
-                overflow:hidden;
-            ">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:95px;
-                        height:95px;
-                        border-radius:50%;
-                        background:#eafaf1;
-                    ">
-
-                        <span class="material-icons"
-                            style="
-                            font-size:55px;
-                            color:#28a745;
-                        ">
-                            check_circle
-                        </span>
-
-                    </div>
-
-                    <h3 class="font-weight-bold mb-2">
-                        Role Berhasil Ditambahkan
-                    </h3>
-
-                    <p class="text-muted mb-4"
-                        id="successText">
-                        Role berhasil dibuat
-                    </p>
-
-                    <button class="btn btn-success px-4"
-                        data-dismiss="modal"
-                        style="
-                        border-radius:12px;
-                        height:45px;
-                        min-width:130px;
-                    ">
-                        OK
-                    </button>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
 
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
@@ -326,319 +626,98 @@
     </footer>
 
     <!-- jQuery -->
-    <script src="assets/vendor/jquery.min.js"></script>
+    <script src="../assets/vendor/jquery.min.js"></script>
 
     <!-- Bootstrap -->
-    <script src="assets/vendor/popper.min.js"></script>
-    <script src="assets/vendor/bootstrap.min.js"></script>
+    <script src="../assets/vendor/popper.min.js"></script>
+    <script src="../assets/vendor/bootstrap.min.js"></script>
 
     <!-- Perfect Scrollbar -->
-    <script src="assets/vendor/perfect-scrollbar.min.js"></script>
+    <script src="../assets/vendor/perfect-scrollbar.min.js"></script>
 
     <!-- DOM Factory -->
-    <script src="assets/vendor/dom-factory.js"></script>
+    <script src="../assets/vendor/dom-factory.js"></script>
+    <script src="../assets/js/pagination.js"></script>
 
     <!-- MDK -->
-    <script src="assets/vendor/material-design-kit.js"></script>
+    <script src="../assets/vendor/material-design-kit.js"></script>
 
     <!-- App -->
-    <script src="assets/js/toggle-check-all.js"></script>
-    <script src="assets/js/check-selected-row.js"></script>
-    <script src="assets/js/dropdown.js"></script>
-    <script src="assets/js/sidebar-mini.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="../assets/js/toggle-check-all.js"></script>
+    <script src="../assets/js/check-selected-row.js"></script>
+    <script src="../assets/js/dropdown.js"></script>
+    <script src="../assets/js/sidebar-mini.js"></script>
+    <script src="../assets/js/app.js"></script>
 
     <!-- App Settings (safe to remove) -->
-    <script src="assets/js/app-settings.js"></script>
+    <script src="../assets/js/app-settings.js"></script>
 
     <!-- Flatpickr -->
-    <script src="assets/vendor/flatpickr/flatpickr.min.js"></script>
-    <script src="assets/js/flatpickr.js"></script>
-
-    <!-- Global Settings -->
-    <script src="assets/js/settings.js"></script>
+    <script src="../assets/vendor/flatpickr/flatpickr.min.js"></script>
+    <script src="../assets/js/flatpickr.js"></script>
 
     <!-- Moment.js -->
-    <script src="assets/vendor/moment.min.js"></script>
-    <script src="assets/vendor/moment-range.js"></script>
-
-
-    <!-- Vector Maps -->
-    <script src="assets/vendor/jqvmap/jquery.vmap.min.js"></script>
-    <script src="assets/vendor/jqvmap/maps/jquery.vmap.world.js"></script>
-    <script src="assets/js/vector-maps.js"></script>
+    <script src="../assets/vendor/moment.min.js"></script>
+    <script src="../assets/vendor/moment-range.js"></script>
 
     <script>
-        let data = [{
-                nama: "Super Admin"
-            },
-            {
-                nama: "Admin"
-            }
-        ];
+        $(document).ready(function() {
 
-        let currentPage = 1;
-        let rowsPerPage = 5;
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK ALL
+            |--------------------------------------------------------------------------
+            */
 
-        function renderTable() {
-            let tbody = document.getElementById("tableBody");
-            tbody.innerHTML = "";
+            $('#checkAll').on('click', function() {
 
-            let search = document.getElementById("searchInput").value.toLowerCase();
+                $('.rowCheck').prop(
+                    'checked',
+                    $(this).prop('checked')
+                );
 
-            let filtered = data.filter(d =>
-                d.nama.toLowerCase().includes(search)
-            );
-
-            let start = (currentPage - 1) * rowsPerPage;
-            let paginated = filtered.slice(start, start + rowsPerPage);
-
-            paginated.forEach((item, index) => {
-                tbody.innerHTML += `
-            <tr>
-                <td><input type="checkbox" class="rowCheck" data-index="${start + index}"></td>
-                <td>${start + index + 1}</td>
-                <td>${item.nama}</td>
-                <td>
-                    <button class="btn btn-warning btn-sm" onclick="editData(${start + index})">Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="hapusData(${start + index})">Hapus</button>
-                </td>
-            </tr>
-        `;
             });
 
-            renderPagination(filtered.length);
-        }
+            /*
+            |--------------------------------------------------------------------------
+            | JIKA SEMUA TERCENTANG
+            |--------------------------------------------------------------------------
+            */
 
-        function renderPagination(total) {
-            let pageCount = Math.ceil(total / rowsPerPage);
-            let pagination = document.getElementById("pagination");
-            pagination.innerHTML = "";
+            $('.rowCheck').on('click', function() {
 
-            if (pageCount <= 1) return;
+                if (
+                    $('.rowCheck:checked').length ==
+                    $('.rowCheck').length
+                ) {
 
-            // PREV BUTTON
-            pagination.innerHTML += `
-        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" onclick="changePage(${currentPage - 1})">Prev</a>
-        </li>
-    `;
+                    $('#checkAll').prop('checked', true);
 
-            let maxVisible = 5;
-            let start = Math.max(1, currentPage - 2);
-            let end = Math.min(pageCount, currentPage + 2);
+                } else {
 
-            // FIX kalau di awal
-            if (currentPage <= 3) {
-                start = 1;
-                end = Math.min(pageCount, maxVisible);
-            }
+                    $('#checkAll').prop('checked', false);
 
-            // FIX kalau di akhir
-            if (currentPage >= pageCount - 2) {
-                start = Math.max(1, pageCount - (maxVisible - 1));
-                end = pageCount;
-            }
-
-            // FIRST PAGE + DOTS
-            if (start > 1) {
-                pagination.innerHTML += `
-            <li class="page-item"><a class="page-link" onclick="changePage(1)">1</a></li>
-        `;
-                if (start > 2) {
-                    pagination.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
                 }
-            }
 
-            // PAGE NUMBERS
-            for (let i = start; i <= end; i++) {
-                pagination.innerHTML += `
-            <li class="page-item ${i === currentPage ? 'active' : ''}">
-                <a class="page-link" onclick="changePage(${i})">${i}</a>
-            </li>
-        `;
-            }
-
-            // LAST PAGE + DOTS
-            if (end < pageCount) {
-                if (end < pageCount - 1) {
-                    pagination.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                }
-                pagination.innerHTML += `
-            <li class="page-item"><a class="page-link" onclick="changePage(${pageCount})">${pageCount}</a></li>
-        `;
-            }
-
-            // NEXT BUTTON
-            pagination.innerHTML += `
-        <li class="page-item ${currentPage === pageCount ? 'disabled' : ''}">
-            <a class="page-link" onclick="changePage(${currentPage + 1})">Next</a>
-        </li>
-    `;
-        }
-
-        function changePage(page) {
-            currentPage = page;
-            renderTable();
-        }
-
-        function tambahData() {
-
-            let nama = document.getElementById("namaTambah").value.trim();
-
-            // VALIDASI
-            if (!nama) {
-
-                document.getElementById("validasiText").innerHTML =
-                    "Nama role wajib diisi!";
-
-                $('#modalValidasi').modal('show');
-
-                return;
-            }
-
-            // DUPLIKAT ROLE
-            let exists = data.some(d =>
-                d.nama.toLowerCase() === nama.toLowerCase()
-            );
-
-            if (exists) {
-
-                document.getElementById("validasiText").innerHTML =
-                    `Role <strong>${nama}</strong> sudah tersedia`;
-
-                $('#modalValidasi').modal('show');
-
-                return;
-            }
-
-            // PUSH DATA
-            data.push({
-                nama
             });
 
-            // RENDER TABLE
-            renderTable();
-
-            // CLOSE MODAL TAMBAH
-            $('#modalTambah').modal('hide');
-
-            // SUCCESS TEXT
-            document.getElementById("successText").innerHTML = `
-        Role <strong>${nama}</strong> berhasil ditambahkan
-    `;
-
-            // SHOW SUCCESS
-            $('#modalSuccess').modal('show');
-
-            // RESET INPUT
-            document.getElementById("namaTambah").value = "";
-        }
-
-        function editData(index) {
-            document.getElementById("editIndex").value = index;
-            document.getElementById("namaEdit").value = data[index].nama;
-
-            $('#modalEdit').modal('show');
-        }
-
-        function updateData() {
-
-            let index = document.getElementById("editIndex").value;
-
-            // DATA LAMA
-            let namaLama = data[index].nama;
-
-            // DATA BARU
-            let namaBaru = document.getElementById("namaEdit").value.trim();
-
-            // VALIDASI KOSONG
-            if (!namaBaru) {
-
-                document.getElementById("validasiText").innerHTML =
-                    "Nama role edit wajib diisi!";
-
-                $('#modalValidasi').modal('show');
-
-                return;
-            }
-
-            // VALIDASI DUPLIKAT
-            let exists = data.some((d, i) =>
-                i != index &&
-                d.nama.toLowerCase() === namaBaru.toLowerCase()
-            );
-
-            if (exists) {
-
-                document.getElementById("validasiText").innerHTML =
-                    `Role <strong>${namaBaru}</strong> sudah tersedia`;
-
-                $('#modalValidasi').modal('show');
-
-                return;
-            }
-
-            // UPDATE DATA
-            data[index].nama = namaBaru;
-
-            // RENDER TABLE
-            renderTable();
-
-            // CLOSE MODAL EDIT
-            $('#modalEdit').modal('hide');
-
-            // TITLE SUCCESS
-            document.querySelector("#modalSuccess h3").innerHTML =
-                "Role Berhasil Diedit";
-
-            // SUCCESS TEXT
-            document.getElementById("successText").innerHTML = `
-        Role <strong>${namaLama}</strong>
-        telah diedit menjadi
-        <strong>${namaBaru}</strong>
-    `;
-
-            // SHOW SUCCESS MODAL
-            $('#modalSuccess').modal('show');
-        }
-
-        function hapusData(index) {
-            if (confirm("Yakin hapus data ini?")) {
-                data.splice(index, 1);
-                renderTable();
-            }
-        }
-
-        document.getElementById("deleteSelected").onclick = function() {
-            let checks = document.querySelectorAll(".rowCheck:checked");
-
-            if (checks.length === 0) {
-                alert("Pilih data dulu!");
-                return;
-            }
-
-            if (confirm("Hapus data terpilih?")) {
-                let indexes = [...checks].map(c => c.dataset.index).sort((a, b) => b - a);
-                indexes.forEach(i => data.splice(i, 1));
-                renderTable();
-            }
-        };
-
-        document.getElementById("checkAll").onclick = function() {
-            document.querySelectorAll(".rowCheck").forEach(c => c.checked = this.checked);
-        };
-
-        document.getElementById("searchInput").onkeyup = renderTable;
-
-        document.getElementById("showEntries").onchange = function() {
-            rowsPerPage = parseInt(this.value);
-            currentPage = 1;
-            renderTable();
-        };
-
-        renderTable();
+        });
     </script>
+
+    <script>
+        // ALERT AUTO CLOSE
+        $(document).ready(function() {
+
+            setTimeout(function() {
+
+                $('.auto-close-alert').alert('close');
+
+            }, 3000);
+
+        });
+    </script>
+
+    
 </body>
 
 </html>

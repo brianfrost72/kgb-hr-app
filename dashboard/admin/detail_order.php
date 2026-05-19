@@ -3,64 +3,41 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="X-UA-Compatible" content="" />
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Manage Lowongan Kerja - Dashboard | Konig Guard Bureau</title>
-
-    <!-- Prevent the demo from appearing in search engines -->
-    <meta name="robots" content="noindex" />
+    <title>Detail Pesanan - Dashboard | Konig Guard Bureau</title>
 
     <!-- Perfect Scrollbar -->
     <link
         type="text/css"
-        href="assets/vendor/perfect-scrollbar.css"
+        href="../assets/vendor/perfect-scrollbar.css"
         rel="stylesheet" />
 
     <!-- App CSS -->
-    <link type="text/css" href="assets/css/app.css" rel="stylesheet" />
+    <link type="text/css" href="../assets/css/app.css" rel="stylesheet" />
 
     <!-- Material Design Icons -->
     <link
         type="text/css"
-        href="assets/css/vendor-material-icons.css"
+        href="../assets/css/vendor-material-icons.css"
         rel="stylesheet" />
 
     <!-- Font Awesome FREE Icons -->
     <link
         type="text/css"
-        href="assets/css/vendor-fontawesome-free.css"
+        href="../assets/css/vendor-fontawesome-free.css"
         rel="stylesheet" />
-
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=UA-133433427-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-        gtag("js", new Date());
-        gtag("config", "UA-133433427-1");
-    </script>
 
     <!-- Flatpickr -->
     <link
         type="text/css"
-        href="assets/css/vendor-flatpickr.css"
+        href="../assets/css/vendor-flatpickr.css"
         rel="stylesheet" />
     <link
         type="text/css"
-        href="assets/css/vendor-flatpickr-airbnb.css"
-        rel="stylesheet" />
-
-    <!-- Vector Maps -->
-    <link
-        type="text/css"
-        href="assets/vendor/jqvmap/jqvmap.min.css"
+        href="../assets/css/vendor-flatpickr-airbnb.css"
         rel="stylesheet" />
 </head>
 
@@ -83,11 +60,11 @@
                                 <ol class="breadcrumb mb-0">
                                     <li class="breadcrumb-item"><a href="#">Beranda</a></li>
                                     <li class="breadcrumb-item active" aria-current="page">
-                                        Manage Lowongan Kerja
+                                        Detail Pesanan
                                     </li>
                                 </ol>
                             </nav>
-                            <h1 class="m-0">Manage Lowongan Kerja</h1>
+                            <h1 class="m-0">Detail Pesanan</h1>
 
                         </div>
                         <a href="manage_orders.php"
@@ -155,7 +132,7 @@
                             <div class="order-progress-line"></div>
 
                             <!-- ACTIVE LINE -->
-                            <div class="order-progress-line-active progress-52"></div>
+                            <div class="order-progress-line-active progress-step-3"></div>
 
 
                             <div class="row text-center">
@@ -1264,47 +1241,34 @@
     </footer>
 
     <!-- jQuery -->
-    <script src="assets/vendor/jquery.min.js"></script>
+    <script src="../assets/vendor/jquery.min.js"></script>
 
     <!-- Bootstrap -->
-    <script src="assets/vendor/popper.min.js"></script>
-    <script src="assets/vendor/bootstrap.min.js"></script>
+    <script src="../assets/vendor/popper.min.js"></script>
+    <script src="../assets/vendor/bootstrap.min.js"></script>
 
     <!-- Perfect Scrollbar -->
-    <script src="assets/vendor/perfect-scrollbar.min.js"></script>
+    <script src="../assets/vendor/perfect-scrollbar.min.js"></script>
 
     <!-- DOM Factory -->
-    <script src="assets/vendor/dom-factory.js"></script>
+    <script src="../assets/vendor/dom-factory.js"></script>
 
     <!-- MDK -->
-    <script src="assets/vendor/material-design-kit.js"></script>
+    <script src="../assets/vendor/material-design-kit.js"></script>
 
     <!-- App -->
-    <script src="assets/js/toggle-check-all.js"></script>
-    <script src="assets/js/check-selected-row.js"></script>
-    <script src="assets/js/dropdown.js"></script>
-    <script src="assets/js/sidebar-mini.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="../assets/js/toggle-check-all.js"></script>
+    <script src="../assets/js/check-selected-row.js"></script>
+    <script src="../assets/js/dropdown.js"></script>
+    <script src="../assets/js/sidebar-mini.js"></script>
+    <script src="../assets/js/app.js"></script>
 
     <!-- App Settings (safe to remove) -->
-    <script src="assets/js/app-settings.js"></script>
+    <script src="../assets/js/app-settings.js"></script>
 
     <!-- Flatpickr -->
-    <script src="assets/vendor/flatpickr/flatpickr.min.js"></script>
-    <script src="assets/js/flatpickr.js"></script>
-
-    <!-- Global Settings -->
-    <script src="assets/js/settings.js"></script>
-
-    <!-- Moment.js -->
-    <script src="assets/vendor/moment.min.js"></script>
-    <script src="assets/vendor/moment-range.js"></script>
-
-
-    <!-- Vector Maps -->
-    <script src="assets/vendor/jqvmap/jquery.vmap.min.js"></script>
-    <script src="assets/vendor/jqvmap/maps/jquery.vmap.world.js"></script>
-    <script src="assets/js/vector-maps.js"></script>
+    <script src="../assets/vendor/flatpickr/flatpickr.min.js"></script>
+    <script src="../assets/js/flatpickr.js"></script>
 
     <script>
         /* =========================
