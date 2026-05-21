@@ -782,10 +782,10 @@ $regions = mysqli_query($conn, "
                                                     <td><?= htmlspecialchars($row['region_name']); ?></td>
 
                                                     <td>
-
                                                         <button
                                                             type="button"
-                                                            class="btn btn-info btn-sm"
+                                                            class="btn btn-info btn-sm mb-1"
+                                                            title="Lihat Detail User Role"
                                                             onclick='viewData(<?= json_encode([
                                                                                     "photo" => !empty($row['photo_profile']) ? $row['photo_profile'] : 'default.png',
                                                                                     "nama" => $row['full_name'],
@@ -814,7 +814,7 @@ $regions = mysqli_query($conn, "
                                                             type="button"
                                                             class="btn btn-warning btn-sm"
                                                             data-toggle="modal"
-                                                            data-target="#modalEdit<?= $row['id']; ?>">
+                                                            data-target="#modalEdit<?= $row['id']; ?>" title="Edit Role Profile">
 
                                                             <i class="material-icons">edit</i>
 
@@ -824,7 +824,7 @@ $regions = mysqli_query($conn, "
                                                             type="button"
                                                             class="btn btn-danger btn-sm"
                                                             data-toggle="modal"
-                                                            data-target="#modalDelete<?= $row['id']; ?>">
+                                                            data-target="#modalDelete<?= $row['id']; ?>" title="Hapus User Role">
 
                                                             <i class="material-icons">delete</i>
 
@@ -868,7 +868,6 @@ $regions = mysqli_query($conn, "
     <?php include 'includes/drawer_menu.php'; ?>
     <!-- ********************************** //END MENU-drawer ********************************** -->
 
-    <!-- BAGIAN INI DIAMBIL DARI TABEL USER_PROFILE, TABEL REGIONS (SELECT CABANG), ROLES (SELECT ROLE), DEPARTMENTS (SELECT DEPARTEMEN), POSITION (SELECT JABATAN) -->
     <form method="POST" enctype="multipart/form-data">
         <div class="modal fade" id="modalTambah">
             <div class="modal-dialog modal-lg">
@@ -1019,7 +1018,7 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <select name="jenis_kelamin" class="form-control">
-                                        <option value="">Pilih Jenis Kelamin</option>
+                                        <option value="">---Pilih Jenis Kelamin---</option>
                                         <option>Laki-laki</option>
                                         <option>Perempuan</option>
                                     </select>
@@ -1038,7 +1037,7 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <select name="status_kawin" class="form-control">
-                                        <option value="">Pilih Status</option>
+                                        <option value="">---Pilih Status---</option>
                                         <option>Belum Nikah</option>
                                         <option>Menikah</option>
                                     </select>
@@ -1057,7 +1056,7 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <select name="role_id" class="form-control">
-                                        <option value="">Pilih Roles</option>
+                                        <option value="">---Pilih Roles---</option>
                                         <?php
                                         mysqli_data_seek($roles, 0);
                                         while ($role = mysqli_fetch_assoc($roles)):
@@ -1090,7 +1089,7 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <select name="department_id" class="form-control">
-                                        <option value="">Pilih Departemen</option>
+                                        <option value="">---Pilih Departemen---</option>
                                         <?php
                                         mysqli_data_seek($departments, 0);
                                         while ($department = mysqli_fetch_assoc($departments)):
@@ -1119,7 +1118,7 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <select name="position_id" class="form-control mb-2">
-                                        <option value="">Pilih Jabatan</option>
+                                        <option value="">---Pilih Jabatan---</option>
                                         <?php
                                         mysqli_data_seek($positions, 0);
                                         while ($position = mysqli_fetch_assoc($positions)):
@@ -1148,7 +1147,7 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <select name="region_id" class="form-control mb-2">
-                                        <option value="">Pilih Cabang</option>
+                                        <option value="">---Pilih Cabang---</option>
                                         <?php
                                         mysqli_data_seek($regions, 0);
                                         while ($region = mysqli_fetch_assoc($regions)):
@@ -1363,7 +1362,7 @@ $regions = mysqli_query($conn, "
                                             <button
                                                 type="button"
                                                 class="btn btn-outline-secondary"
-                                                onclick="togglePasswordEdit(<?= $row['id']; ?>)"><span class="material-icons">remove_red_eye</span></button>
+                                                onclick="togglePasswordEdit(event, <?= $row['id']; ?>)"><span class="material-icons">remove_red_eye</span></button>
                                         </div>
                                     </div>
                                 </div>
@@ -1453,8 +1452,8 @@ $regions = mysqli_query($conn, "
                                         </div>
 
                                         <select
-                                            name="jenis_kelamin" id="genderEdit" class="form-control">
-                                            <option value="">Pilih Jenis Kelamin</option>
+                                            name="jenis_kelamin" class="form-control">
+                                            <option value="">---Pilih Jenis Kelamin---</option>
                                             <<option
                                                 value="Laki-laki"
                                                 <?= ($row['jenis_kelamin'] == 'Laki-laki') ? 'selected' : ''; ?>>
@@ -1483,7 +1482,7 @@ $regions = mysqli_query($conn, "
                                         <select
                                             name="status_kawin"
                                             id="statusEdit" class="form-control">
-                                            <option value="">Pilih Status</option>
+                                            <option value="">---Pilih Status---</option>
                                             <option
                                                 value="Belum Menikah"
                                                 <?= ($row['status_kawin'] == 'Belum Menikah') ? 'selected' : ''; ?>>
@@ -1736,7 +1735,6 @@ $regions = mysqli_query($conn, "
 
                                 <textarea
                                     name="address"
-                                    id="alamatEdit"
                                     class="form-control mb-2"><?= htmlspecialchars($row['address']); ?></textarea>
 
                                 <label class="mt-2">
@@ -2270,7 +2268,7 @@ $regions = mysqli_query($conn, "
 
                 let cover =
                     user.cover ||
-                    "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d";
+                    "../assets/images/bg-banner-profiles/role-profiles.png";
 
                 document.querySelector(".profile-cover").style.backgroundImage =
                     `url('${cover}')`;
@@ -2291,7 +2289,7 @@ $regions = mysqli_query($conn, "
                 "password";
         }
 
-        function togglePasswordEdit(id) {
+        function togglePasswordEdit(event, id) {
             let input =
                 document.getElementById("passwordEdit" + id);
 

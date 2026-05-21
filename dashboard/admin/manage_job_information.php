@@ -1,3 +1,75 @@
+<?php
+session_start();
+require_once "../koneksi.php";
+
+/* =========================================
+   QUERY JOB VACANCY + REGION
+========================================= */
+$jobVacancy = mysqli_query($conn, "
+    SELECT
+        job_vacancy.id,
+        job_vacancy.job_title,
+        job_vacancy.id_region,
+        job_vacancy.type_vacancy,
+        job_vacancy.job_desc,
+        job_vacancy.job_quota,
+        job_vacancy.start_info,
+        job_vacancy.end_info,
+        job_vacancy.link_info,
+        job_vacancy.status,
+
+        regions.region_name,
+        regions.region_address
+
+    FROM job_vacancy
+
+    LEFT JOIN regions
+    ON job_vacancy.id_region = regions.id
+
+    ORDER BY job_vacancy.id DESC
+");
+
+/* =========================================
+   TOTAL LOWONGAN
+========================================= */
+$totalLowongan = mysqli_num_rows($jobVacancy);
+
+/* =========================================
+   LOWONGAN AKTIF
+========================================= */
+$totalAktifQuery = mysqli_query($conn, "
+    SELECT COUNT(*) as total_aktif
+    FROM job_vacancy
+    WHERE status = 'Aktif'
+");
+
+$totalAktif = mysqli_fetch_assoc($totalAktifQuery);
+
+/* =========================================
+   LOWONGAN SELESAI
+========================================= */
+$totalSelesaiQuery = mysqli_query($conn, "
+    SELECT COUNT(*) as total_selesai
+    FROM job_vacancy
+    WHERE status = 'Selesai'
+");
+
+$totalSelesai = mysqli_fetch_assoc($totalSelesaiQuery);
+
+/* =========================================
+   AKAN BERAKHIR
+========================================= */
+$totalAkanBerakhirQuery = mysqli_query($conn, "
+    SELECT COUNT(*) as total_akan_berakhir
+    FROM job_vacancy
+    WHERE end_info >= CURDATE()
+    AND end_info <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+");
+
+$totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
+
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -112,7 +184,7 @@
                                 </div>
 
                                 <div>
-                                    <h3 class="mb-0">12</h3>
+                                    <h3 class="mb-0"><?= $totalLowongan; ?></h3>
                                     <small class="text-muted">Total Lowongan</small>
                                 </div>
 
@@ -133,7 +205,7 @@
                                 </div>
 
                                 <div>
-                                    <h3 class="mb-0">8</h3>
+                                    <h3 class="mb-0"><?= $totalAktif['total_aktif']; ?></h3>
                                     <small class="text-muted">Lowongan Aktif</small>
                                 </div>
 
@@ -154,7 +226,7 @@
                                 </div>
 
                                 <div>
-                                    <h3 class="mb-0">3</h3>
+                                    <h3 class="mb-0"><?= $totalAkanBerakhir['total_akan_berakhir']; ?></h3>
                                     <small class="text-muted">Akan Berakhir</small>
                                 </div>
 
@@ -175,7 +247,7 @@
                                 </div>
 
                                 <div>
-                                    <h3 class="mb-0">4</h3>
+                                    <h3 class="mb-0"><?= $totalSelesai['total_selesai']; ?></h3>
                                     <small class="text-muted">Selesai</small>
                                 </div>
 
@@ -249,16 +321,6 @@
                                     <option>Part Time</option>
                                     <option>Freelance</option>
                                     <option>Magang</option>
-                                </select>
-
-                                <!-- LOKASI -->
-                                <select id="locationFilter" class="form-control"
-                                    style="width:190px;">
-                                    <option>--Lokasi Penempatan--</option>
-                                    <option>Semua Lokasi</option>
-                                    <option>Jakarta</option>
-                                    <option>Bandung</option>
-                                    <option>Bekasi</option>
                                 </select>
 
                                 <!-- STATUS -->

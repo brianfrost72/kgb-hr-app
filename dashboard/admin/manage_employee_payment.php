@@ -1,3 +1,456 @@
+<?php
+session_start();
+require_once __DIR__ . '/../koneksi.php';
+
+date_default_timezone_set('Asia/Jakarta');
+
+/* =========================================================
+   FUNCTION
+========================================================= */
+function cleanRupiah($value)
+{
+    return preg_replace('/[^0-9]/', '', $value);
+}
+
+/* =========================================================
+   GET DATA DEPARTMENT
+========================================================= */
+$queryDepartment = mysqli_query($conn, "
+    SELECT 
+        id,
+        department_name
+    FROM department
+    ORDER BY department_name ASC
+");
+
+/* =========================================================
+   GET DATA POSITIONS
+========================================================= */
+$queryPositions = mysqli_query($conn, "
+    SELECT 
+        positions.id,
+        positions.position_name,
+        positions.department_id,
+        department.department_name
+    FROM positions
+    LEFT JOIN department
+        ON positions.department_id = department.id
+    ORDER BY positions.position_name ASC
+");
+
+/* =========================================================
+   GET DATA EMPLOYEE PAYMENT
+========================================================= */
+$queryEmployeePayments = mysqli_query($conn, "
+    SELECT
+        employee_payment.id,
+
+        employee_payment.id_employee,
+        employee_payment.id_department,
+        employee_payment.id_position,
+
+        employee_payment.period_date,
+        employee_payment.payment_date,
+        employee_payment.payment_method,
+
+        employee_payment.basic_salary,
+        employee_payment.benefit_salary,
+        employee_payment.bonus_salary,
+        employee_payment.overtime_salary,
+
+        employee_payment.bpjs_deduction,
+        employee_payment.bpjstk_deduction,
+        employee_payment.pph21_deduction,
+        employee_payment.etc_deduction,
+
+        employee_payment.note_payment,
+        employee_payment.update_at,
+
+        department.department_name,
+
+        positions.position_name
+
+    FROM employee_payment
+
+    LEFT JOIN department
+        ON employee_payment.id_department = department.id
+
+    LEFT JOIN positions
+        ON employee_payment.id_position = positions.id
+
+    ORDER BY employee_payment.id DESC
+");
+
+/* =========================================================
+   TAMBAH DATA PAYMENT
+========================================================= */
+if (isset($_POST['add_employee_payment'])) {
+
+    $id_employee      = mysqli_real_escape_string($conn, $_POST['id_employee']);
+    $id_department    = mysqli_real_escape_string($conn, $_POST['id_department']);
+    $id_position      = mysqli_real_escape_string($conn, $_POST['id_position']);
+
+    $period_date_input = mysqli_real_escape_string($conn, $_POST['period_date']);
+    $period_date = $period_date_input . "-01";
+    $payment_date     = mysqli_real_escape_string($conn, $_POST['payment_date']);
+    $payment_method   = mysqli_real_escape_string($conn, $_POST['payment_method']);
+
+    $basic_salary     = cleanRupiah($_POST['basic_salary']);
+    $benefit_salary   = cleanRupiah($_POST['benefit_salary']);
+    $bonus_salary     = cleanRupiah($_POST['bonus_salary']);
+    $overtime_salary  = cleanRupiah($_POST['overtime_salary']);
+
+    $bpjs_deduction   = cleanRupiah($_POST['bpjs_deduction']);
+    $bpjstk_deduction = cleanRupiah($_POST['bpjstk_deduction']);
+    $pph21_deduction  = cleanRupiah($_POST['pph21_deduction']);
+    $etc_deduction    = cleanRupiah($_POST['etc_deduction']);
+
+    /* =========================================
+   CEK DUPLICATE PAYROLL
+========================================= */
+
+    $checkPayroll = mysqli_query($conn, "
+
+    SELECT id
+    FROM employee_payment
+
+    WHERE id_employee = '$id_employee'
+    AND period_date = '$period_date'
+
+");
+
+    if (mysqli_num_rows($checkPayroll) > 0) {
+
+        $_SESSION['error'] = "Payroll personil sudah tersedia";
+
+        header("Location: manage_employee_payment.php");
+
+        exit;
+    }
+
+    $note_payment     = mysqli_real_escape_string($conn, $_POST['note_payment']);
+
+    $update_at = date('Y-m-d H:i:s');
+
+    $insertPayment = mysqli_query($conn, "
+        INSERT INTO employee_payment (
+
+            id_employee,
+            id_department,
+            id_position,
+
+            period_date,
+            payment_date,
+            payment_method,
+
+            basic_salary,
+            benefit_salary,
+            bonus_salary,
+            overtime_salary,
+
+            bpjs_deduction,
+            bpjstk_deduction,
+            pph21_deduction,
+            etc_deduction,
+
+            note_payment,
+            update_at
+
+        ) VALUES (
+
+            '$id_employee',
+            '$id_department',
+            '$id_position',
+
+            '$period_date',
+            '$payment_date',
+            '$payment_method',
+
+            '$basic_salary',
+            '$benefit_salary',
+            '$bonus_salary',
+            '$overtime_salary',
+
+            '$bpjs_deduction',
+            '$bpjstk_deduction',
+            '$pph21_deduction',
+            '$etc_deduction',
+
+            '$note_payment',
+            '$update_at'
+        )
+    ");
+
+    if ($insertPayment) {
+
+        $_SESSION['success'] = "Data payroll " . $_POST['employee_name_hidden'] . " berhasil ditambahkan";
+    } else {
+
+        $_SESSION['error'] = "Gagal menambahkan payroll : " . mysqli_error($conn);
+    }
+
+    header("Location: manage_employee_payment.php");
+    exit;
+}
+
+/* =========================================================
+   DELETE PAYMENT
+========================================================= */
+if (isset($_GET['delete'])) {
+
+    $id = intval($_GET['delete']);
+
+    $deletePayment = mysqli_query($conn, "
+        DELETE FROM employee_payment
+        WHERE id = '$id'
+    ");
+
+    if ($deletePayment) {
+
+        $_SESSION['success'] = "Data payroll berhasil dihapus";
+    } else {
+
+        $_SESSION['error'] = "Gagal menghapus payroll";
+    }
+
+    header("Location: manage_employee_payment.php");
+    exit;
+}
+
+/* =========================================================
+   GET DETAIL PAYMENT
+========================================================= */
+if (isset($_GET['detail'])) {
+
+    $id = intval($_GET['detail']);
+
+    $queryDetailPayment = mysqli_query($conn, "
+    SELECT
+
+        employee_payment.*,
+
+        employee.full_name,
+
+        department.department_name,
+
+        positions.position_name
+
+    FROM employee_payment
+
+    LEFT JOIN employee
+        ON employee_payment.id_employee = employee.id
+
+    LEFT JOIN department
+        ON employee_payment.id_department = department.id
+
+    LEFT JOIN positions
+        ON employee_payment.id_position = positions.id
+
+    WHERE employee_payment.id = '$id'
+");
+
+    $detailPayment = mysqli_fetch_assoc($queryDetailPayment);
+}
+
+/* =========================================================
+   UPDATE PAYMENT
+========================================================= */
+if (isset($_POST['update_employee_payment'])) {
+
+    $id = intval($_POST['id']);
+
+    $id_employee      = mysqli_real_escape_string($conn, $_POST['id_employee']);
+    $id_department    = mysqli_real_escape_string($conn, $_POST['id_department']);
+    $id_position      = mysqli_real_escape_string($conn, $_POST['id_position']);
+
+    $period_date_input = mysqli_real_escape_string($conn, $_POST['period_date']);
+    $period_date = $period_date_input . "-01";
+    $payment_date     = mysqli_real_escape_string($conn, $_POST['payment_date']);
+    $payment_method   = mysqli_real_escape_string($conn, $_POST['payment_method']);
+
+    $basic_salary     = cleanRupiah($_POST['basic_salary']);
+    $benefit_salary   = cleanRupiah($_POST['benefit_salary']);
+    $bonus_salary     = cleanRupiah($_POST['bonus_salary']);
+    $overtime_salary  = cleanRupiah($_POST['overtime_salary']);
+
+    $bpjs_deduction   = cleanRupiah($_POST['bpjs_deduction']);
+    $bpjstk_deduction = cleanRupiah($_POST['bpjstk_deduction']);
+    $pph21_deduction  = cleanRupiah($_POST['pph21_deduction']);
+    $etc_deduction    = cleanRupiah($_POST['etc_deduction']);
+
+    $note_payment     = mysqli_real_escape_string($conn, $_POST['note_payment']);
+
+    $update_at = date('Y-m-d H:i:s');
+
+    $updatePayment = mysqli_query($conn, "
+        UPDATE employee_payment SET
+
+            id_employee      = '$id_employee',
+            id_department    = '$id_department',
+            id_position      = '$id_position',
+
+            period_date      = '$period_date',
+            payment_date     = '$payment_date',
+            payment_method   = '$payment_method',
+
+            basic_salary     = '$basic_salary',
+            benefit_salary   = '$benefit_salary',
+            bonus_salary     = '$bonus_salary',
+            overtime_salary  = '$overtime_salary',
+
+            bpjs_deduction   = '$bpjs_deduction',
+            bpjstk_deduction = '$bpjstk_deduction',
+            pph21_deduction  = '$pph21_deduction',
+            etc_deduction    = '$etc_deduction',
+
+            note_payment     = '$note_payment',
+
+            update_at        = '$update_at'
+
+        WHERE id = '$id'
+    ");
+
+    if ($updatePayment) {
+
+        $_SESSION['success'] = "Data payroll " . $_POST['employee_name_hidden'] . " berhasil diupdate";
+    } else {
+
+        $_SESSION['error'] = "Gagal update payroll : " . mysqli_error($conn);
+    }
+
+    header("Location: manage_employee_payment.php");
+    exit;
+}
+
+/* =========================================================
+   PERSONIL BARU SESUAI PERIODE
+========================================================= */
+$queryEmployeeAll = mysqli_query($conn, "
+
+    SELECT
+        employee.id,
+        employee.full_name,
+        employee.id_department,
+        employee.id_position
+
+    FROM employee
+
+    ORDER BY employee.full_name ASC
+
+");
+
+/* =========================================================
+   GET DEPARTMENT
+========================================================= */
+$queryDepartment = mysqli_query($conn, "
+    SELECT
+        id,
+        department_name
+    FROM department
+    ORDER BY department_name ASC
+");
+
+/* =========================================================
+   GET POSITIONS
+========================================================= */
+$queryPositions = mysqli_query($conn, "
+    SELECT
+        positions.id,
+        positions.position_name,
+        positions.department_id,
+        department.department_name
+    FROM positions
+
+    LEFT JOIN department
+        ON positions.department_id = department.id
+
+    ORDER BY positions.position_name ASC
+");
+
+/* =========================================================
+   GET ENUM PAYMENT METHOD
+========================================================= */
+$queryPaymentMethod = mysqli_query($conn, "
+    SHOW COLUMNS 
+    FROM employee_payment 
+    LIKE 'payment_method'
+");
+
+$dataPaymentMethod = mysqli_fetch_assoc($queryPaymentMethod);
+
+preg_match("/^enum\(\'(.*)\'\)$/", $dataPaymentMethod['Type'], $matches);
+
+$paymentMethods = explode("','", $matches[1]);
+
+/* =========================================================
+   NOTIFICATION
+========================================================= */
+
+$successMessage = "";
+
+$errorMessage = "";
+
+if (isset($_SESSION['success'])) {
+
+    $successMessage = $_SESSION['success'];
+
+    unset($_SESSION['success']);
+}
+
+if (isset($_SESSION['error'])) {
+
+    $errorMessage = $_SESSION['error'];
+
+    unset($_SESSION['error']);
+}
+
+/* =========================================================
+   GET DATA TABLE PAYROLL
+========================================================= */
+
+$queryTablePayroll = mysqli_query($conn, "
+    SELECT
+
+        employee_payment.id,
+
+        employee.full_name,
+
+        department.department_name,
+
+        positions.position_name,
+
+        employee_payment.period_date,
+
+        employee_payment.payment_date,
+
+        employee_payment.basic_salary,
+        employee_payment.benefit_salary,
+        employee_payment.bonus_salary,
+        employee_payment.overtime_salary,
+
+        employee_payment.bpjs_deduction,
+        employee_payment.bpjstk_deduction,
+        employee_payment.pph21_deduction,
+        employee_payment.etc_deduction,
+
+        employee_payment.update_at
+
+    FROM employee_payment
+
+    LEFT JOIN employee
+        ON employee_payment.id_employee = employee.id
+
+    LEFT JOIN department
+        ON employee_payment.id_department = department.id
+
+    LEFT JOIN positions
+        ON employee_payment.id_position = positions.id
+
+    ORDER BY employee_payment.id DESC
+");
+
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -8,6 +461,8 @@
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Gaji Karyawan - Dashboard | Konig Guard Bureau</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Perfect Scrollbar -->
     <link
@@ -86,126 +541,293 @@
                 </div>
 
                 <!-- FORM -->
-                <div class="card p-3 mb-4" style="background:#fff;border-radius:8px;">
+                <form action="" method="POST">
+                    <div class="card p-3 mb-4" style="background:#fff;border-radius:8px;">
 
-                    <!-- TOP FORM -->
-                    <div class="row mb-4 pb-3" style="border-bottom:1px solid #ECEEF0;">
+                        <!-- TOP FORM -->
+                        <div class="row mb-4 pb-3" style="border-bottom:1px solid #ECEEF0;">
 
-                        <div class="col-md-3">
-                            <label>Karyawan</label>
-                            <select class="form-control">
-                                <option>Pilih Karyawan</option>
-                                <option>Andi</option>
-                                <option>Budi</option>
-                            </select>
+                            <!-- PERIODE -->
+                            <div class="col-md-3">
+
+                                <label>Periode</label>
+
+                                <input type="month" name="period_date" class="form-control"
+                                    value="<?= date('Y-m'); ?>" required>
+
+                            </div>
+
+                            <!-- DEPARTMENT -->
+                            <div class="col-md-3 mb-2">
+
+                                <label>Department</label>
+
+                                <select
+                                    name="id_department"
+                                    id="departmentSelect"
+                                    class="form-control"
+                                    disabled
+                                    required>
+
+                                    <option value="">
+                                        -- Pilih Department --
+                                    </option>
+
+                                    <?php while ($department = mysqli_fetch_assoc($queryDepartment)) : ?>
+
+                                        <option value="<?= $department['id']; ?>">
+
+                                            <?= $department['department_name']; ?>
+
+                                        </option>
+
+                                    <?php endwhile; ?>
+
+                                </select>
+
+                            </div>
+
+                            <!-- POSITION -->
+                            <div class="col-md-3 mb-2">
+
+                                <label>Jabatan</label>
+
+                                <select
+                                    name="id_position"
+                                    id="positionSelect"
+                                    class="form-control"
+                                    disabled
+                                    required>
+
+                                    <option value="">
+                                        -- Pilih Jabatan --
+                                    </option>
+
+                                    <?php while ($position = mysqli_fetch_assoc($queryPositions)) : ?>
+
+                                        <option value="<?= $position['id']; ?>" data-department="<?= $position['department_id']; ?>">
+
+                                            <?= $position['position_name']; ?>
+
+                                        </option>
+
+                                    <?php endwhile; ?>
+
+                                </select>
+
+                            </div>
+
+                            <!-- PERSONIL -->
+                            <div class="col-md-3">
+
+                                <label>Personil</label>
+
+                                <select
+                                    name="id_employee"
+                                    id="employeeSelect"
+                                    class="form-control"
+                                    disabled
+                                    required>
+
+                                    <option value="">
+                                        -- Pilih Personil --
+                                    </option>
+
+                                </select>
+
+                                <select id="employeeData" style="display:none;">
+
+                                    <?php while ($employee = mysqli_fetch_assoc($queryEmployeeAll)) : ?>
+
+                                        <option
+                                            value="<?= $employee['id']; ?>"
+                                            data-department="<?= $employee['id_department']; ?>"
+                                            data-position="<?= $employee['id_position']; ?>">
+
+                                            <?= $employee['full_name']; ?>
+
+                                        </option>
+
+                                    <?php endwhile; ?>
+
+                                </select>
+
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Tanggal Bayar</label>
+                                <input type="date" name="payment_date" class="form-control">
+                            </div>
+
+                            <!-- PAYMENT METHOD -->
+                            <div class="col-md-3">
+
+                                <label>Metode Pembayaran</label>
+
+                                <select
+                                    name="payment_method"
+                                    class="form-control"
+                                    required>
+
+                                    <option value="">
+                                        -- Pilih Metode --
+                                    </option>
+
+                                    <?php foreach ($paymentMethods as $method) : ?>
+
+                                        <option value="<?= $method; ?>">
+
+                                            <?= $method; ?>
+
+                                        </option>
+
+                                    <?php endforeach; ?>
+
+                                </select>
+
+                            </div>
+
                         </div>
 
-                        <div class="col-md-3">
-                            <label>Periode</label>
-                            <input type="month" class="form-control">
-                        </div>
+                        <!-- MAIN CONTENT -->
+                        <div class="row">
 
-                        <div class="col-md-3">
-                            <label>Tanggal Bayar</label>
-                            <input type="date" class="form-control">
-                        </div>
+                            <!-- PENDAPATAN -->
+                            <div class="col-md-4" style="border-right:1px solid #ECEEF0;">
+                                <h6 class="mb-3 text-success">Pendapatan</h6>
 
-                        <div class="col-md-3">
-                            <label>Metode Pembayaran</label>
-                            <select class="form-control">
-                                <option>Transfer Bank</option>
-                                <option>Cash</option>
-                            </select>
+                                <label>Gaji Pokok</label>
+                                <input type="number" name="basic_salary" class="form-control mb-2 rupiah-input pendapatan-input">
+
+                                <label>Tunjangan</label>
+                                <input type="number" name="benefit_salary" class="form-control mb-2 rupiah-input pendapatan-input">
+
+                                <label>Bonus</label>
+                                <input type="number" name="bonus_salary" class="form-control mb-2 rupiah-input pendapatan-input">
+
+                                <label>Lembur</label>
+                                <input type="number" name="overtime_salary" class="form-control mb-3 rupiah-input pendapatan-input">
+
+                                <div class="p-2" style="background:#FAFBFE;border-radius:6px;">
+                                    <strong>Total Pendapatan</strong>
+                                    <span id="totalPendapatan" class="float-right text-success">Rp 0</span>
+                                </div>
+                            </div>
+
+                            <!-- POTONGAN -->
+                            <div class="col-md-4" style="border-right:1px solid #ECEEF0;">
+                                <h6 class="mb-3 text-danger">Potongan</h6>
+
+                                <label>BPJS Kesehatan</label>
+                                <input type="number" name="bpjs_deduction" class="form-control mb-2 rupiah-input potongan-input">
+
+                                <label>BPJS Ketenagakerjaan</label>
+                                <input type="number" name="bpjstk_deduction" class="form-control mb-2 rupiah-input potongan-input">
+
+                                <label>PPh 21</label>
+                                <input type="number" name="pph21_deduction" class="form-control mb-2 rupiah-input potongan-input">
+
+                                <label>Lain-lain</label>
+                                <input type="number" name="etc_deduction" class="form-control mb-3 rupiah-input potongan-input">
+
+                                <div class="p-2" style="background:#FAFBFE;border-radius:6px;">
+                                    <strong>Total Potongan</strong>
+                                    <span id="totalPotongan" class="float-right text-danger">Rp 0</span>
+                                </div>
+                            </div>
+
+                            <!-- RINGKASAN -->
+                            <div class="col-md-4">
+                                <h6 class="mb-3">Ringkasan</h6>
+
+                                <div class="p-3 mb-3" style="background:#FAFBFE;border-radius:8px;">
+                                    <p>Total Pendapatan
+                                        <span id="summaryPendapatan" class="float-right text-success">Rp 0</span>
+                                    </p>
+                                    <p>Total Potongan
+                                        <span id="summaryPotongan" class="float-right text-danger">Rp 0</span>
+                                    </p>
+
+                                    <hr>
+
+                                    <h5>Take Home Pay
+                                        <span id="takeHomePay" class="float-right text-primary">Rp 0</span>
+                                    </h5>
+                                </div>
+
+                                <textarea name="note_payment" class="form-control mb-3" placeholder="Catatan..."></textarea>
+
+                                <div class="text-right">
+                                    <button
+                                        type="submit"
+                                        name="add_employee_payment"
+                                        id="btnSimpanPayroll"
+                                        class="btn btn-primary">
+                                        Simpan
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
 
                     </div>
+                </form>
 
-                    <!-- MAIN CONTENT -->
-                    <div class="row">
+                <!-- NOTIF DISINI -->
+                <?php if (!empty($successMessage)) : ?>
 
-                        <!-- PENDAPATAN -->
-                        <div class="col-md-4" style="border-right:1px solid #ECEEF0;">
-                            <h6 class="mb-3 text-success">Pendapatan</h6>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
 
-                            <label>Gaji Pokok</label>
-                            <input type="number" class="form-control mb-2 rupiah-input pendapatan-input">
+                        <?= $successMessage; ?>
 
-                            <label>Tunjangan</label>
-                            <input type="number" class="form-control mb-2 rupiah-input pendapatan-input">
+                        <button type="button"
+                            class="close"
+                            data-dismiss="alert">
 
-                            <label>Bonus</label>
-                            <input type="number" class="form-control mb-2 rupiah-input pendapatan-input">
+                            <span>&times;</span>
 
-                            <label>Lembur</label>
-                            <input type="number" class="form-control mb-3 rupiah-input pendapatan-input">
-
-                            <div class="p-2" style="background:#FAFBFE;border-radius:6px;">
-                                <strong>Total Pendapatan</strong>
-                                <span id="totalPendapatan" class="float-right text-success">Rp 0</span>
-                            </div>
-                        </div>
-
-                        <!-- POTONGAN -->
-                        <div class="col-md-4" style="border-right:1px solid #ECEEF0;">
-                            <h6 class="mb-3 text-danger">Potongan</h6>
-
-                            <label>BPJS Kesehatan</label>
-                            <input type="number" class="form-control mb-2 rupiah-input potongan-input">
-
-                            <label>BPJS Ketenagakerjaan</label>
-                            <input type="number" class="form-control mb-2 rupiah-input potongan-input">
-
-                            <label>PPh 21</label>
-                            <input type="number" class="form-control mb-2 rupiah-input potongan-input">
-
-                            <label>Lain-lain</label>
-                            <input type="number" class="form-control mb-3 rupiah-input potongan-input">
-
-                            <div class="p-2" style="background:#FAFBFE;border-radius:6px;">
-                                <strong>Total Potongan</strong>
-                                <span id="totalPotongan" class="float-right text-danger">Rp 0</span>
-                            </div>
-                        </div>
-
-                        <!-- RINGKASAN -->
-                        <div class="col-md-4">
-                            <h6 class="mb-3">Ringkasan</h6>
-
-                            <div class="p-3 mb-3" style="background:#FAFBFE;border-radius:8px;">
-                                <p>Total Pendapatan
-                                    <span id="summaryPendapatan" class="float-right text-success">Rp 0</span>
-                                </p>
-                                <p>Total Potongan
-                                    <span id="summaryPotongan" class="float-right text-danger">Rp 0</span>
-                                </p>
-
-                                <hr>
-
-                                <h5>Take Home Pay
-                                    <span id="takeHomePay" class="float-right text-primary">Rp 0</span>
-                                </h5>
-                            </div>
-
-                            <textarea class="form-control mb-3" placeholder="Catatan..."></textarea>
-
-                            <div class="text-right">
-                                <button
-                                    id="btnResetPayroll"
-                                    class="btn btn-light">
-                                    Reset
-                                </button>
-                                <button
-                                    id="btnSimpanPayroll"
-                                    class="btn btn-primary">
-                                    Simpan
-                                </button>
-                            </div>
-                        </div>
+                        </button>
 
                     </div>
+
+                <?php endif; ?>
+
+                <?php if (!empty($errorMessage)) : ?>
+
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+
+                        <?= $errorMessage; ?>
+
+                        <button type="button"
+                            class="close"
+                            data-dismiss="alert">
+
+                            <span>&times;</span>
+
+                        </button>
+
+                    </div>
+
+                <?php endif; ?>
+
+                <!-- TABLE WIDTH -->
+                <div class="mb-3">
+
+                    <label class="mb-1">
+
+                        Lebar Tabel
+
+                    </label>
+
+                    <input
+                        type="range"
+                        min="800"
+                        max="3000"
+                        value="1200"
+                        id="slider"
+                        class="w-100">
 
                 </div>
-
                 <!-- TABLE -->
                 <div class="card p-3" style="background:#fff;border-radius:8px;">
 
@@ -270,55 +892,137 @@
                     </div>
 
                     <!-- TABLE -->
-                    <div class="table-responsive">
+                    <div class="table-responsive" id="tableContainer">
 
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="payrollTable">
 
                             <thead>
                                 <tr>
                                     <th>No</th>
                                     <th>Karyawan</th>
-                                    <th>Divisi</th>
+                                    <th>Department</th>
+                                    <th>Jabatan</th>
                                     <th>Periode</th>
                                     <th>Tgl Bayar</th>
                                     <th>Total</th>
                                     <th>Potongan</th>
                                     <th>Take Home Pay</th>
+                                    <th>Tanggal Update</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
 
-                            <tbody id="tableBody">
+                            <tbody id="payrollTableBody">
 
-                                <tr>
-                                    <td>1</td>
-                                    <td>Andi</td>
-                                    <td>Marketing</td>
-                                    <td>Mei 2025</td>
-                                    <td>31/05/2025</td>
+                                <?php
 
-                                    <td class="text-success">
-                                        Rp 8.000.000
-                                    </td>
+                                $no = 1;
 
-                                    <td class="text-danger">
-                                        Rp 1.000.000
-                                    </td>
+                                while ($row = mysqli_fetch_assoc($queryTablePayroll)) :
 
-                                    <td class="text-primary">
-                                        Rp 7.000.000
-                                    </td>
+                                    $totalPendapatan =
+                                        $row['basic_salary'] +
+                                        $row['benefit_salary'] +
+                                        $row['bonus_salary'] +
+                                        $row['overtime_salary'];
 
-                                    <td>
-                                        <button class="btn btn-sm btn-primary">
-                                            View
-                                        </button>
+                                    $totalPotongan =
+                                        $row['bpjs_deduction'] +
+                                        $row['bpjstk_deduction'] +
+                                        $row['pph21_deduction'] +
+                                        $row['etc_deduction'];
 
-                                        <button class="btn btn-sm btn-danger">
-                                            Hapus
-                                        </button>
-                                    </td>
-                                </tr>
+                                    $takeHomePay = $totalPendapatan - $totalPotongan;
+
+                                ?>
+
+                                    <tr>
+
+                                        <!-- NO -->
+                                        <td>
+                                            <?= $no++; ?>
+                                        </td>
+
+                                        <!-- KARYAWAN -->
+                                        <td>
+                                            <?= $row['full_name']; ?>
+                                        </td>
+
+                                        <!-- DEPARTMENT -->
+                                        <td>
+                                            <?= $row['department_name']; ?>
+                                        </td>
+
+                                        <!-- POSITION -->
+                                        <td>
+                                            <?= $row['position_name']; ?>
+                                        </td>
+
+                                        <!-- PERIODE -->
+                                        <td>
+                                            <?= !empty($row['period_date']) && $row['period_date'] != '0000-00-00'
+                                                ? date('F Y', strtotime($row['period_date']))
+                                                : '-'; ?>
+                                        </td>
+
+                                        <!-- TGL BAYAR -->
+                                        <td>
+                                            <?= date('d/m/Y', strtotime($row['payment_date'])); ?>
+                                        </td>
+
+                                        <!-- TOTAL -->
+                                        <td class="text-success">
+
+                                            Rp <?= number_format($totalPendapatan, 0, ',', '.'); ?>
+
+                                        </td>
+
+                                        <!-- POTONGAN -->
+                                        <td class="text-danger">
+
+                                            Rp <?= number_format($totalPotongan, 0, ',', '.'); ?>
+
+                                        </td>
+
+                                        <!-- TAKE HOME -->
+                                        <td class="text-primary">
+
+                                            Rp <?= number_format($takeHomePay, 0, ',', '.'); ?>
+
+                                        </td>
+
+                                        <!-- UPDATE -->
+                                        <td>
+
+                                            <?= date('d/m/Y H:i', strtotime($row['update_at'])); ?>
+
+                                        </td>
+
+                                        <!-- AKSI -->
+                                        <td>
+
+                                            <!-- VIEW -->
+                                            <a href="?detail=<?= $row['id']; ?>"
+                                                class="btn btn-sm btn-primary my-1">
+
+                                                View
+
+                                            </a>
+
+                                            <!-- DELETE -->
+                                            <a href="?delete=<?= $row['id']; ?>"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Yakin hapus payroll ini?')">
+
+                                                Hapus
+
+                                            </a>
+
+                                        </td>
+
+                                    </tr>
+
+                                <?php endwhile; ?>
 
                             </tbody>
 
@@ -341,12 +1045,12 @@
                         </div>
 
                         <!-- EXPORT -->
-                        <button class="btn btn-primary"
-                            onclick="exportExcel()">
+                        <a href="includes/export_employee_payment_excel.php"
+                            class="btn btn-success">
 
                             Export Excel
 
-                        </button>
+                        </a>
                     </div>
 
                 </div>
@@ -367,393 +1071,437 @@
     <?php include 'includes/drawer_menu.php'; ?>
     <!-- ********************************** //END MENU-drawer ********************************** -->
 
-    <!-- DETAIL VIEW -->
-    <div id="detailPayrollCard"
-        class="card p-3 mt-4"
-        style="display:none;background:#fff;border-radius:8px;">
+    <?php if (isset($detailPayment)) :
 
-        <!-- TITLE -->
-        <div class="mb-3">
-            <h4>Detail Penggajian Karyawan</h4>
+        $detailTotalPendapatan =
+            $detailPayment['basic_salary'] +
+            $detailPayment['benefit_salary'] +
+            $detailPayment['bonus_salary'] +
+            $detailPayment['overtime_salary'];
 
-            <small class="text-muted">
-                Informasi lengkap data penggajian
-            </small>
-        </div>
+        $detailTotalPotongan =
+            $detailPayment['bpjs_deduction'] +
+            $detailPayment['bpjstk_deduction'] +
+            $detailPayment['pph21_deduction'] +
+            $detailPayment['etc_deduction'];
 
-        <!-- FORM -->
-        <div class="card p-3"
+        $detailTakeHome =
+            $detailTotalPendapatan - $detailTotalPotongan;
+
+    ?>
+
+        <!-- DETAIL VIEW -->
+        <div id="detailPayrollCard"
+            class="card p-3 mt-4"
             style="background:#fff;border-radius:8px;">
 
-            <!-- TOP FORM -->
-            <div class="row mb-4 pb-3"
-                style="border-bottom:1px solid #ECEEF0;">
+            <!-- TITLE -->
+            <div class="mb-3">
 
-                <div class="col-md-3">
-                    <label>Karyawan</label>
+                <h4>
+                    Detail Penggajian Karyawan
+                </h4>
 
-                    <input type="text" id="detailNama"
-                        class="form-control" readonly>
-                    </input>
-                </div>
+                <small class="text-muted">
 
-                <div class="col-md-3">
-                    <label>Periode</label>
+                    Informasi lengkap data penggajian
 
-                    <input type="text" id="detailPeriode"
-                        class="form-control" readonly>
-                    </input>
-                </div>
-
-                <div class="col-md-3">
-                    <label>Tanggal Bayar</label>
-
-                    <input type="date" id="detailTanggal"
-                        class="form-control" readonly>
-                    </input>
-                </div>
-
-                <div class="col-md-3">
-                    <label>Metode Pembayaran</label>
-
-                    <select id="detailMetode"
-                        class="form-control" disabled>
-                        <option>Transfer Bank</option>
-                        <option>Cash</option>
-                    </select>
-                </div>
+                </small>
 
             </div>
 
-            <!-- MAIN CONTENT -->
-            <div class="row">
+            <!-- FORM -->
+            <form
+                action=""
+                method="POST"
+                id="formEditPayroll">
+                <div class="card p-3"
+                    style="background:#fff;border-radius:8px;">
 
-                <!-- PENDAPATAN -->
-                <div class="col-md-4"
-                    style="border-right:1px solid #ECEEF0;">
+                    <!-- TOP -->
+                    <div class="row mb-4 pb-3"
+                        style="border-bottom:1px solid #ECEEF0;">
 
-                    <h6 class="mb-3 text-success">
-                        Pendapatan
-                    </h6>
+                        <input
+                            type="hidden"
+                            name="id"
+                            value="<?= $detailPayment['id']; ?>">
 
-                    <label>Gaji Pokok</label>
+                        <input
+                            type="hidden"
+                            name="id_employee"
+                            value="<?= $detailPayment['id_employee']; ?>">
 
-                    <input type="text" id="detailGaji"
-                        class="form-control mb-2 detail-rupiah" readonly>
-                    </input>
+                        <input
+                            type="hidden"
+                            name="id_department"
+                            value="<?= $detailPayment['id_department']; ?>">
 
-                    <label>Tunjangan</label>
+                        <input
+                            type="hidden"
+                            name="id_position"
+                            value="<?= $detailPayment['id_position']; ?>">
 
-                    <input type="text" id="detailTunjangan"
-                        class="form-control mb-2 detail-rupiah" readonly>
-                    </input>
+                        <input
+                            type="hidden"
+                            name="period_date"
+                            value="<?= date('Y-m', strtotime($detailPayment['period_date'])); ?>">
 
-                    <label>Bonus</label>
+                        <input
+                            type="hidden"
+                            name="employee_name_hidden"
+                            value="<?= $detailPayment['full_name']; ?>">
 
-                    <input type="text" id="detailBonus"
-                        class="form-control mb-2 detail-rupiah" readonly>
-                    </input>
+                        <!-- PERSONIL -->
+                        <div class="col-md-3">
 
-                    <label>Lembur</label>
+                            <label>Personil</label>
 
-                    <input type="text" id="detailLembur"
-                        class="form-control mb-3 detail-rupiah" readonly>
-                    </input>
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="<?= $detailPayment['full_name'] ?? '-'; ?>"
+                                readonly>
 
-                    <div class="p-2"
-                        style="background:#FAFBFE;border-radius:6px;">
+                        </div>
 
-                        <strong>Total Pendapatan</strong>
+                        <!-- DEPARTMENT -->
+                        <div class="col-md-3">
 
-                        <span id="detailTotalPendapatan"
-                            class="float-right text-success">
+                            <label>Department</label>
 
-                        </span>
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="<?= $detailPayment['department_name'] ?? '-'; ?>"
+                                readonly>
+
+                        </div>
+
+                        <!-- JABATAN -->
+                        <div class="col-md-3">
+
+                            <label>Jabatan</label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="<?= $detailPayment['position_name'] ?? '-'; ?>"
+                                readonly>
+
+                        </div>
+
+                        <!-- PERIODE -->
+                        <div class="col-md-3">
+
+                            <label>Periode</label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="<?= !empty($detailPayment['period_date']) && $detailPayment['period_date'] != '0000-00-00'
+                                            ? date('F Y', strtotime($detailPayment['period_date']))
+                                            : '-'; ?>"
+                                readonly>
+
+                        </div>
+
+                        <!-- TANGGAL -->
+                        <div class="col-md-3 mt-3">
+
+                            <label>Tanggal Bayar</label>
+
+                            <input
+                                type="date"
+                                name="payment_date"
+                                class="form-control"
+                                value="<?= date('d/m/Y', strtotime($detailPayment['payment_date'])); ?>"
+                                readonly>
+
+                        </div>
+
+                        <!-- METODE -->
+                        <div class="col-md-3 mt-3">
+
+                            <label>Metode Pembayaran</label>
+
+                            <select
+                                name="payment_method"
+                                class="form-control editable-field"
+                                disabled>
+
+                                <?php foreach ($paymentMethods as $method) : ?>
+
+                                    <option
+                                        value="<?= $method; ?>"
+                                        <?= $detailPayment['payment_method'] == $method ? 'selected' : ''; ?>>
+
+                                        <?= $method; ?>
+
+                                    </option>
+
+                                <?php endforeach; ?>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <!-- MAIN -->
+                    <div class="row">
+
+                        <!-- PENDAPATAN -->
+                        <div class="col-md-4"
+                            style="border-right:1px solid #ECEEF0;">
+
+                            <h6 class="mb-3 text-success">
+
+                                Pendapatan
+
+                            </h6>
+
+                            <label>Gaji Pokok</label>
+
+                            <input
+                                type="text"
+                                name="basic_salary"
+                                class="form-control mb-2 editable-field rupiah-input-edit"
+                                value="Rp <?= number_format($detailPayment['basic_salary'], 0, ',', '.'); ?>"
+                                readonly>
+
+                            <label>Tunjangan</label>
+
+                            <input
+                                type="text"
+                                name="benefit_salary"
+                                class="form-control mb-2 editable-field rupiah-input-edit"
+                                value="Rp <?= number_format($detailPayment['benefit_salary'], 0, ',', '.'); ?>"
+                                readonly>
+
+                            <label>Bonus</label>
+
+                            <input
+                                type="text"
+                                name="bonus_salary"
+                                class="form-control mb-2 editable-field rupiah-input-edit"
+                                value="Rp <?= number_format($detailPayment['bonus_salary'], 0, ',', '.'); ?>"
+                                readonly>
+
+                            <label>Lembur</label>
+
+                            <input
+                                type="text"
+                                name="overtime_salary"
+                                class="form-control mb-3 editable-field rupiah-input-edit"
+                                value="Rp <?= number_format($detailPayment['overtime_salary'], 0, ',', '.'); ?>"
+                                readonly>
+
+                            <div class="p-2"
+                                style="background:#FAFBFE;border-radius:6px;">
+
+                                <strong>Total Pendapatan</strong>
+
+                                <span class="float-right text-success">
+
+                                    Rp <?= number_format($detailTotalPendapatan, 0, ',', '.'); ?>
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <!-- POTONGAN -->
+                        <div class="col-md-4"
+                            style="border-right:1px solid #ECEEF0;">
+
+                            <h6 class="mb-3 text-danger">
+
+                                Potongan
+
+                            </h6>
+
+                            <label>BPJS Kesehatan</label>
+
+                            <input
+                                type="text"
+                                name="bpjs_deduction"
+                                class="form-control mb-2 editable-field rupiah-input-edit"
+                                value="Rp <?= number_format($detailPayment['bpjs_deduction'], 0, ',', '.'); ?>"
+                                readonly>
+
+                            <label>BPJS Ketenagakerjaan</label>
+
+                            <input
+                                type="text"
+                                name="bpjstk_deduction"
+                                class="form-control mb-2 editable-field rupiah-input-edit"
+                                value="Rp <?= number_format($detailPayment['bpjstk_deduction'], 0, ',', '.'); ?>"
+                                readonly>
+
+                            <label>PPh 21</label>
+
+                            <input
+                                type="text"
+                                name="pph21_deduction"
+                                class="form-control mb-2 editable-field rupiah-input-edit"
+                                value="Rp <?= number_format($detailPayment['pph21_deduction'], 0, ',', '.'); ?>"
+                                readonly>
+
+                            <label>Lain-lain</label>
+
+                            <input
+                                type="text"
+                                name="etc_deduction"
+                                class="form-control mb-3 editable-field rupiah-input-edit"
+                                value="Rp <?= number_format($detailPayment['etc_deduction'], 0, ',', '.'); ?>"
+                                readonly>
+
+                            <div class="p-2"
+                                style="background:#FAFBFE;border-radius:6px;">
+
+                                <strong>Total Potongan</strong>
+
+                                <span class="float-right text-danger">
+
+                                    Rp <?= number_format($detailTotalPotongan, 0, ',', '.'); ?>
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <!-- RINGKASAN -->
+                        <div class="col-md-4">
+
+                            <h6 class="mb-3">
+
+                                Ringkasan
+
+                            </h6>
+
+                            <div class="p-3 mb-3"
+                                style="background:#FAFBFE;border-radius:8px;">
+
+                                <p>
+
+                                    Total Pendapatan
+
+                                    <span class="float-right text-success">
+
+                                        Rp <?= number_format($detailTotalPendapatan, 0, ',', '.'); ?>
+
+                                    </span>
+
+                                </p>
+
+                                <p>
+
+                                    Total Potongan
+
+                                    <span class="float-right text-danger">
+
+                                        Rp <?= number_format($detailTotalPotongan, 0, ',', '.'); ?>
+
+                                    </span>
+
+                                </p>
+
+                                <hr>
+
+                                <h5>
+
+                                    Take Home Pay
+
+                                    <span class="float-right text-primary">
+
+                                        Rp <?= number_format($detailTakeHome, 0, ',', '.'); ?>
+
+                                    </span>
+
+                                </h5>
+
+                            </div>
+
+                            <!-- CATATAN -->
+                            <label>
+                                Catatan
+                            </label>
+
+                            <textarea
+                                class="form-control mb-3 editable-field"
+                                name="note_payment"
+                                readonly><?= $detailPayment['note_payment']; ?></textarea>
+
+                            <!-- BUTTON -->
+                            <div class="text-right">
+
+                                <!-- TUTUP -->
+                                <a href="manage_employee_payment.php"
+                                    class="btn btn-light">
+
+                                    Tutup
+
+                                </a>
+
+                                <!-- TOGGLE EDIT -->
+                                <button
+                                    type="button"
+                                    id="btnToggleEdit"
+                                    class="btn btn-warning">
+
+                                    Edit
+
+                                </button>
+
+                                <!-- SIMPAN -->
+                                <button
+                                    type="submit"
+                                    form="formEditPayroll"
+                                    name="update_employee_payment"
+                                    id="btnSaveEdit"
+                                    class="btn btn-success"
+                                    style="display:none;">
+
+                                    Simpan
+
+                                </button>
+
+                                <!-- BATAL -->
+                                <button
+                                    type="button"
+                                    id="btnCancelEdit"
+                                    class="btn btn-secondary"
+                                    style="display:none;">
+
+                                    Batal
+
+                                </button>
+
+                                <!-- PRINT -->
+                                <a href="includes/print_slip_gaji.php?id=<?= $detailPayment['id']; ?>"
+                                    target="_blank"
+                                    class="btn btn-md btn-primary">
+
+                                    Print Slip
+
+                                </a>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                <!-- POTONGAN -->
-                <div class="col-md-4"
-                    style="border-right:1px solid #ECEEF0;">
-
-                    <h6 class="mb-3 text-danger">
-                        Potongan
-                    </h6>
-
-                    <label>BPJS Kesehatan</label>
-
-                    <input type="text" id="detailBPJS"
-                        class="form-control mb-2 detail-rupiah" readonly>
-                    </input>
-
-                    <label>BPJS Ketenagakerjaan</label>
-
-                    <input type="text" id="detailBPJSTK"
-                        class="form-control mb-2 detail-rupiah" readonly>
-                    </input>
-
-                    <label>PPh 21</label>
-
-                    <input type="text" id="detailPPH"
-                        class="form-control mb-2 detail-rupiah" readonly>
-                    </input>
-
-                    <label>Lain-lain</label>
-
-                    <input type="text" id="detailLain"
-                        class="form-control mb-3 detail-rupiah" readonly>
-                    </input>
-
-                    <div class="p-2"
-                        style="background:#FAFBFE;border-radius:6px;">
-
-                        <strong>Total Potongan</strong>
-
-                        <span id="detailTotalPotongan"
-                            class="float-right text-danger">
-
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <!-- RINGKASAN -->
-                <div class="col-md-4">
-
-                    <h6 class="mb-3">
-                        Ringkasan
-                    </h6>
-
-                    <div class="p-3 mb-3"
-                        style="background:#FAFBFE;border-radius:8px;">
-
-                        <p>
-                            Total Pendapatan
-
-                            <span id="summaryPendapatanView"
-                                class="float-right text-success">
-
-                            </span>
-                        </p>
-
-                        <p>
-                            Total Potongan
-
-                            <span id="summaryPotonganView"
-                                class="float-right text-danger">
-
-                            </span>
-                        </p>
-
-                        <hr>
-
-                        <h5>
-                            Take Home Pay
-
-                            <span id="summaryTakeHomeView"
-                                class="float-right text-primary">
-
-                            </span>
-                        </h5>
-
-                    </div>
-
-                    <label>Catatan</label>
-
-                    <textarea id="detailCatatan"
-                        class="form-control mb-3"
-                        readonly>
-                </textarea>
-
-                    <div class="text-right">
-
-                        <!-- EDIT -->
-                        <button id="btnEditPayroll"
-                            class="btn btn-warning"
-                            onclick="toggleEditPayroll()">
-
-                            Edit
-
-                        </button>
-
-                        <!-- CANCEL -->
-                        <button id="btnCancelEdit"
-                            class="btn btn-light"
-                            onclick="cancelEditPayroll()"
-                            style="display:none;">
-
-                            Batal
-
-                        </button>
-
-                        <button class="btn btn-secondary"
-                            onclick="printSlipGaji()">
-
-                            Print Slip
-
-                        </button>
-
-                        <button class="btn btn-light"
-                            onclick="closeDetailPayroll()">
-
-                            Tutup
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
+            </form>
 
         </div>
 
-    </div>
-
-    <!-- =========================
-    MODAL SUCCESS
-========================= -->
-
-    <div class="modal fade" id="modalSuccess" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content border-0"
-                style="
-                border-radius:18px;
-                overflow:hidden;
-            ">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#ecfdf3;
-                    ">
-
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#16a34a;
-                        ">
-                            check_circle
-                        </span>
-
-                    </div>
-
-                    <!-- TITLE -->
-                    <h4 class="font-weight-bold mb-2" id="modalSuccessTitle">
-                        Berhasil
-                    </h4>
-
-                    <!-- TEXT -->
-                    <p class="text-muted mb-4" id="modalSuccessText">
-                        Data berhasil disimpan
-                    </p>
-
-                    <!-- BUTTON -->
-                    <button type="button"
-                        class="btn btn-success px-4"
-                        data-dismiss="modal"
-                        style="
-                        min-width:120px;
-                        height:45px;
-                        border-radius:10px;
-                    ">
-                        Okay
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-    </div>
-
-    <!-- =========================
-    MODAL RESET
-========================= -->
-
-    <div class="modal fade" id="modalReset" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content border-0"
-                style="
-                border-radius:18px;
-                overflow:hidden;
-            ">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#fff4e6;
-                    ">
-
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#f59e0b;
-                        ">
-                            refresh
-                        </span>
-
-                    </div>
-
-                    <!-- TITLE -->
-                    <h4 class="font-weight-bold mb-2">
-                        Reset Form?
-                    </h4>
-
-                    <!-- TEXT -->
-                    <p class="text-muted mb-4">
-                        Semua data input akan dihapus
-                    </p>
-
-                    <!-- BUTTON -->
-                    <div class="d-flex justify-content-center">
-
-                        <button type="button"
-                            class="btn btn-light mr-2"
-                            data-dismiss="modal"
-                            style="
-                            min-width:120px;
-                            height:45px;
-                            border-radius:10px;
-                        ">
-                            Batal
-                        </button>
-
-                        <button type="button"
-                            id="btnConfirmReset"
-                            class="btn btn-warning"
-                            style="
-                            min-width:120px;
-                            height:45px;
-                            border-radius:10px;
-                            color:#fff;
-                        ">
-                            Reset
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-    </div>
+    <?php endif; ?>
 
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
@@ -770,6 +1518,7 @@
 
     <!-- jQuery -->
     <script src="../assets/vendor/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Bootstrap -->
     <script src="../assets/vendor/popper.min.js"></script>
@@ -780,8 +1529,6 @@
 
     <!-- DOM Factory -->
     <script src="../assets/vendor/dom-factory.js"></script>
-    <script src="../assets/js/costume-dom/m.emp-pt.js"></script>
-    <script src="../assets/js/costume-dom/export-data.js"></script>
 
     <!-- MDK -->
     <script src="../assets/vendor/material-design-kit.js"></script>
@@ -800,6 +1547,487 @@
     <script src="../assets/vendor/flatpickr/flatpickr.min.js"></script>
     <script src="../assets/js/flatpickr.js"></script>
 
+    <script>
+        $(document).ready(function() {
+
+            $('#employeeSelect').select2({
+
+                placeholder: '-- Pilih Personil --',
+
+                allowClear: true,
+
+                width: '100%'
+
+            });
+
+        });
+    </script>
+
+    <script>
+        // LOGIC JS UNTUK LEBAR TABEL COSTUME
+        $("#slider").on("input", function() {
+
+            let val = $(this).val();
+
+            $("#payrollTable").css("min-width", val + "px");
+
+        });
+    </script>
+
+    <script>
+        // =========================================== FORMAT RUPIAH ===========================================
+        // FORMAT RUPIAH
+        function formatRupiah(angka) {
+            let number_string = angka.replace(/[^,\d]/g, "").toString(),
+                split = number_string.split(","),
+                sisa = split[0].length % 3,
+                rupiah = split[0].substr(0, sisa),
+                ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                separator = sisa ? "." : "";
+                rupiah += separator + ribuan.join(".");
+            }
+
+            return rupiah ? "Rp " + rupiah : "";
+        }
+
+        // AMBIL ANGKA
+        function getNumber(value) {
+            return parseInt(value.replace(/[^0-9]/g, "")) || 0;
+        }
+
+        // INPUT
+        const pendapatanInputs = document.querySelectorAll(".pendapatan-input");
+        const potonganInputs = document.querySelectorAll(".potongan-input");
+
+        // TOTAL
+        const totalPendapatan = document.getElementById("totalPendapatan");
+        const totalPotongan = document.getElementById("totalPotongan");
+
+        const summaryPendapatan = document.getElementById("summaryPendapatan");
+        const summaryPotongan = document.getElementById("summaryPotongan");
+
+        const takeHomePay = document.getElementById("takeHomePay");
+
+        // FORMAT INPUT
+        document.querySelectorAll(".rupiah-input").forEach((input) => {
+            input.setAttribute("type", "text");
+
+            input.addEventListener("input", function() {
+                let angka = this.value.replace(/[^0-9]/g, "");
+                this.value = formatRupiah(angka);
+
+                hitungTotal();
+            });
+        });
+
+        // HITUNG TOTAL
+        function hitungTotal() {
+            let totalP = 0;
+            let totalPot = 0;
+
+            pendapatanInputs.forEach((input) => {
+                totalP += getNumber(input.value);
+            });
+
+            potonganInputs.forEach((input) => {
+                totalPot += getNumber(input.value);
+            });
+
+            let takeHome = totalP - totalPot;
+
+            totalPendapatan.innerHTML = formatRupiah(totalP.toString());
+            totalPotongan.innerHTML = formatRupiah(totalPot.toString());
+
+            summaryPendapatan.innerHTML = formatRupiah(totalP.toString());
+            summaryPotongan.innerHTML = formatRupiah(totalPot.toString());
+
+            takeHomePay.innerHTML = formatRupiah(takeHome.toString());
+        }
+
+        // ======================================== PENJUMLAHAN ========================================
+        // DATA
+        let payrollData = [];
+
+        // DUMMY DATA
+        for (let i = 1; i <= 120; i++) {
+            payrollData.push({
+                nama: "Karyawan " + i,
+                divisi: i % 3 == 0 ? "Finance" : i % 2 == 0 ? "IT" : "Marketing",
+
+                periode: i % 2 == 0 ? "2025-05" : "2025-06",
+
+                tanggal: "31/05/2025",
+
+                total: 8000000 + i * 10000,
+
+                potongan: 1000000,
+            });
+        }
+    </script>
+
+    <script>
+        $("#employeeSelect").on("change", function() {
+
+            let employeeName = $("#employeeSelect option:selected").text();
+
+            $("#employeeNameHidden").val(employeeName);
+
+        });
+    </script>
+
+    <script>
+        let originalForm = $("#formEditPayroll").html();
+
+        $("#btnToggleEdit").click(function() {
+
+            $(".editable-field").each(function() {
+
+                $(this).prop("readonly", false);
+
+                $(this).prop("disabled", false);
+
+            });
+
+            $("#btnToggleEdit").hide();
+
+            $("#btnSaveEdit").show();
+
+            $("#btnCancelEdit").show();
+
+        });
+
+        $("#btnCancelEdit").click(function() {
+
+            location.reload();
+
+        });
+
+        /* =========================================
+           FORMAT RUPIAH EDIT
+        ========================================= */
+
+        $(document).on("input", ".rupiah-input-edit", function() {
+
+            let angka = $(this).val().replace(/[^0-9]/g, "");
+
+            angka = angka.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+            $(this).val(angka);
+
+        });
+
+        /* =========================================
+           AUTO HITUNG EDIT
+        ========================================= */
+
+        function getNumberEdit(value) {
+
+            return parseInt(value.replace(/\./g, '')) || 0;
+
+        }
+
+        function updateSummaryEdit() {
+
+            let totalPendapatan =
+                getNumberEdit($("[name='basic_salary']").val()) +
+                getNumberEdit($("[name='benefit_salary']").val()) +
+                getNumberEdit($("[name='bonus_salary']").val()) +
+                getNumberEdit($("[name='overtime_salary']").val());
+
+            let totalPotongan =
+                getNumberEdit($("[name='bpjs_deduction']").val()) +
+                getNumberEdit($("[name='bpjstk_deduction']").val()) +
+                getNumberEdit($("[name='pph21_deduction']").val()) +
+                getNumberEdit($("[name='etc_deduction']").val());
+
+            let takeHome = totalPendapatan - totalPotongan;
+
+            $("#detailTotalPendapatan").html(
+                "Rp " + totalPendapatan.toLocaleString("id-ID")
+            );
+
+            $("#detailTotalPotongan").html(
+                "Rp " + totalPotongan.toLocaleString("id-ID")
+            );
+
+            $("#summaryPendapatanView").html(
+                "Rp " + totalPendapatan.toLocaleString("id-ID")
+            );
+
+            $("#summaryPotonganView").html(
+                "Rp " + totalPotongan.toLocaleString("id-ID")
+            );
+
+            $("#summaryTakeHomeView").html(
+                "Rp " + takeHome.toLocaleString("id-ID")
+            );
+
+        }
+
+        $(document).on("input", ".rupiah-input-edit", function() {
+
+            updateSummaryEdit();
+
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+
+            $('#employeeSelect').select2({
+
+                placeholder: '-- Pilih Personil --',
+
+                allowClear: true,
+
+                width: '100%'
+
+            });
+
+            /* =========================================
+               DISABLE AWAL
+            ========================================= */
+
+            $("#departmentSelect").prop("disabled", true);
+
+            $("#positionSelect").prop("disabled", true);
+
+            $("#employeeSelect").prop("disabled", true);
+
+            /* =========================================
+               PILIH PERIODE
+            ========================================= */
+
+            $("[name='period_date']").on("change", function() {
+
+                let periode = $(this).val();
+
+                if (periode != "") {
+
+                    $("#departmentSelect").prop("disabled", false);
+
+                } else {
+
+                    $("#departmentSelect").prop("disabled", true);
+
+                    $("#positionSelect").prop("disabled", true);
+
+                    $("#employeeSelect").prop("disabled", true);
+
+                }
+
+            });
+
+            /* =========================================
+               CEK DUPLICATE PERIODE
+            ========================================= */
+
+            $.ajax({
+
+                url: "ajax/get_used_employee_payroll.php",
+
+                type: "POST",
+
+                data: {
+
+                    period_date: periode
+
+                },
+
+                success: function(response) {
+
+                    let usedEmployees = JSON.parse(response);
+
+                    $("#employeeSelect option").each(function() {
+
+                        let employeeId = $(this).val();
+
+                        if (usedEmployees.includes(employeeId)) {
+
+                            $(this).hide();
+
+                        }
+
+                    });
+
+                }
+
+            });
+
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+
+            /* =========================================
+               SELECT2
+            ========================================= */
+
+            $('#employeeSelect').select2({
+
+                placeholder: '-- Pilih Personil --',
+
+                allowClear: true,
+
+                width: '100%'
+
+            });
+
+            /* =========================================
+               DISABLE AWAL
+            ========================================= */
+
+            $("#departmentSelect").prop("disabled", true);
+
+            $("#positionSelect").prop("disabled", true);
+
+            $("#employeeSelect").prop("disabled", true);
+
+            /* =========================================
+               PILIH PERIODE
+            ========================================= */
+
+            $("[name='period_date']").on("change", function() {
+
+                let periode = $(this).val();
+
+                if (periode != "") {
+
+                    $("#departmentSelect").prop("disabled", false);
+
+                } else {
+
+                    $("#departmentSelect").prop("disabled", true);
+
+                    $("#positionSelect").prop("disabled", true);
+
+                    $("#employeeSelect").prop("disabled", true);
+
+                }
+
+            });
+
+            /* =========================================
+               FILTER JABATAN
+            ========================================= */
+
+            $("#departmentSelect").on("change", function() {
+
+                let departmentId = $(this).val();
+
+                $("#positionSelect").prop("disabled", false);
+
+                $("#positionSelect").val("");
+
+                $("#employeeSelect").prop("disabled", true);
+
+                $("#employeeSelect").html(
+                    '<option value="">-- Pilih Personil --</option>'
+                );
+
+                $("#positionSelect option").hide();
+
+                $("#positionSelect option:first").show();
+
+                $("#positionSelect option").each(function() {
+
+                    if ($(this).data("department") == departmentId) {
+
+                        $(this).show();
+
+                    }
+
+                });
+
+            });
+
+            /* =========================================
+               FILTER EMPLOYEE
+            ========================================= */
+
+            $("#positionSelect").on("change", function() {
+
+                let departmentId = $("#departmentSelect").val();
+
+                let positionId = $("#positionSelect").val();
+
+                let periode = $("[name='period_date']").val();
+
+                $("#employeeSelect").prop("disabled", false);
+
+                /* =========================================
+                   GET DUPLICATE EMPLOYEE
+                ========================================= */
+
+                $.ajax({
+
+                    url: "ajax/get_used_employee_payroll.php",
+
+                    type: "POST",
+
+                    data: {
+
+                        period_date: periode
+
+                    },
+
+                    success: function(response) {
+
+                        let usedEmployees = JSON.parse(response);
+
+                        /* =========================================
+                           LOOP ALL EMPLOYEE
+                        ========================================= */
+
+                        $("#employeeData option").each(function() {
+
+                            let employeeId = $(this).val();
+
+                            let empDepartment = $(this).data("department");
+
+                            let empPosition = $(this).data("position");
+
+                            /* =========================================
+                               FILTER
+                            ========================================= */
+
+                            if (
+
+                                empDepartment == departmentId &&
+                                empPosition == positionId &&
+                                !usedEmployees.includes(employeeId)
+
+                            ) {
+
+                                let option = `
+
+                            <option value="${employeeId}">
+
+                                ${$(this).text()}
+
+                            </option>
+
+                        `;
+
+                                $("#employeeSelect").append(option);
+
+                            }
+
+                        });
+
+                        $("#employeeSelect").trigger("change");
+
+                    }
+
+                });
+
+            });
+
+        });
+    </script>
 </body>
 
 </html>

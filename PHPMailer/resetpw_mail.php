@@ -126,9 +126,6 @@ try {
         ]
     ];
 
-    $mail->SMTPDebug = 2;
-    $mail->Debugoutput = 'html';
-
     $mail->setFrom('no-reply@konig.co.id', 'Konig Guard Bureau');
     $mail->addAddress($email);
 
@@ -190,16 +187,9 @@ try {
 ';
 
     $mail->send();
-    echo "EMAIL BERHASIL TERKIRIM";
-    exit;
 } catch (Exception $e) {
 
     $status = "gagal";
-
-    echo "<pre>";
-    echo $mail->ErrorInfo;
-    echo "</pre>";
-    exit;
 }
 
 /* =========================

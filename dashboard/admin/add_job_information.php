@@ -1,3 +1,125 @@
+<?php
+session_start();
+require_once "../koneksi.php";
+
+date_default_timezone_set('Asia/Jakarta');
+
+/* =========================================
+   FUNCTION CLEAN INPUT
+========================================= */
+function clean($data)
+{
+    global $conn;
+
+    return htmlspecialchars(mysqli_real_escape_string($conn, trim($data)));
+}
+
+/* =========================================
+   TAMBAH DATA LOWONGAN
+========================================= */
+if (isset($_POST['submit_job'])) {
+
+    // AMBIL DATA
+    $job_title      = clean($_POST['job_title']);
+    $id_region = clean($_POST['id_region']);
+    $type_vacancy   = clean($_POST['type_vacancy']);
+    $job_desc       = $_POST['job_desc'];
+    $job_quota      = clean($_POST['job_quota']);
+    $start_info     = clean($_POST['start_info']);
+    $end_info       = clean($_POST['end_info']);
+    $link_info      = clean($_POST['link_info']);
+
+    // DEFAULT STATUS
+    $status = 'Aktif';
+
+    /* =========================================
+       VALIDASI
+    ========================================= */
+    if (
+        empty($job_title) ||
+        empty($id_region) ||
+        empty($type_vacancy) ||
+        empty($job_desc) ||
+        empty($job_quota) ||
+        empty($start_info) ||
+        empty($end_info) ||
+        empty($link_info)
+    ) {
+
+        $_SESSION['failed'] = "Semua field wajib diisi!";
+        header("Location: add_job_information.php");
+        exit;
+    }
+
+    // VALIDASI URL
+    if (!filter_var($link_info, FILTER_VALIDATE_URL)) {
+
+        $_SESSION['failed'] = "Format link tidak valid!";
+        header("Location: add_job_information.php");
+        exit;
+    }
+
+    // VALIDASI QUOTA
+    if ($job_quota <= 0) {
+
+        $_SESSION['failed'] = "Kuota harus lebih dari 0!";
+        header("Location: add_job_information.php");
+        exit;
+    }
+
+    // VALIDASI TANGGAL
+    if ($end_info < $start_info) {
+
+        $_SESSION['failed'] = "Tanggal tutup tidak boleh kurang dari tanggal post!";
+        header("Location: add_job_information.php");
+        exit;
+    }
+
+    /* =========================================
+       INSERT DATA
+    ========================================= */
+    $query = mysqli_query($conn, "
+        INSERT INTO job_vacancy (
+            job_title,
+            id_region,
+            type_vacancy,
+            job_desc,
+            job_quota,
+            start_info,
+            end_info,
+            link_info,
+            status
+        ) VALUES (
+            '$job_title',
+            '$id_region',
+            '$type_vacancy',
+            '$job_desc',
+            '$job_quota',
+            '$start_info',
+            '$end_info',
+            '$link_info',
+            '$status'
+        )
+    ");
+
+    /* =========================================
+       RESPONSE
+    ========================================= */
+    if ($query) {
+
+        $_SESSION['success'] = "Lowongan kerja berhasil ditambahkan!";
+        header("Location: manage_job_information.php");
+        exit;
+    } else {
+
+        $_SESSION['failed'] = "Gagal menambahkan data lowongan!";
+        header("Location: add_job_information.php");
+        exit;
+    }
+}
+
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -8,6 +130,8 @@
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Tambah Info Loker - Dashboard | Konig Guard Bureau</title>
+
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
     <!-- Perfect Scrollbar -->
     <link
@@ -85,24 +209,43 @@
                         </div>
 
                         <!-- FORM -->
-                        <form>
+                        <form method="POST">
 
                             <!-- JUDUL -->
                             <div class="form-group">
                                 <label>Judul Lowongan Kerja <span style="color:red">*</span></label>
-                                <input type="text" class="form-control" placeholder="Contoh: Frontend Developer">
+                                <input type="text" name="job_title" class="form-control" placeholder="Contoh: Frontend Developer">
                             </div>
 
                             <!-- LOKASI -->
                             <div class="form-group">
                                 <label>Lokasi <span style="color:red">*</span></label>
-                                <input type="text" class="form-control" placeholder="Contoh: Jakarta">
+
+                                <select name="id_region" class="form-control" required>
+                                    <option value="">-- Pilih Lokasi --</option>
+
+                                    <?php
+                                    $regions = mysqli_query($conn, "
+            SELECT *
+            FROM regions
+            ORDER BY region_name ASC
+        ");
+
+                                    while ($region = mysqli_fetch_assoc($regions)) :
+                                    ?>
+
+                                        <option value="<?= $region['id']; ?>">
+                                            <?= $region['region_name']; ?>
+                                        </option>
+
+                                    <?php endwhile; ?>
+                                </select>
                             </div>
 
                             <!-- JENIS -->
                             <div class="form-group">
                                 <label>Jenis Lowongan <span style="color:red">*</span></label>
-                                <select class="form-control">
+                                <select class="form-control" name="type_vacancy">
                                     <option value="">Pilih jenis lowongan</option>
                                     <option>Full Time</option>
                                     <option>Part Time</option>
@@ -115,22 +258,45 @@
                             <div class="form-group">
                                 <label>Deskripsi Lowongan <span style="color:red">*</span></label>
 
-                                <!-- TOOLBAR SIMPLE -->
-                                <div style="border:1px solid #dbe5ee; border-bottom:none; padding:8px; background:#f5f7fb;">
-                                    <span class="material-icons" style="font-size:18px; cursor:pointer;">format_bold</span>
-                                    <span class="material-icons" style="font-size:18px; cursor:pointer;">format_italic</span>
-                                    <span class="material-icons" style="font-size:18px; cursor:pointer;">format_underlined</span>
-                                    <span class="material-icons" style="font-size:18px; cursor:pointer;">format_list_bulleted</span>
-                                    <span class="material-icons" style="font-size:18px; cursor:pointer;">format_align_left</span>
+                                <!-- TOOLBAR -->
+                                <div id="toolbar" style="border-radius:8px 8px 0 0;">
+
+                                    <span class="ql-formats">
+                                        <button class="ql-bold"></button>
+                                        <button class="ql-italic"></button>
+                                        <button class="ql-underline"></button>
+                                    </span>
+
+                                    <span class="ql-formats">
+                                        <select class="ql-color"></select>
+                                        <select class="ql-background"></select>
+                                    </span>
+
+                                    <span class="ql-formats">
+                                        <button class="ql-list" value="ordered"></button>
+                                        <button class="ql-list" value="bullet"></button>
+                                    </span>
+
+                                    <span class="ql-formats">
+                                        <button class="ql-align" value=""></button>
+                                        <button class="ql-align" value="center"></button>
+                                        <button class="ql-align" value="right"></button>
+                                        <button class="ql-align" value="justify"></button>
+                                    </span>
+
                                 </div>
 
-                                <textarea class="form-control" rows="5" placeholder="Tulis deskripsi lowongan kerja di sini..."></textarea>
+                                <!-- EDITOR -->
+                                <div id="editor" style="height:250px; background:#fff;"></div>
+
+                                <!-- HIDDEN INPUT -->
+                                <input type="hidden" name="job_desc" id="description">
                             </div>
 
                             <!-- KOUTA -->
                             <div class="form-group">
                                 <label>Kuota Pelamar <span style="color:red">*</span></label>
-                                <input type="number" class="form-control" placeholder="Contoh: 5">
+                                <input type="number" name="job_quota" class="form-control" placeholder="Contoh: 5">
                             </div>
 
                             <!-- TANGGAL -->
@@ -139,7 +305,7 @@
                                     <div class="form-group">
                                         <label>Tanggal Post <span style="color:red">*</span></label>
                                         <div class="d-flex align-items-center">
-                                            <input type="date" class="form-control">
+                                            <input type="date" name="start_info" class="form-control">
                                             <span class="material-icons ml-2">calendar_today</span>
                                         </div>
                                     </div>
@@ -149,7 +315,7 @@
                                     <div class="form-group">
                                         <label>Tanggal Tutup Loker <span style="color:red">*</span></label>
                                         <div class="d-flex align-items-center">
-                                            <input type="date" class="form-control">
+                                            <input type="date" name="end_info" class="form-control">
                                             <span class="material-icons ml-2">event_busy</span>
                                         </div>
                                     </div>
@@ -161,13 +327,13 @@
                                 <label>Link Loker <span style="color:red">*</span></label>
                                 <div class="d-flex align-items-center">
                                     <span class="material-icons mr-2">link</span>
-                                    <input type="url" class="form-control" placeholder="https://example.com/lowongan">
+                                    <input type="url" name="link_info" class="form-control" placeholder="https://example.com/lowongan">
                                 </div>
                             </div>
 
                             <!-- BUTTON -->
                             <div class="d-flex justify-content-end mt-4">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" name="submit_job" class="btn btn-primary">
                                     <span class="material-icons" style="font-size:18px; vertical-align:middle;">send</span>
                                     Submit
                                 </button>
@@ -276,6 +442,7 @@
 
     <!-- jQuery -->
     <script src="../assets/vendor/jquery.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
     <!-- Bootstrap -->
     <script src="../assets/vendor/popper.min.js"></script>
@@ -305,30 +472,44 @@
     <script src="../assets/js/flatpickr.js"></script>
 
     <script>
-        // FORM SUBMIT
-        $('form').on('submit', function(e) {
-            e.preventDefault();
-
-            // AMBIL JUDUL LOWONGAN
-            let judul = $('input[type="text"]').first().val();
-
-            // VALIDASI TEXT
-            if (judul.trim() === '') {
-                judul = 'Lowongan';
-            }
-
-            // SET TEXT MODAL
-            $('#textPostingBerhasil').html(
-                '<b>' + judul + '</b> berhasil di posting'
-            );
-
-            // SHOW MODAL
-            $('#modalPostingBerhasil').modal('show');
+        // INIT QUILL
+        var quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: '#toolbar'
+            },
+            placeholder: 'Tulis deskripsi lowongan kerja di sini...'
         });
 
-        // BUTTON OKAY
-        $('#btnOkayPosting').on('click', function() {
-            location.reload();
+        // SUBMIT FORM
+        $('form').on('submit', function() {
+
+            // AMBIL HTML QUILL
+            $('#description').val(quill.root.innerHTML);
+
+            // VALIDASI DESKRIPSI
+            if (quill.getText().trim() === '') {
+                alert('Deskripsi lowongan wajib diisi!');
+                return false;
+            }
+
+            return true;
+        });
+    </script>
+
+    <script>
+        // INIT QUILL
+        var quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: '#toolbar'
+            },
+            placeholder: 'Tulis deskripsi lowongan kerja di sini...'
+        });
+
+        // AMBIL HTML SAAT SUBMIT
+        $('form').on('submit', function() {
+            $('#description').val(quill.root.innerHTML);
         });
     </script>
 </body>

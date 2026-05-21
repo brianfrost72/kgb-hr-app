@@ -1,0 +1,17 @@
+{
+    "name": "hp/fixed-v2",
+    "authors": [
+        {
+            "name": "brianfrost72",
+            "email": "briansteven464@gmail.com"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "1.28"
+    },
+    "config": {
+        "audit": {
+            "block-insecure": false
+        }
+    }
+}

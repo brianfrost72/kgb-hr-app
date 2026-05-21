@@ -1,3 +1,280 @@
+<?php
+session_start();
+require_once "../koneksi.php";
+
+
+/*
+|--------------------------------------------------------------------------
+| TAMBAH DATA
+|--------------------------------------------------------------------------
+*/
+
+if (isset($_POST['tambah_service'])) {
+
+    $service_category = trim($_POST['service_category']);
+    $service_name = trim($_POST['service_name']);
+    $service_desc = trim($_POST['service_desc']);
+
+    if (
+        empty($service_category) ||
+        empty($service_name) ||
+        empty($service_desc) ||
+        empty($_FILES['service_picture']['name'])
+    ) {
+
+        $_SESSION['error'] = "Semua field wajib diisi!";
+
+        header("Location: manage_services.php");
+        exit;
+    } else {
+
+        // VALIDASI DUPLICATE
+        $cek = mysqli_query($conn, "
+            SELECT id 
+            FROM services 
+            WHERE LOWER(service_name) = LOWER('$service_name')
+        ");
+
+        if (mysqli_num_rows($cek) > 0) {
+
+            $_SESSION['error'] = "Nama layanan sudah ada!";
+
+            header("Location: manage_services.php");
+            exit;
+        } else {
+
+            $folder = "../assets/images/services/";
+
+            if (!is_dir($folder)) {
+                mkdir($folder, 0777, true);
+            }
+
+            $gambar = time() . "_" . $_FILES['service_picture']['name'];
+
+            $tmp = $_FILES['service_picture']['tmp_name'];
+
+            move_uploaded_file($tmp, $folder . $gambar);
+
+            mysqli_query($conn, "
+                INSERT INTO services
+                (
+                    service_category,
+                    service_name,
+                    service_picture,
+                    service_desc,
+                    created_at,
+                    update_at
+                )
+                VALUES
+                (
+                    '$service_category',
+                    '$service_name',
+                    '$gambar',
+                    '$service_desc',
+                    NOW(),
+                    NOW()
+                )
+            ");
+
+            $_SESSION['success'] = "Data berhasil ditambahkan!";
+
+            header("Location: manage_services.php");
+            exit;
+        }
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE DATA
+|--------------------------------------------------------------------------
+*/
+
+if (isset($_POST['update_service'])) {
+
+    $id = (int) $_POST['id'];
+
+    $service_category = trim($_POST['service_category']);
+
+    $service_name = trim($_POST['service_name']);
+
+    $service_desc = trim($_POST['service_desc']);
+
+    if (
+        empty($service_category) ||
+        empty($service_name) ||
+        empty($service_desc)
+    ) {
+
+        $_SESSION['error'] = "Semua field wajib diisi!";
+
+        header("Location: manage_services.php");
+        exit;
+    } else {
+
+        // VALIDASI DUPLICATE
+        $cek = mysqli_query($conn, "
+            SELECT id 
+            FROM services 
+            WHERE LOWER(service_name)=LOWER('$service_name')
+            AND id != '$id'
+        ");
+
+        if (mysqli_num_rows($cek) > 0) {
+
+            $_SESSION['error'] = "Nama layanan sudah digunakan!";
+
+            header("Location: manage_services.php");
+            exit;
+        } else {
+
+            $qOld = mysqli_query($conn, "
+                SELECT service_picture
+                FROM services
+                WHERE id='$id'
+            ");
+
+            $old = mysqli_fetch_assoc($qOld);
+
+            $gambar = $old['service_picture'];
+
+            // JIKA ADA GAMBAR BARU
+            if (!empty($_FILES['service_picture']['name'])) {
+
+                $folder = "../assets/images/services/";
+
+                if (
+                    file_exists($folder . $gambar)
+                ) {
+                    unlink($folder . $gambar);
+                }
+
+                $gambar =
+                    time() . "_" .
+                    $_FILES['service_picture']['name'];
+
+                move_uploaded_file(
+                    $_FILES['service_picture']['tmp_name'],
+                    $folder . $gambar
+                );
+            }
+
+            mysqli_query($conn, "
+                UPDATE services
+                SET
+                    service_category = '$service_category',
+                    service_name = '$service_name',
+                    service_picture = '$gambar',
+                    service_desc = '$service_desc',
+                    update_at = NOW()
+                WHERE id='$id'
+            ");
+
+            $_SESSION['success'] = "Data berhasil diupdate!";
+
+            header("Location: manage_services.php");
+            exit;
+        }
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| HAPUS SINGLE
+|--------------------------------------------------------------------------
+*/
+
+if (isset($_POST['hapus_service'])) {
+
+    $id = (int) $_POST['hapus_id'];
+
+    $q = mysqli_query($conn, "
+        SELECT service_picture
+        FROM services
+        WHERE id='$id'
+    ");
+
+    $d = mysqli_fetch_assoc($q);
+
+    if (
+        file_exists(
+            "../assets/images/services/" .
+                $d['service_picture']
+        )
+    ) {
+
+        unlink(
+            "../assets/images/services/" .
+                $d['service_picture']
+        );
+    }
+
+    mysqli_query($conn, "
+        DELETE FROM services
+        WHERE id='$id'
+    ");
+
+    $_SESSION['success'] = "Data berhasil dihapus!";
+
+    header("Location: manage_services.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| HAPUS TERPILIH
+|--------------------------------------------------------------------------
+*/
+
+if (isset($_POST['hapus_terpilih'])) {
+
+    if (!empty($_POST['selected'])) {
+
+        foreach ($_POST['selected'] as $id) {
+
+            $id = (int) $id;
+
+            $q = mysqli_query($conn, "
+                SELECT service_picture
+                FROM services
+                WHERE id='$id'
+            ");
+
+            $d = mysqli_fetch_assoc($q);
+
+            if (
+                file_exists(
+                    "../assets/images/services/" .
+                        $d['service_picture']
+                )
+            ) {
+
+                unlink(
+                    "../assets/images/services/" .
+                        $d['service_picture']
+                );
+            }
+
+            mysqli_query($conn, "
+                DELETE FROM services
+                WHERE id='$id'
+            ");
+        }
+
+        $_SESSION['success'] = "Data terpilih berhasil dihapus!";
+
+        header("Location: manage_services.php");
+        exit;
+    }
+}
+
+$dataServices = mysqli_query($conn, "
+    SELECT *
+    FROM services
+    ORDER BY id ASC
+");
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -77,6 +354,51 @@
             <!-- ********************************// START page__content //******************************* -->
             <div class="container-fluid page__container">
                 <div class="container mt-4">
+                    <!-- NOTIFIKASI DISINI -->
+                    <?php if (isset($_SESSION['success'])) : ?>
+
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 notif-auto">
+
+                            <i class="fa fa-check-circle mr-2"></i>
+
+                            <?= $_SESSION['success']; ?>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert">
+
+                                <span>&times;</span>
+
+                            </button>
+
+                        </div>
+
+                    <?php unset($_SESSION['success']);
+                    endif; ?>
+
+
+                    <?php if (isset($_SESSION['error'])) : ?>
+
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 notif-auto">
+
+                            <i class="fa fa-times-circle mr-2"></i>
+
+                            <?= $_SESSION['error']; ?>
+
+                            <button
+                                type="button"
+                                class="close"
+                                data-dismiss="alert">
+
+                                <span>&times;</span>
+
+                            </button>
+
+                        </div>
+
+                    <?php unset($_SESSION['error']);
+                    endif; ?>
                     <div class="card">
                         <div class="card-header d-flex justify-content-between">
                             <h4 class="card-title">Tambah Layanan</h4>
@@ -106,13 +428,99 @@
                                         <tr>
                                             <th><input type="checkbox" id="checkAll"></th>
                                             <th>No</th>
+                                            <th>Kategori Layanan</th>
                                             <th>Nama Layanan</th>
                                             <th>Gambar</th>
                                             <th>Deskripsi</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="tableBody"></tbody>
+                                    <tbody>
+
+                                        <?php
+                                        $no = 1;
+
+                                        while ($row = mysqli_fetch_assoc($dataServices)) :
+                                        ?>
+
+                                            <tr>
+
+                                                <td>
+                                                    <input type="checkbox"
+                                                        class="rowCheck"
+                                                        name="selected[]"
+                                                        value="<?= $row['id'] ?>">
+                                                </td>
+
+                                                <td><?= $no++ ?></td>
+
+                                                <td>
+
+                                                    <?php if ($row['service_category'] == 'Layanan Keamanan') : ?>
+
+                                                        <span class="badge badge-primary p-2">
+                                                            <?= $row['service_category'] ?>
+                                                        </span>
+
+                                                    <?php else : ?>
+
+                                                        <span class="badge badge-success p-2">
+                                                            <?= $row['service_category'] ?>
+                                                        </span>
+
+                                                    <?php endif; ?>
+
+                                                </td>
+
+                                                <td><?= htmlspecialchars($row['service_name']) ?></td>
+
+                                                <td>
+                                                    <img
+                                                        src="../assets/images/services/<?= $row['service_picture'] ?>"
+                                                        width="80"
+                                                        height="60"
+                                                        style="object-fit:cover; border-radius:10px;">
+                                                </td>
+
+                                                <td>
+
+                                                    <div style="max-width:250px; white-space:nowrap;
+                                                    overflow:hidden; text-overflow:ellipsis;">
+                                                        <?= htmlspecialchars($row['service_desc']) ?>
+                                                    </div>
+
+                                                </td>
+
+                                                <td>
+
+                                                    <button
+                                                        class="btn btn-info btn-sm mb-1"
+                                                        data-toggle="modal"
+                                                        data-target="#modalView<?= $row['id'] ?>" title="Lihat Layanan">
+                                                        View
+                                                    </button>
+
+                                                    <button
+                                                        class="btn btn-warning btn-sm mb-1"
+                                                        data-toggle="modal"
+                                                        data-target="#modalEdit<?= $row['id'] ?>" title="Edit Layanan">
+                                                        Edit
+                                                    </button>
+
+                                                    <button
+                                                        class="btn btn-danger btn-sm"
+                                                        data-toggle="modal"
+                                                        data-target="#modalHapus<?= $row['id'] ?>" title="Hapus Layanan">
+                                                        Hapus
+                                                    </button>
+
+                                                </td>
+
+                                            </tr>
+
+                                        <?php endwhile; ?>
+
+                                    </tbody>
                                 </table>
                             </div>
 
@@ -143,7 +551,7 @@
 
     <!-- ********************************** // MODAL ********************************** -->
     <!-- =========================
-    MODAL LOADING
+    MODAL LOADING TOLONG BUATKAN AGAR KELIATAN KEREN
 ========================= -->
 
     <div class="modal fade"
@@ -189,302 +597,354 @@
         <div class="modal-dialog">
             <div class="modal-content">
 
-                <div class="modal-header">
-                    <h5>Tambah Data</h5>
-                </div>
+                <form method="POST"
+                    enctype="multipart/form-data">
 
-                <div class="modal-body">
+                    <div class="modal-header">
+                        <h5>Tambah Data</h5>
 
-                    <label>Nama Layanan</label>
-                    <input type="text"
-                        id="layananTambah"
-                        class="form-control mb-3"
-                        placeholder="Nama Layanan">
+                        <button type="button"
+                            class="close"
+                            data-dismiss="modal">
+                            &times;
+                        </button>
+                    </div>
 
-                    <label>Upload Gambar</label>
+                    <div class="modal-body">
 
-                    <input type="file"
-                        id="gambarTambah"
-                        class="form-control mb-3"
-                        accept="image/*"
-                        onchange="previewTambah(event)">
+                        <label>Kategori Layanan</label>
 
-                    <img id="previewTambah"
-                        src=""
-                        class="img-fluid mb-3 d-none"
-                        style="
+                        <select
+                            name="service_category"
+                            class="form-control mb-3"
+                            required>
+
+                            <option value="">
+                                -- Pilih Kategori --
+                            </option>
+
+                            <option value="Layanan Keamanan">
+                                Layanan Keamanan
+                            </option>
+
+                            <option value="Fasilitas & Operasional">
+                                Fasilitas & Operasional
+                            </option>
+
+                        </select>
+
+                        <label>Nama Layanan</label>
+
+                        <input type="text"
+                            name="service_name"
+                            class="form-control mb-3"
+                            placeholder="Nama Layanan"
+                            required>
+
+                        <label>Upload Gambar</label>
+
+                        <input type="file"
+                            name="service_picture"
+                            id="gambarTambah"
+                            class="form-control mb-3"
+                            accept="image/*"
+                            onchange="previewTambah(event)"
+                            required>
+
+                        <img id="previewTambah"
+                            src=""
+                            class="img-fluid mb-3 d-none"
+                            style="
                         width:100%;
                         height:220px;
                         object-fit:cover;
                         border-radius:15px;
                     ">
 
-                    <label>Deskripsi</label>
+                        <label>Deskripsi</label>
 
-                    <textarea id="deskripsiTambah"
-                        class="form-control"
-                        rows="5"
-                        placeholder="Masukkan deskripsi layanan"></textarea>
+                        <textarea
+                            name="service_desc"
+                            class="form-control"
+                            rows="5"
+                            placeholder="Masukkan deskripsi layanan"
+                            required></textarea>
 
-                </div>
+                    </div>
 
-                <div class="modal-footer">
-                    <button class="btn btn-primary"
-                        onclick="tambahData()">
-                        Simpan
-                    </button>
-                </div>
+                    <div class="modal-footer">
+
+                        <button type="button"
+                            class="btn btn-secondary"
+                            data-dismiss="modal">
+                            Batal
+                        </button>
+
+                        <button type="submit"
+                            name="tambah_service"
+                            class="btn btn-primary">
+
+                            Simpan
+
+                        </button>
+
+                    </div>
+
+                </form>
 
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modalEdit">
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
-            <div class="modal-content">
+    <?php
+    $dataModal = mysqli_query($conn, "
+    SELECT *
+    FROM services
+    ORDER BY id DESC
+");
 
-                <div class="modal-header">
-                    <h5>Edit Data</h5>
-                </div>
+    while ($m = mysqli_fetch_assoc($dataModal)) :
+    ?>
 
-                <div class="modal-body"
-                    style="max-height:70vh; overflow-y:auto;">
+        <!-- MODAL EDIT -->
+        <div class="modal fade"
+            id="modalEdit<?= $m['id'] ?>">
 
-                    <input type="hidden" id="editIndex">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
 
-                    <label>Nama Layanan</label>
-                    <input type="text"
-                        id="layananEdit"
-                        class="form-control mb-3"
-                        placeholder="Nama Layanan">
+                <div class="modal-content"
+                    style="
+            max-height:95vh;
+            border-radius:18px;
+            overflow:hidden;
+        ">
 
-                    <label>Upload Gambar</label>
-
-                    <input type="file"
-                        id="gambarEdit"
-                        class="form-control mb-3"
-                        accept="image/*"
-                        onchange="previewEdit(event)">
-
-                    <img id="previewEdit"
-                        src=""
-                        class="img-fluid mb-3"
+                    <form method="POST"
+                        enctype="multipart/form-data"
                         style="
+                height:100%;
+                display:flex;
+                flex-direction:column;
+            ">
+
+                        <input type="hidden"
+                            name="id"
+                            value="<?= $m['id'] ?>">
+
+                        <!-- HEADER -->
+                        <div class="modal-header"
+                            style="
+                    position:sticky;
+                    top:0;
+                    z-index:20;
+                    background:#fff;
+                    border-bottom:1px solid #eee;
+                ">
+
+                            <h5 class="mb-0">
+                                Edit Layanan
+                            </h5>
+
+                            <button type="button"
+                                class="close"
+                                data-dismiss="modal">
+
+                                <span>&times;</span>
+
+                            </button>
+
+                        </div>
+
+                        <!-- BODY -->
+                        <div class="modal-body"
+                            style="
+                    overflow-y:auto;
+                    padding:25px;
+                    padding-bottom:140px;
+                    flex:1;
+                ">
+
+                            <label class="font-weight-bold">
+                                Kategori Layanan
+                            </label>
+
+                            <select
+                                name="service_category"
+                                class="form-control mb-4"
+                                required>
+
+                                <option value="Layanan Keamanan"
+                                    <?= $m['service_category'] == 'Layanan Keamanan' ? 'selected' : '' ?>>
+
+                                    Layanan Keamanan
+
+                                </option>
+
+                                <option value="Fasilitas & Operasional"
+                                    <?= $m['service_category'] == 'Fasilitas & Operasional' ? 'selected' : '' ?>>
+
+                                    Fasilitas & Operasional
+
+                                </option>
+
+                            </select>
+
+                            <label class="font-weight-bold">
+                                Nama Layanan
+                            </label>
+
+                            <input type="text"
+                                name="service_name"
+                                class="form-control mb-4"
+                                value="<?= htmlspecialchars($m['service_name']) ?>"
+                                required>
+
+                            <label class="font-weight-bold">
+                                Upload Gambar
+                            </label>
+
+                            <input type="file"
+                                name="service_picture"
+                                class="form-control mb-3"
+                                accept="image/*">
+
+                            <img
+                                src="../assets/images/services/<?= $m['service_picture'] ?>"
+                                class="img-fluid mb-4"
+                                style="
                         width:100%;
-                        height:220px;
+                        max-height:300px;
                         object-fit:cover;
                         border-radius:15px;
+                        box-shadow:0 5px 15px rgba(0,0,0,.1);
                     ">
 
-                    <label>Deskripsi</label>
+                            <label class="font-weight-bold">
+                                Deskripsi
+                            </label>
 
-                    <textarea id="deskripsiEdit"
-                        class="form-control"
-                        rows="5"
-                        placeholder="Masukkan deskripsi"></textarea>
+                            <textarea
+                                name="service_desc"
+                                class="form-control"
+                                required
+                                style="
+                        min-height:300px;
+                        resize:vertical;
+                        line-height:1.8;
+                    "><?= htmlspecialchars($m['service_desc']) ?></textarea>
 
-                </div>
+                        </div>
 
-                <div class="modal-footer">
-                    <button class="btn btn-success"
-                        onclick="updateData()">
-                        Update
-                    </button>
-                </div>
+                        <!-- FOOTER -->
+                        <div class="modal-footer"
+                            style="
+                    position:sticky;
+                    bottom:0;
+                    z-index:20;
+                    background:#fff;
+                    border-top:1px solid #eee;
+                    padding:15px 20px;
+                ">
 
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL VIEW -->
-    <div class="modal fade" id="modalView">
-        <div class="modal-dialog">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5>Detail Layanan</h5>
-                </div>
-
-                <div class="modal-body text-center">
-
-                    <img id="viewGambar"
-                        src=""
-                        class="img-fluid mb-4"
-                        style="width:100%; height:300px;
-                                object-fit:cover; border-radius:20px;
-                                box-shadow:0 5px 15px rgba(0,0,0,.15);">
-
-                    <h4 id="viewNama"></h4>
-
-                    <div id="viewDeskripsi"
-                        class="text-muted"
-                        style="line-height:1.8; text-align:justify;">
-                    </div>
-
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary"
-                        data-dismiss="modal">
-                        Tutup
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================
-    MODAL HAPUS SINGLE
-========================= -->
-
-    <div class="modal fade"
-        id="modalHapus"
-        tabindex="-1">
-
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content border-0"
-                style="
-                border-radius:20px;
-                overflow:hidden;
-            ">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#fff1f2;
+                            <button
+                                type="button"
+                                class="btn btn-secondary px-4"
+                                data-dismiss="modal"
+                                style="
+                        border-radius:10px;
+                        min-width:120px;
                     ">
 
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#dc3545;
-                        ">
-                            delete
-                        </span>
+                                Batal
 
-                    </div>
+                            </button>
 
-                    <h4 class="font-weight-bold mb-2">
-                        Hapus Data?
-                    </h4>
-
-                    <p class="text-muted mb-4"
-                        id="textHapus">
-
-                        Data akan dihapus permanen
-
-                    </p>
-
-                    <div class="d-flex justify-content-center">
-
-                        <button class="btn btn-light mr-2 px-4"
-                            data-dismiss="modal"
-                            style="
-                            height:45px;
-                            border-radius:10px;
-                        ">
-
-                            Batal
-
-                        </button>
-
-                        <button class="btn btn-danger px-4"
-                            id="btnConfirmHapus"
-                            style="
-                            height:45px;
-                            border-radius:10px;
-                        ">
-
-                            Hapus
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- =========================
-    MODAL HAPUS TERPILIH
-========================= -->
-
-    <div class="modal fade"
-        id="modalHapusSelected"
-        tabindex="-1">
-
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content border-0"
-                style="
-                border-radius:20px;
-                overflow:hidden;
-            ">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#fff1f2;
+                            <button
+                                type="submit"
+                                name="update_service"
+                                class="btn btn-success px-4"
+                                style="
+                        border-radius:10px;
+                        min-width:120px;
                     ">
 
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#dc3545;
-                        ">
-                            delete_sweep
-                        </span>
+                                Update
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- MODAL VIEW -->
+        <div class="modal fade"
+            id="modalView<?= $m['id'] ?>">
+
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+                <div class="modal-content" style="max-height:90vh; border-radius:18px;">
+
+                    <div class="modal-header"
+                        style="position:sticky; top:0; background:#fff; z-index:10;">
+                        <h5>Detail Layanan</h5>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <img
+                            src="../assets/images/services/<?= $m['service_picture'] ?>"
+                            class="img-fluid mb-4"
+                            style="width:100%; max-height:400px; object-fit:cover; border-radius:20px;">
+
+                        <div class="mb-4">
+
+                            <?php if ($m['service_category'] == 'Layanan Keamanan') : ?>
+
+                                <span class="badge badge-primary p-2 px-3">
+
+                                    <?= $m['service_category'] ?>
+
+                                </span>
+
+                            <?php else : ?>
+
+                                <span class="badge badge-success p-2 px-3">
+
+                                    <?= $m['service_category'] ?>
+
+                                </span>
+
+                            <?php endif; ?>
+
+                        </div>
+
+                        <h4 class="mb-3">
+                            <?= htmlspecialchars($m['service_name']) ?>
+                        </h4>
+
+                        <div style="
+                    line-height:1.8;
+                    text-align:justify;
+                    white-space:pre-line;
+                ">
+                            <?= htmlspecialchars($m['service_desc']) ?>
+                        </div>
 
                     </div>
 
-                    <h4 class="font-weight-bold mb-2">
-                        Hapus Data Terpilih?
-                    </h4>
+                    <div class="modal-footer"
+                        style="position:sticky; bottom:0; background:#fff; z-index:10;">
 
-                    <p class="text-muted mb-4">
-
-                        Semua data yang dipilih akan dihapus permanen
-
-                    </p>
-
-                    <div class="d-flex justify-content-center">
-
-                        <button class="btn btn-light mr-2 px-4"
-                            data-dismiss="modal"
-                            style="
-                            height:45px;
-                            border-radius:10px;
-                        ">
-
-                            Batal
-
-                        </button>
-
-                        <button class="btn btn-danger px-4"
-                            id="btnConfirmDeleteSelected"
-                            style="
-                            height:45px;
-                            border-radius:10px;
-                        ">
-
-                            Hapus
-
+                        <button
+                            class="btn btn-secondary"
+                            data-dismiss="modal">
+                            Tutup
                         </button>
 
                     </div>
@@ -495,7 +955,55 @@
 
         </div>
 
-    </div>
+        <!-- MODAL HAPUS -->
+        <div class="modal fade"
+            id="modalHapus<?= $m['id'] ?>">
+
+            <div class="modal-dialog modal-dialog-centered">
+
+                <div class="modal-content">
+
+                    <form method="POST">
+
+                        <input type="hidden"
+                            name="hapus_id"
+                            value="<?= $m['id'] ?>">
+
+                        <div class="modal-body text-center p-5">
+
+                            <h4 class="mb-3">
+                                Hapus Data?
+                            </h4>
+
+                            <p>
+                                <?= htmlspecialchars($m['service_name']) ?>
+                            </p>
+
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                data-dismiss="modal">
+                                Batal
+                            </button>
+
+                            <button
+                                type="submit"
+                                name="hapus_service"
+                                class="btn btn-danger">
+                                Hapus
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    <?php endwhile; ?>
     <!-- ********************************** // MODAL ********************************** -->
 
     <footer class="dashboard-footer mt-4">
@@ -549,86 +1057,6 @@
     <script src="../assets/vendor/moment-range.js"></script>
 
     <script>
-        let data = [{
-                nama: "Security",
-                gambar: "../assets/images/posts/fabian-irsara-92113.jpg",
-                deskripsi: "Keamanan solid adalah landasan utama dalam kelangsungan operasional sebuah perusahaan. Konig Guard Bureau menyediakan layanan Jasa Security dengan standar profesional tinggi untuk memastikan setiap area kerja, fasilitas, dan aset perusahaan terlindungi dari berbagai potensi ancaman. Petugas keamanan kami telah melalui pelatihan intensif dalam prosedur pengamanan modern, analisa risiko, hingga komunikasi taktis. Mereka tidak hanya menjaga lingkungan tetap aman, namun juga menghadirkan ketenangan bagi seluruh pihak di dalamnya. Dengan kehadiran satpam Konig Guard Bureau yang sigap, disiplin, dan berintegritas, produktivitas perusahaan akan meningkat karena seluruh kegiatan dapat berlangsung tanpa gangguan."
-
-            },
-            {
-                nama: "Pengacara",
-                gambar: "../assets/images/posts/fabian-irsara-92113.jpg",
-                deskripsi: "Perlindungan personal merupakan kebutuhan penting bagi eksekutif perusahaan, tokoh publik, atau tamu kehormatan. Konig Guard Bureau menghadirkan layanan Jasa Bodyguard yang mengutamakan keselamatan, kenyamanan, dan kepercayaan penuh bagi setiap klien, tanpa membatasi aktivitas mereka dalam pekerjaan maupun kehidupan sehari-hari. Bodyguard kami memiliki keahlian dalam bela diri, pengamatan ancaman, protokol keselamatan, serta pengaturan rute pengawalan. Setiap pengawalan direncanakan melalui analisa risiko yang matang dan metode pengamanan yang selalu disesuaikan dengan kondisi di lapangan."
-            }
-        ];
-
-        let currentPage = 1;
-        let rowsPerPage = 5;
-        let deleteIndex = null;
-
-        function renderTable() {
-            let tbody = document.getElementById("tableBody");
-            tbody.innerHTML = "";
-
-            let search = document.getElementById("searchInput").value.toLowerCase();
-
-            let filtered = data.filter(d =>
-                d.nama.toLowerCase().includes(search)
-            );
-
-            let start = (currentPage - 1) * rowsPerPage;
-            let paginated = filtered.slice(start, start + rowsPerPage);
-
-            paginated.forEach((item, index) => {
-                tbody.innerHTML += `
-        <tr>
-            <td>
-                <input type="checkbox" class="rowCheck" data-index="${start + index}">
-            </td>
-
-            <td>${start + index + 1}</td>
-
-            <td>${item.nama}</td>
-
-            <td>
-                <img src="${item.gambar}" 
-                     width="80"
-                     height="60"
-                     style="object-fit:cover; border-radius:10px;">
-            </td>
-
-            <td>
-                <div style=" max-width:250px;
-                            white-space:nowrap;
-                            overflow:hidden;
-                            text-overflow:ellipsis;">
-                                ${item.deskripsi}
-                </div>
-            </td>
-
-            <td>
-                <button class="btn btn-info btn-sm mb-1"
-                    onclick="viewData(${start + index})">
-                    View
-                </button>
-
-                <button class="btn btn-warning btn-sm mb-1"
-                    onclick="editData(${start + index})">
-                    Edit
-                </button>
-
-                <button class="btn btn-danger btn-sm"
-                    onclick="hapusData(${start + index})">
-                    Hapus
-                </button>
-            </td>
-        </tr>
-        `;
-            });
-
-            renderPagination(filtered.length);
-        }
-
         function renderPagination(total) {
             let pageCount = Math.ceil(total / rowsPerPage);
             let pagination = document.getElementById("pagination");
@@ -701,22 +1129,6 @@
             renderTable();
         }
 
-        function previewTambah(event) {
-
-            let reader = new FileReader();
-
-            reader.onload = function() {
-
-                let output = document.getElementById('previewTambah');
-
-                output.src = reader.result;
-
-                output.classList.remove('d-none');
-            }
-
-            reader.readAsDataURL(event.target.files[0]);
-        }
-
         function previewEdit(event) {
 
             let reader = new FileReader();
@@ -756,113 +1168,6 @@
 
         }
 
-        function tambahData() {
-
-            let nama =
-                document.getElementById("layananTambah").value;
-
-            let deskripsi =
-                document.getElementById("deskripsiTambah").value;
-
-            let file =
-                document.getElementById("gambarTambah").files[0];
-
-            if (!nama || !deskripsi || !file) {
-                alert("Semua wajib diisi!");
-                return;
-            }
-
-            let reader = new FileReader();
-
-            reader.onload = function(e) {
-
-                data.push({
-                    nama: nama,
-                    gambar: e.target.result,
-                    deskripsi: deskripsi
-                });
-
-                renderTable();
-
-                $('#modalTambah').modal('hide');
-
-                document.getElementById("layananTambah").value = "";
-                document.getElementById("deskripsiTambah").value = "";
-                document.getElementById("gambarTambah").value = "";
-
-                document.getElementById("previewTambah")
-                    .classList.add("d-none");
-            }
-
-            reader.readAsDataURL(file);
-        }
-
-        function editData(index) {
-
-            showLoading(() => {
-
-                document.getElementById("editIndex").value = index;
-
-                document.getElementById("layananEdit").value =
-                    data[index].nama;
-
-                document.getElementById("deskripsiEdit").value =
-                    data[index].deskripsi;
-
-                document.getElementById("previewEdit").src =
-                    data[index].gambar;
-
-                $('#modalEdit').modal('show');
-
-            });
-
-        }
-
-        function updateData() {
-
-            let index =
-                document.getElementById("editIndex").value;
-
-            let nama =
-                document.getElementById("layananEdit").value;
-
-            let deskripsi =
-                document.getElementById("deskripsiEdit").value;
-
-            let file =
-                document.getElementById("gambarEdit").files[0];
-
-            if (!nama || !deskripsi) {
-                alert("Semua wajib diisi!");
-                return;
-            }
-
-            data[index].nama = nama;
-            data[index].deskripsi = deskripsi;
-
-            if (file) {
-
-                let reader = new FileReader();
-
-                reader.onload = function(e) {
-
-                    data[index].gambar = e.target.result;
-
-                    renderTable();
-
-                    $('#modalEdit').modal('hide');
-                }
-
-                reader.readAsDataURL(file);
-
-            } else {
-
-                renderTable();
-
-                $('#modalEdit').modal('hide');
-            }
-        }
-
         function viewData(index) {
 
             showLoading(() => {
@@ -882,103 +1187,6 @@
 
         }
 
-        function hapusData(index) {
-
-            deleteIndex = index;
-
-            showLoading(() => {
-
-                document.getElementById("textHapus").innerHTML =
-                    `<b>${data[index].nama}</b> akan dihapus permanen`;
-
-                $('#modalHapus').modal('show');
-
-            });
-
-        }
-
-        document.getElementById("deleteSelected")
-            .addEventListener("click", function() {
-
-                let checks =
-                    document.querySelectorAll(".rowCheck:checked");
-
-                // VALIDASI
-                if (checks.length === 0) {
-
-                    alert("Pilih data terlebih dahulu!");
-
-                    return;
-
-                }
-
-                // SHOW LOADING
-                showLoading(() => {
-
-                    $('#modalHapusSelected').modal('show');
-
-                });
-
-            });
-
-        // =========================
-        // CONFIRM DELETE SINGLE
-        // =========================
-
-        document.getElementById("btnConfirmHapus")
-            .addEventListener("click", function() {
-
-                // VALIDASI
-                if (deleteIndex === null) return;
-
-                // HAPUS DATA
-                data.splice(deleteIndex, 1);
-
-                // RESET
-                deleteIndex = null;
-
-                // TUTUP MODAL
-                $('#modalHapus').modal('hide');
-
-                // RESET CHECK ALL
-                document.getElementById("checkAll").checked = false;
-
-                // REFRESH TABLE
-                renderTable();
-            });
-
-        // CONFIRM DELETE SELECTED
-        document.getElementById("btnConfirmDeleteSelected")
-            .addEventListener("click", function() {
-
-                // AMBIL SEMUA CHECKBOX YANG DICENTANG
-                let checks =
-                    document.querySelectorAll(".rowCheck:checked");
-
-                // AMBIL INDEX
-                let indexes = [...checks]
-                    .map(c => parseInt(c.dataset.index))
-                    .sort((a, b) => b - a);
-
-                // HAPUS DATA
-                indexes.forEach(index => {
-
-                    data.splice(index, 1);
-
-                });
-
-                // CLOSE MODAL
-                $('#modalHapusSelected').modal('hide');
-
-                // RESET CHECK ALL
-                document.getElementById("checkAll").checked = false;
-
-                // REFRESH TABLE
-                renderTable();
-
-            });
-
-
         document.getElementById("checkAll").onclick = function() {
             document.querySelectorAll(".rowCheck").forEach(c => c.checked = this.checked);
         };
@@ -992,6 +1200,84 @@
         };
 
         renderTable();
+    </script>
+
+    <script>
+        function previewTambah(event) {
+
+            let reader = new FileReader();
+
+            reader.onload = function() {
+
+                let preview =
+                    document.getElementById("previewTambah");
+
+                preview.src = reader.result;
+
+                preview.classList.remove("d-none");
+            }
+
+            reader.readAsDataURL(
+                event.target.files[0]
+            );
+        }
+    </script>
+
+    <script>
+        let rowsPerPage = 5;
+        let currentPage = 1;
+
+        function renderTable() {
+
+            let input =
+                document.getElementById("searchInput")
+                .value.toLowerCase();
+
+            let rows =
+                document.querySelectorAll("#dataTable tbody tr");
+
+            let filtered = [];
+
+            rows.forEach(row => {
+
+                let text =
+                    row.innerText.toLowerCase();
+
+                if (text.includes(input)) {
+
+                    filtered.push(row);
+
+                    row.style.display = "";
+                } else {
+
+                    row.style.display = "none";
+                }
+            });
+
+            rows.forEach(r => r.style.display = "none");
+
+            let start =
+                (currentPage - 1) * rowsPerPage;
+
+            let end =
+                start + rowsPerPage;
+
+            filtered
+                .slice(start, end)
+                .forEach(r => r.style.display = "");
+
+            renderPagination(filtered.length);
+        }
+
+        renderTable();
+    </script>
+
+    <script>
+        setTimeout(() => {
+
+            $('.notif-auto').alert('close');
+
+        }, 4000);
     </script>
 </body>
 
