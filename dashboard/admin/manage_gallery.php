@@ -1,3 +1,171 @@
+<?php
+session_start();
+
+require_once __DIR__ . "/../koneksi.php";
+
+date_default_timezone_set('Asia/Jakarta');
+
+/* =========================================
+   TAMBAH GALLERY
+========================================= */
+if (isset($_POST['save_gallery'])) {
+
+    $name_gallery = trim($_POST['name_gallery']);
+
+    // validasi nama
+    if (empty($name_gallery)) {
+        echo "<script>alert('Nama galeri wajib diisi!');</script>";
+    } else {
+
+        // folder upload
+        $uploadDir = __DIR__ . "/../assets/images/uploads/gallery/";
+
+        // buat folder jika belum ada
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // cek ada file
+        if (!empty($_FILES['picture']['name'][0])) {
+
+            foreach ($_FILES['picture']['tmp_name'] as $key => $tmpName) {
+
+                $fileName = $_FILES['picture']['name'][$key];
+                $fileSize = $_FILES['picture']['size'][$key];
+                $fileError = $_FILES['picture']['error'][$key];
+
+                // extension
+                $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+                // valid extension
+                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+                if (!in_array($extension, $allowed)) {
+                    continue;
+                }
+
+                // max 5MB
+                if ($fileSize > 5 * 1024 * 1024) {
+                    continue;
+                }
+
+                // cek error upload
+                if ($fileError !== 0) {
+                    continue;
+                }
+
+                // rename file
+                $newFileName = time() . '_' . rand(1000, 9999) . '.' . $extension;
+
+                // upload path
+                $uploadFile = $uploadDir . $newFileName;
+
+                // upload file
+                if (move_uploaded_file($tmpName, $uploadFile)) {
+
+                    // insert database
+                    $insertGallery = mysqli_query($conn, "
+                        INSERT INTO gallery (
+                            name_gallery,
+                            picture,
+                            created_at
+                        ) VALUES (
+                            '" . mysqli_real_escape_string($conn, $name_gallery) . "',
+                            '" . mysqli_real_escape_string($conn, $newFileName) . "',
+                            NOW()
+                        )
+                    ");
+
+                    if (!$insertGallery) {
+                        die("Insert Error: " . mysqli_error($conn));
+                    }
+                }
+            }
+
+            echo "
+            <script>
+                alert('Galeri berhasil disimpan!');
+                window.location='manage_gallery.php';
+            </script>
+            ";
+        } else {
+
+            echo "
+            <script>
+                alert('Upload gambar terlebih dahulu!');
+            </script>
+            ";
+        }
+    }
+}
+
+/* =========================================
+   DELETE GALLERY
+========================================= */
+if (isset($_GET['delete'])) {
+
+    $id = (int) $_GET['delete'];
+
+    // ambil gambar
+    $getGallery = mysqli_query($conn, "
+        SELECT picture 
+        FROM gallery 
+        WHERE id = '$id'
+    ");
+
+    $dataGallery = mysqli_fetch_assoc($getGallery);
+
+    // hapus file gambar
+    if ($dataGallery) {
+
+        $filePath = __DIR__ . "/../assets/images/uploads/gallery/" . $dataGallery['picture'];
+
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+    }
+
+    // hapus database
+    $deleteGallery = mysqli_query($conn, "
+        DELETE FROM gallery
+        WHERE id = '$id'
+    ");
+
+    if ($deleteGallery) {
+
+        echo "
+        <script>
+            alert('Galeri berhasil dihapus!');
+            window.location='manage_gallery.php';
+        </script>
+        ";
+
+        exit;
+    } else {
+
+        die('Delete Error: ' . mysqli_error($conn));
+    }
+}
+
+/* =========================================
+   AMBIL DATA GALLERY
+========================================= */
+$queryGallery = mysqli_query($conn, "
+    SELECT 
+        id,
+        name_gallery,
+        picture,
+        created_at
+    FROM gallery
+    ORDER BY id DESC
+");
+
+if (!$queryGallery) {
+    die('Query Error: ' . mysqli_error($conn));
+}
+
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -75,7 +243,7 @@
                 <div class="container mt-4">
 
                     <!-- FORM TAMBAH GALERI -->
-                    <form id="formGaleri">
+                    <form method="POST" enctype="multipart/form-data">
 
                         <div class="card p-4 mb-4" style="border-radius:12px;">
                             <h6 class="mb-3">Tambah Galeri</h6>
@@ -83,7 +251,13 @@
                             <!-- NAMA GALERI -->
                             <div class="form-group">
                                 <label>Nama Galeri <span style="color:red">*</span></label>
-                                <input type="text" id="namaGaleri" class="form-control" placeholder="Contoh: Kegiatan Sekolah 2024">
+
+                                <input
+                                    type="text"
+                                    name="name_gallery"
+                                    class="form-control"
+                                    placeholder="Contoh: Kegiatan Sekolah 2024"
+                                    required>
                             </div>
 
                             <!-- UPLOAD -->
@@ -91,20 +265,33 @@
                                 <label>Upload Gambar <span style="color:red">*</span></label>
 
                                 <div id="dropArea" style="
-            border:2px dashed #dbe5ee;
-            border-radius:10px;
-            padding:40px;
-            text-align:center;
-            background:#fafbfe;
-            cursor:pointer;
-        ">
+                border:2px dashed #dbe5ee;
+                border-radius:10px;
+                padding:40px;
+                text-align:center;
+                background:#fafbfe;
+                cursor:pointer;
+            ">
                                     <span class="material-icons" style="font-size:40px; color:#939fad;">
                                         cloud_upload
                                     </span>
-                                    <p class="mt-2 mb-1">Klik atau drag & drop gambar di sini</p>
-                                    <small class="text-muted">Format: JPG, PNG, WEBP (Max 5MB)</small>
 
-                                    <input type="file" id="fileInput" multiple hidden>
+                                    <p class="mt-2 mb-1">
+                                        Klik atau drag & drop gambar di sini
+                                    </p>
+
+                                    <small class="text-muted">
+                                        Format: JPG, PNG, WEBP (Max 5MB)
+                                    </small>
+
+                                    <input
+                                        type="file"
+                                        id="fileInput"
+                                        name="picture[]"
+                                        multiple
+                                        hidden
+                                        accept=".jpg,.jpeg,.png,.webp"
+                                        required>
                                 </div>
 
                                 <!-- PREVIEW -->
@@ -113,16 +300,21 @@
 
                             <!-- BUTTON -->
                             <div class="text-right">
-                                <button type="submit" class="btn btn-primary">
-                                    <span class="material-icons" style="font-size:16px; vertical-align:middle;">
+                                <button type="submit" name="save_gallery" class="btn btn-primary">
+
+                                    <span class="material-icons"
+                                        style="font-size:16px; vertical-align:middle;">
                                         save
                                     </span>
+
                                     Simpan Galeri
                                 </button>
                             </div>
                         </div>
 
                     </form>
+
+                    <!-- NOTIF DISINI -->
 
                     <!-- LIST GALERI -->
                     <div class="card p-4" style="border-radius:12px;">
@@ -155,7 +347,67 @@
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tableBody"></tbody>
+                                <tbody id="tableBody">
+
+                                    <?php
+                                    $no = 1;
+
+                                    while ($row = mysqli_fetch_assoc($queryGallery)) :
+                                    ?>
+
+                                        <tr>
+
+                                            <!-- NO -->
+                                            <td class="align-middle text-center" style="width:70px;">
+                                                <?= $no++; ?>
+                                            </td>
+
+                                            <!-- NAMA -->
+                                            <td class="align-middle">
+                                                <?= htmlspecialchars($row['name_gallery']); ?>
+                                            </td>
+
+                                            <!-- GAMBAR -->
+                                            <td class="align-middle text-center" style="width:160px;">
+
+                                                <img
+                                                    src="../assets/images/uploads/gallery/<?= htmlspecialchars($row['picture']); ?>"
+                                                    style="
+                width:80px;
+                height:80px;
+                object-fit:cover;
+                border-radius:10px;
+                border:1px solid #dee2e6;
+            ">
+
+                                            </td>
+
+                                            <!-- TANGGAL -->
+                                            <td class="align-middle" style="width:200px;">
+                                                <?= date('d M Y H:i', strtotime($row['created_at'])); ?>
+                                            </td>
+
+                                            <!-- AKSI -->
+                                            <td class="align-middle text-center" style="width:120px;">
+
+                                                <a
+                                                    href="manage_gallery.php?delete=<?= $row['id']; ?>"
+                                                    class="btn btn-sm btn-light text-danger"
+                                                    onclick="return confirm('Yakin ingin menghapus galeri ini?')">
+
+                                                    <span class="material-icons" style="font-size:18px;">
+                                                        delete
+                                                    </span>
+
+                                                </a>
+
+                                            </td>
+
+                                        </tr>
+
+                                    <?php endwhile; ?>
+
+                                </tbody>
                             </table>
                         </div>
 
@@ -298,9 +550,7 @@
     <script src="../assets/js/flatpickr.js"></script>
 
     <script>
-        let filesArray = [];
-
-        // klik upload
+        // klik area upload
         document.getElementById("dropArea").addEventListener("click", () => {
             document.getElementById("fileInput").click();
         });
@@ -309,159 +559,97 @@
         const dropArea = document.getElementById("dropArea");
 
         dropArea.addEventListener("dragover", (e) => {
+
             e.preventDefault();
+
             dropArea.style.background = "#eef2ff";
         });
 
         dropArea.addEventListener("dragleave", () => {
+
             dropArea.style.background = "#fafbfe";
         });
 
         dropArea.addEventListener("drop", (e) => {
+
             e.preventDefault();
+
             dropArea.style.background = "#fafbfe";
-            handleFiles(e.dataTransfer.files);
+
+            // masukkan file ke input
+            document.getElementById("fileInput").files = e.dataTransfer.files;
+
+            renderPreview(e.dataTransfer.files);
         });
 
-        // input file
+        // ketika pilih file
         document.getElementById("fileInput").addEventListener("change", function() {
-            handleFiles(this.files);
+
+            renderPreview(this.files);
         });
 
-        // handle file
-        function handleFiles(files) {
-            for (let file of files) {
-                filesArray.push(file);
-            }
-            renderPreview();
-        }
+        // render preview gambar
+        function renderPreview(files) {
 
-        // preview
-        function renderPreview() {
             const preview = document.getElementById("preview");
+
             preview.innerHTML = "";
 
-            filesArray.forEach(file => {
+            Array.from(files).forEach(file => {
+
                 const reader = new FileReader();
 
                 reader.onload = function(e) {
-                    const img = document.createElement("img");
-                    img.src = e.target.result;
-                    img.style.width = "60px";
-                    img.style.margin = "5px";
-                    img.style.borderRadius = "6px";
-                    preview.appendChild(img);
-                }
+
+                    preview.innerHTML += `
+                <img 
+                    src="${e.target.result}" 
+                    style="
+                        width:80px;
+                        height:80px;
+                        object-fit:cover;
+                        border-radius:10px;
+                        margin:5px;
+                        border:1px solid #dee2e6;
+                    "
+                >
+            `;
+                };
 
                 reader.readAsDataURL(file);
             });
         }
-
-        // submit form
-        document.getElementById("formGaleri").addEventListener("submit", function(e) {
-            e.preventDefault();
-
-            const nama = document.getElementById("namaGaleri").value;
-
-            if (!nama || filesArray.length === 0) {
-                alert("Isi semua field!");
-                return;
-            }
-
-            const table = document.getElementById("tableBody");
-
-            let imagesHTML = "";
-            filesArray.forEach(file => {
-                const url = URL.createObjectURL(file);
-                imagesHTML += `<img src="${url}" width="40" style="margin:2px;border-radius:5px;">`;
-            });
-
-            const row = `
-        <tr>
-            <td>${table.children.length + 1}</td>
-            <td>${nama}</td>
-            <td>${imagesHTML}</td>
-            <td>${new Date().toLocaleDateString()}</td>
-            <td>
-                <button class="btn btn-sm btn-light text-danger btn-delete">
-                    <span class="material-icons">delete</span>
-                </button>
-            </td>
-        </tr>
-    `;
-
-            table.insertAdjacentHTML("afterbegin", row);
-
-            // reset
-            filesArray = [];
-            document.getElementById("preview").innerHTML = "";
-            document.getElementById("formGaleri").reset();
-
-            // MODAL SUKSES
-            document.getElementById("textGaleriBerhasil").innerHTML =
-                `<b>${nama}</b> berhasil disimpan`;
-
-            $('#modalSuksesGaleri').modal('show');
-        });
-
-        // DELETE dengan konfirmasi
-        document.addEventListener("click", function(e) {
-            if (e.target.closest(".btn-delete")) {
-
-                const btn = e.target.closest(".btn-delete");
-                const row = btn.closest("tr");
-
-                // konfirmasi
-                const confirmDelete = confirm("Yakin mau hapus galeri ini?");
-
-                if (!confirmDelete) return;
-
-                // ambil index dari baris (sesuai nomor)
-                const index = Array.from(row.parentNode.children).indexOf(row);
-
-                // hapus dari data utama
-                tableData.splice(index, 1);
-
-                // filter ulang (biar search tetap aman)
-                filteredData = [...tableData];
-
-                // kalau page kosong setelah delete → mundur halaman
-                const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-                if (currentPage > totalPages) {
-                    currentPage = totalPages || 1;
-                }
-
-                renderTable();
-            }
-        });
     </script>
 
     <script>
         let tableData = [];
-        let currentPage = 1;
-        let rowsPerPage = 10;
         let filteredData = [];
 
-        // ambil data awal dari tabel
-        function initData() {
+        let currentPage = 1;
+        let rowsPerPage = 10;
+
+        // ambil data tabel
+        function initTableData() {
+
             const rows = document.querySelectorAll("#tableBody tr");
 
             tableData = Array.from(rows).map(row => {
+
                 return {
                     html: row.innerHTML,
                     text: row.innerText.toLowerCase()
-                }
+                };
             });
 
             filteredData = [...tableData];
         }
 
-        initData();
-
-        // render table
+        // render tabel
         function renderTable() {
-            const table = document.getElementById("tableBody");
-            table.innerHTML = "";
+
+            const tableBody = document.getElementById("tableBody");
+
+            tableBody.innerHTML = "";
 
             const start = (currentPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
@@ -469,79 +657,167 @@
             const pageData = filteredData.slice(start, end);
 
             pageData.forEach((row, index) => {
+
                 const tr = document.createElement("tr");
-                tr.innerHTML = `<td>${start + index + 1}</td>` + row.html.replace(/^<td>.*?<\/td>/, '');
-                table.appendChild(tr);
+
+                // replace nomor
+                const rowHTML = row.html.replace(
+                    /<td class="align-middle text-center" style="width:70px;">.*?<\/td>/,
+                    `<td class="align-middle text-center" style="width:70px;">
+                ${start + index + 1}
+            </td>`
+                );
+
+                tr.innerHTML = rowHTML;
+
+                tableBody.appendChild(tr);
             });
 
             renderPagination();
-            updateInfo();
+            updateInfoText();
         }
 
-        // pagination
+        // pagination style:
+        // 1 2 3 4 5 ... 20 21 22
         function renderPagination() {
+
             const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+
             const pagination = document.getElementById("pagination");
+
             pagination.innerHTML = "";
 
             if (totalPages <= 1) return;
 
-            // prev
+            // PREV
             pagination.innerHTML += `
-        <button class="btn btn-light btn-sm mr-1" ${currentPage===1?'disabled':''}
-            onclick="changePage(${currentPage-1})">Previous</button>
+        <button 
+            class="btn btn-sm btn-light mr-1"
+            ${currentPage === 1 ? 'disabled' : ''}
+            onclick="changePage(${currentPage - 1})"
+        >
+            Previous
+        </button>
     `;
 
-            for (let i = 1; i <= totalPages; i++) {
-                pagination.innerHTML += `
-            <button class="btn btn-sm ${i===currentPage?'btn-primary':'btn-light'} mr-1"
-                onclick="changePage(${i})">${i}</button>
-        `;
+            let pages = [];
+
+            // awal
+            for (let i = 1; i <= Math.min(5, totalPages); i++) {
+                pages.push(i);
             }
 
-            // next
+            // titik
+            if (totalPages > 8) {
+                pages.push("...");
+            }
+
+            // akhir
+            let startLast = Math.max(6, totalPages - 2);
+
+            for (let i = startLast; i <= totalPages; i++) {
+                if (!pages.includes(i)) {
+                    pages.push(i);
+                }
+            }
+
+            // render
+            pages.forEach(page => {
+
+                if (page === "...") {
+
+                    pagination.innerHTML += `
+                <span class="mx-1">...</span>
+            `;
+
+                } else {
+
+                    pagination.innerHTML += `
+                <button
+                    class="btn btn-sm mr-1 ${
+                        currentPage === page
+                        ? 'btn-primary'
+                        : 'btn-light'
+                    }"
+                    onclick="changePage(${page})"
+                >
+                    ${page}
+                </button>
+            `;
+                }
+            });
+
+            // NEXT
             pagination.innerHTML += `
-        <button class="btn btn-light btn-sm ml-1" ${currentPage===totalPages?'disabled':''}
-            onclick="changePage(${currentPage+1})">Next</button>
+        <button 
+            class="btn btn-sm btn-light ml-1"
+            ${currentPage === totalPages ? 'disabled' : ''}
+            onclick="changePage(${currentPage + 1})"
+        >
+            Next
+        </button>
     `;
         }
 
-        // ganti halaman
+        // pindah halaman
         function changePage(page) {
+
             const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+
             if (page < 1 || page > totalPages) return;
 
             currentPage = page;
+
             renderTable();
         }
 
         // show entries
-        document.getElementById("entriesSelect").addEventListener("change", function() {
-            rowsPerPage = parseInt(this.value);
-            currentPage = 1;
-            renderTable();
-        });
+        document.getElementById("entriesSelect")
+            .addEventListener("change", function() {
+
+                rowsPerPage = parseInt(this.value);
+
+                currentPage = 1;
+
+                renderTable();
+            });
 
         // search
-        document.getElementById("searchInput").addEventListener("keyup", function() {
-            const keyword = this.value.toLowerCase();
+        document.getElementById("searchInput")
+            .addEventListener("keyup", function() {
 
-            filteredData = tableData.filter(row => row.text.includes(keyword));
-            currentPage = 1;
-            renderTable();
-        });
+                const keyword = this.value.toLowerCase();
+
+                filteredData = tableData.filter(row =>
+                    row.text.includes(keyword)
+                );
+
+                currentPage = 1;
+
+                renderTable();
+            });
 
         // info text
-        function updateInfo() {
-            const info = document.getElementById("infoText");
+        function updateInfoText() {
 
-            const start = filteredData.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1;
-            const end = Math.min(currentPage * rowsPerPage, filteredData.length);
+            const infoText = document.getElementById("infoText");
 
-            info.innerText = `Showing ${start} to ${end} of ${filteredData.length} entries`;
+            const start =
+                filteredData.length === 0 ?
+                0 :
+                ((currentPage - 1) * rowsPerPage) + 1;
+
+            const end = Math.min(
+                currentPage * rowsPerPage,
+                filteredData.length
+            );
+
+            infoText.innerText =
+                `Showing ${start} to ${end} of ${filteredData.length} entries`;
         }
 
-        // first render
+        // first load
+        initTableData();
         renderTable();
     </script>
 </body>

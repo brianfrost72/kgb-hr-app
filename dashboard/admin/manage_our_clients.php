@@ -1,3 +1,266 @@
+<?php
+session_start();
+require_once __DIR__ . '/../koneksi.php';
+
+/* =========================================
+   TAMBAH DATA CLIENT
+========================================= */
+if (isset($_POST['save_client'])) {
+
+    $client_name = mysqli_real_escape_string($conn, $_POST['client_name']);
+    $client_desc = mysqli_real_escape_string($conn, $_POST['client_desc']);
+
+    /* =========================================
+       VALIDASI
+    ========================================= */
+    if (
+        empty($client_name) ||
+        empty($client_desc) ||
+        empty($_FILES['client_pic']['name'])
+    ) {
+
+        $_SESSION['error'] = "Semua field wajib diisi!";
+    } else {
+
+        /* =========================================
+           UPLOAD GAMBAR
+        ========================================= */
+        $uploadDir = __DIR__ . "/../assets/images/uploads/our_clients/";
+
+        // BUAT FOLDER JIKA BELUM ADA
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $fileName = time() . '_' . basename($_FILES['client_pic']['name']);
+        $targetFile = $uploadDir . $fileName;
+
+        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+        $allowedTypes = ['jpg', 'jpeg', 'png', 'webp'];
+
+        if (!in_array($imageFileType, $allowedTypes)) {
+
+            $_SESSION['error'] = "Format gambar harus JPG, JPEG, PNG atau WEBP!";
+        } else {
+
+            if (move_uploaded_file($_FILES['client_pic']['tmp_name'], $targetFile)) {
+
+                /* =========================================
+                   INSERT DATABASE
+                ========================================= */
+                $insertClient = mysqli_query($conn, "
+                    INSERT INTO list_clients (
+                        client_name,
+                        client_pic,
+                        client_desc,
+                        created_at
+                    ) VALUES (
+                        '$client_name',
+                        '$fileName',
+                        '$client_desc',
+                        NOW()
+                    )
+                ");
+
+                if ($insertClient) {
+
+                    $_SESSION['success'] = "Data klien berhasil ditambahkan!";
+                } else {
+
+                    $_SESSION['error'] = "Gagal menyimpan data: " . mysqli_error($conn);
+                }
+            } else {
+
+                $_SESSION['error'] = "Upload gambar gagal!";
+            }
+        }
+    }
+
+    header("Location: manage_our_clients.php");
+    exit;
+}
+
+/* =========================================
+   EDIT DATA CLIENT
+========================================= */
+if (isset($_POST['edit_client'])) {
+
+    $id_client   = (int) $_POST['id_client'];
+    $client_name = mysqli_real_escape_string($conn, $_POST['client_name']);
+    $client_desc = mysqli_real_escape_string($conn, $_POST['client_desc']);
+
+    // AMBIL DATA LAMA
+    $getOldData = mysqli_query($conn, "
+        SELECT client_pic
+        FROM list_clients
+        WHERE id = '$id_client'
+    ");
+
+    $oldData = mysqli_fetch_assoc($getOldData);
+
+    $client_pic = $oldData['client_pic'];
+
+    /* =========================================
+       UPLOAD GAMBAR BARU
+    ========================================= */
+    if (!empty($_FILES['client_pic']['name'])) {
+
+        $uploadDir = __DIR__ . "/../assets/images/uploads/our_clients/";
+
+        $fileName = time() . '_' . basename($_FILES['client_pic']['name']);
+        $targetFile = $uploadDir . $fileName;
+
+        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+        $allowedTypes = ['jpg', 'jpeg', 'png', 'webp'];
+
+        if (!in_array($imageFileType, $allowedTypes)) {
+
+            $_SESSION['error'] = "Format gambar harus JPG, JPEG, PNG atau WEBP!";
+
+            header("Location: manage_our_clients.php");
+            exit;
+        }
+
+        if (move_uploaded_file($_FILES['client_pic']['tmp_name'], $targetFile)) {
+
+            // HAPUS GAMBAR LAMA
+            if (
+                !empty($oldData['client_pic']) &&
+                file_exists($uploadDir . $oldData['client_pic'])
+            ) {
+                unlink($uploadDir . $oldData['client_pic']);
+            }
+
+            $client_pic = $fileName;
+        }
+    }
+
+    /* =========================================
+       UPDATE DATABASE
+    ========================================= */
+    $updateClient = mysqli_query($conn, "
+        UPDATE list_clients
+        SET
+            client_name = '$client_name',
+            client_pic  = '$client_pic',
+            client_desc = '$client_desc'
+        WHERE id = '$id_client'
+    ");
+
+    if ($updateClient) {
+
+        $_SESSION['success'] = "Data klien berhasil diupdate!";
+    } else {
+
+        $_SESSION['error'] = "Gagal update data: " . mysqli_error($conn);
+    }
+
+    header("Location: manage_our_clients.php");
+    exit;
+}
+
+
+/* =========================================
+   HAPUS DATA CLIENT
+========================================= */
+if (isset($_GET['delete'])) {
+
+    $id_client = (int) $_GET['delete'];
+
+    // AMBIL DATA GAMBAR
+    $getClient = mysqli_query($conn, "
+        SELECT client_pic
+        FROM list_clients
+        WHERE id = '$id_client'
+    ");
+
+    $clientData = mysqli_fetch_assoc($getClient);
+
+    // HAPUS FILE GAMBAR
+    $filePath = __DIR__ . "/../assets/images/uploads/our_clients/" . $clientData['client_pic'];
+
+    if (
+        !empty($clientData['client_pic']) &&
+        file_exists($filePath)
+    ) {
+        unlink($filePath);
+    }
+
+    // HAPUS DATABASE
+    $deleteClient = mysqli_query($conn, "
+        DELETE FROM list_clients
+        WHERE id = '$id_client'
+    ");
+
+    if ($deleteClient) {
+
+        $_SESSION['success'] = "Data klien berhasil dihapus!";
+    } else {
+
+        $_SESSION['error'] = "Gagal hapus data!";
+    }
+
+    header("Location: manage_our_clients.php");
+    exit;
+}
+
+/* =========================================
+   SHOW ENTRIES
+========================================= */
+$show = isset($_GET['show']) ? (int) $_GET['show'] : 10;
+
+$allowedShow = [5, 10, 25, 50, 100];
+
+if (!in_array($show, $allowedShow)) {
+    $show = 10;
+}
+
+/* =========================================
+   PAGINATION
+========================================= */
+$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+
+if ($page < 1) {
+    $page = 1;
+}
+
+$start = ($page - 1) * $show;
+
+/* =========================================
+   TOTAL DATA
+========================================= */
+$totalDataQuery = mysqli_query($conn, "
+    SELECT COUNT(*) as total
+    FROM list_clients
+");
+
+$totalData = mysqli_fetch_assoc($totalDataQuery)['total'];
+
+$totalPages = ceil($totalData / $show);
+
+/* =========================================
+   GET DATA CLIENTS
+========================================= */
+$queryClients = mysqli_query($conn, "
+    SELECT 
+        id,
+        client_name,
+        client_pic,
+        client_desc,
+        created_at
+    FROM list_clients
+    ORDER BY id DESC
+    LIMIT $start, $show
+");
+
+if (!$queryClients) {
+    die('Query Error: ' . mysqli_error($conn));
+}
+
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -74,67 +337,518 @@
             <div class="container-fluid page__container">
                 <div class="container mt-4">
 
-                    <form id="formKlien" enctype="multipart/form-data">
+                    <form method="POST" enctype="multipart/form-data">
                         <!-- FORM -->
                         <div class="card p-4 mb-4" style="border-radius:12px;">
+
                             <h5 class="mb-3 d-flex align-items-center">
-                                <span class="material-icons mr-2" style="color: var(--primary);">image</span>
+                                <span class="material-icons mr-2" style="color: var(--primary);">
+                                    image
+                                </span>
                                 Form Data Gambar Klien
                             </h5>
 
                             <div class="row">
+
                                 <!-- Nama Klien -->
                                 <div class="col-md-12 mb-3">
                                     <label>Nama Klien</label>
-                                    <input type="text" id="namaKlien" class="form-control" placeholder="Masukkan nama klien">
+
+                                    <input
+                                        type="text"
+                                        name="client_name"
+                                        class="form-control"
+                                        placeholder="Masukkan nama klien"
+                                        required>
                                 </div>
 
                                 <!-- Upload Gambar -->
                                 <div class="col-md-12 mb-3">
+
                                     <label>Upload Gambar</label>
-                                    <div class="border p-4 text-center" style="border-radius:10px; border-style:dashed;">
-                                        <span class="material-icons" style="font-size:40px; color: var(--gray);">cloud_upload</span>
+
+                                    <div class="border p-4 text-center"
+                                        style="border-radius:10px; border-style:dashed;">
+
+                                        <span class="material-icons"
+                                            style="font-size:40px; color: var(--gray);">
+                                            cloud_upload
+                                        </span>
+
                                         <p class="mb-2">Klik untuk upload gambar</p>
-                                        <input type="file" id="gambarKlien" class="form-control-file">
+
+                                        <input
+                                            type="file"
+                                            name="client_pic"
+                                            class="form-control-file"
+                                            accept=".jpg,.jpeg,.png,.webp"
+                                            required>
                                     </div>
                                 </div>
 
                                 <!-- Deskripsi -->
                                 <div class="col-md-12 mb-3">
+
                                     <label>Deskripsi Gambar</label>
-                                    <textarea class="form-control" id="deskripsi" rows="3" placeholder="Masukkan deskripsi gambar"></textarea>
+
+                                    <textarea
+                                        class="form-control"
+                                        name="client_desc"
+                                        rows="3"
+                                        placeholder="Masukkan deskripsi gambar"
+                                        required></textarea>
                                 </div>
 
                                 <!-- BUTTON -->
                                 <div class="col-md-12">
-                                    <button type="submit" class="btn" style="background: var(--primary); color:#fff;">
-                                        <span class="material-icons" style="font-size:18px;">save</span>
+
+                                    <button
+                                        type="submit"
+                                        name="save_client"
+                                        class="btn"
+                                        style="background: var(--primary); color:#fff;">
+
+                                        <span class="material-icons" style="font-size:18px;">
+                                            save
+                                        </span>
+
                                         Simpan
                                     </button>
+
                                 </div>
+
                             </div>
                         </div>
                     </form>
 
+                    <!-- NOTIFIKASI -->
+                    <?php if (isset($_SESSION['success'])) : ?>
+
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>Berhasil!</strong>
+                            <?= $_SESSION['success']; ?>
+
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+
+                        <?php unset($_SESSION['success']); ?>
+
+                    <?php endif; ?>
+
+                    <?php if (isset($_SESSION['error'])) : ?>
+
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Gagal!</strong>
+                            <?= $_SESSION['error']; ?>
+
+                            <button type="button" class="close" data-dismiss="alert">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+
+                        <?php unset($_SESSION['error']); ?>
+
+                    <?php endif; ?>
+
+
                     <!-- TABLE -->
                     <div class="card p-4" style="border-radius:12px;">
+
                         <h6 class="mb-3">List Data Gambar</h6>
 
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+
+                            <!-- SHOW ENTRIES -->
+                            <div class="d-flex align-items-center">
+
+                                <span class="mr-2">Show</span>
+
+                                <select
+                                    class="form-control"
+                                    style="width:90px;"
+                                    onchange="window.location.href='?show=' + this.value">
+
+                                    <option value="5" <?= $show == 5 ? 'selected' : ''; ?>>
+                                        5
+                                    </option>
+
+                                    <option value="10" <?= $show == 10 ? 'selected' : ''; ?>>
+                                        10
+                                    </option>
+
+                                    <option value="25" <?= $show == 25 ? 'selected' : ''; ?>>
+                                        25
+                                    </option>
+
+                                    <option value="50" <?= $show == 50 ? 'selected' : ''; ?>>
+                                        50
+                                    </option>
+
+                                    <option value="100" <?= $show == 100 ? 'selected' : ''; ?>>
+                                        100
+                                    </option>
+
+                                </select>
+
+                                <span class="ml-2">entries</span>
+
+                            </div>
+
+                            <!-- TOTAL DATA -->
+                            <div class="text-muted mt-2 mt-md-0">
+
+                                Total Data:
+                                <strong><?= $totalData; ?></strong>
+
+                            </div>
+
+                        </div>
+
                         <div class="table-responsive">
-                            <table class="table table-hover">
+
+                            <table class="table table-hover align-middle">
+
                                 <thead>
                                     <tr>
-                                        <th>No</th>
+                                        <th width="60">No</th>
                                         <th>Nama Klien</th>
-                                        <th>Gambar</th>
+                                        <th width="140">Gambar</th>
                                         <th>Deskripsi</th>
-                                        <th>Tanggal Upload</th>
-                                        <th>Aksi</th>
+                                        <th width="180">Tanggal Upload</th>
+                                        <th width="150">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="tableBody"></tbody>
+
+                                <tbody id="tableBody">
+
+                                    <?php if (mysqli_num_rows($queryClients) > 0) : ?>
+
+                                        <?php $no = 1; ?>
+                                        <?php while ($client = mysqli_fetch_assoc($queryClients)) : ?>
+
+                                            <tr>
+
+                                                <!-- NO -->
+                                                <td>
+                                                    <?= $no++; ?>
+                                                </td>
+
+                                                <!-- NAMA CLIENT -->
+                                                <td>
+                                                    <?= htmlspecialchars($client['client_name']); ?>
+                                                </td>
+
+                                                <!-- GAMBAR -->
+                                                <td>
+
+                                                    <img
+                                                        src="../assets/images/uploads/our_clients/<?= htmlspecialchars($client['client_pic']); ?>"
+                                                        width="80"
+                                                        height="80"
+                                                        style="object-fit:cover; border-radius:10px; border:1px solid #ddd;">
+
+                                                </td>
+
+                                                <!-- DESKRIPSI -->
+                                                <td style="max-width:300px; white-space:normal;">
+                                                    <?= nl2br(htmlspecialchars($client['client_desc'])); ?>
+                                                </td>
+
+                                                <!-- TANGGAL -->
+                                                <td>
+
+                                                    <?= date('d F Y H:i', strtotime($client['created_at'])); ?>
+
+                                                </td>
+
+                                                <!-- AKSI -->
+                                                <td>
+
+                                                    <!-- EDIT -->
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm mr-1"
+                                                        style="background: var(--primary); color:#fff;"
+                                                        data-toggle="collapse"
+                                                        data-target="#editClient<?= $client['id']; ?>">
+
+                                                        <span class="material-icons" style="font-size:16px;">
+                                                            edit
+                                                        </span>
+
+                                                    </button>
+
+                                                    <!-- HAPUS -->
+                                                    <a
+                                                        href="?delete=<?= $client['id']; ?>"
+                                                        class="btn btn-sm"
+                                                        style="background: var(--danger); color:#fff;"
+                                                        onclick="return confirm('Yakin ingin menghapus data ini?')">
+
+                                                        <span class="material-icons" style="font-size:16px;">
+                                                            delete
+                                                        </span>
+
+                                                    </a>
+
+                                                </td>
+
+                                            </tr>
+
+                                            <!-- FORM EDIT -->
+                                            <tr class="collapse" id="editClient<?= $client['id']; ?>">
+
+                                                <td colspan="6">
+
+                                                    <div class="card p-4 my-3" style="background:#f9fafc; border-radius:12px;">
+
+                                                        <h6 class="mb-4 d-flex align-items-center">
+
+                                                            <span class="material-icons mr-2" style="color:var(--primary);">
+                                                                edit
+                                                            </span>
+
+                                                            Edit Data Klien
+
+                                                        </h6>
+
+                                                        <form method="POST" enctype="multipart/form-data">
+
+                                                            <input
+                                                                type="hidden"
+                                                                name="id_client"
+                                                                value="<?= $client['id']; ?>">
+
+                                                            <div class="row">
+
+                                                                <!-- NAMA -->
+                                                                <div class="col-md-12 mb-3">
+
+                                                                    <label>Nama Klien</label>
+
+                                                                    <input
+                                                                        type="text"
+                                                                        name="client_name"
+                                                                        class="form-control"
+                                                                        value="<?= htmlspecialchars($client['client_name']); ?>"
+                                                                        required>
+
+                                                                </div>
+
+                                                                <!-- PREVIEW -->
+                                                                <div class="col-md-12 mb-3">
+
+                                                                    <label>Gambar Lama</label>
+
+                                                                    <div class="mb-3">
+
+                                                                        <img
+                                                                            src="../assets/images/uploads/our_clients/<?= htmlspecialchars($client['client_pic']); ?>"
+                                                                            width="120"
+                                                                            height="120"
+                                                                            style="object-fit:cover; border-radius:12px; border:1px solid #ddd;">
+
+                                                                    </div>
+
+                                                                    <label>Ganti Gambar</label>
+
+                                                                    <input
+                                                                        type="file"
+                                                                        name="client_pic"
+                                                                        class="form-control-file"
+                                                                        accept=".jpg,.jpeg,.png,.webp">
+
+                                                                </div>
+
+                                                                <!-- DESKRIPSI -->
+                                                                <div class="col-md-12 mb-3">
+
+                                                                    <label>Deskripsi</label>
+
+                                                                    <textarea
+                                                                        name="client_desc"
+                                                                        class="form-control"
+                                                                        rows="4"
+                                                                        required><?= htmlspecialchars($client['client_desc']); ?></textarea>
+
+                                                                </div>
+
+                                                                <!-- BUTTON -->
+                                                                <div class="col-md-12">
+
+                                                                    <button
+                                                                        type="submit"
+                                                                        name="edit_client"
+                                                                        class="btn"
+                                                                        style="background:var(--primary); color:#fff;">
+
+                                                                        <span class="material-icons" style="font-size:16px;">
+                                                                            save
+                                                                        </span>
+
+                                                                        Simpan Perubahan
+
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </form>
+
+                                                    </div>
+
+                                                </td>
+
+                                            </tr>
+
+                                        <?php endwhile; ?>
+
+                                    <?php else : ?>
+
+                                        <tr>
+
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                Belum ada data klien
+                                            </td>
+
+                                        </tr>
+
+                                    <?php endif; ?>
+
+                                </tbody>
+
                             </table>
+
+                            <!-- PAGINATION -->
+                            <div class="d-flex justify-content-between align-items-center flex-wrap mt-4">
+
+                                <!-- INFO -->
+                                <div class="text-muted mb-2">
+
+                                    Showing
+                                    <?= $start + 1; ?>
+                                    to
+                                    <?= min($start + $show, $totalData); ?>
+                                    of
+                                    <?= $totalData; ?> entries
+
+                                </div>
+
+                                <!-- PAGINATION -->
+                                <nav>
+
+                                    <ul class="pagination pagination-sm mb-0">
+
+                                        <!-- PREVIOUS -->
+                                        <li class="page-item <?= ($page <= 1) ? 'disabled' : ''; ?>">
+
+                                            <a
+                                                class="page-link"
+                                                href="?page=<?= $page - 1; ?>&show=<?= $show; ?>">
+
+                                                Previous
+
+                                            </a>
+
+                                        </li>
+
+                                        <?php
+                                        $visiblePages = 5;
+
+                                        if ($totalPages <= $visiblePages + 2) {
+
+                                            for ($i = 1; $i <= $totalPages; $i++) :
+                                        ?>
+
+                                                <li class="page-item <?= ($page == $i) ? 'active' : ''; ?>">
+
+                                                    <a
+                                                        class="page-link"
+                                                        href="?page=<?= $i; ?>&show=<?= $show; ?>">
+
+                                                        <?= $i; ?>
+
+                                                    </a>
+
+                                                </li>
+
+                                            <?php
+                                            endfor;
+                                        } else {
+
+                                            // AWAL
+                                            for ($i = 1; $i <= 5; $i++) :
+                                            ?>
+
+                                                <li class="page-item <?= ($page == $i) ? 'active' : ''; ?>">
+
+                                                    <a
+                                                        class="page-link"
+                                                        href="?page=<?= $i; ?>&show=<?= $show; ?>">
+
+                                                        <?= $i; ?>
+
+                                                    </a>
+
+                                                </li>
+
+                                            <?php endfor; ?>
+
+                                            <!-- TITIK -->
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+
+                                            <?php
+                                            // AKHIR
+                                            for ($i = $totalPages - 2; $i <= $totalPages; $i++) :
+
+                                                if ($i > 5) :
+                                            ?>
+
+                                                    <li class="page-item <?= ($page == $i) ? 'active' : ''; ?>">
+
+                                                        <a
+                                                            class="page-link"
+                                                            href="?page=<?= $i; ?>&show=<?= $show; ?>">
+
+                                                            <?= $i; ?>
+
+                                                        </a>
+
+                                                    </li>
+
+                                        <?php
+                                                endif;
+
+                                            endfor;
+                                        }
+                                        ?>
+
+                                        <!-- NEXT -->
+                                        <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : ''; ?>">
+
+                                            <a
+                                                class="page-link"
+                                                href="?page=<?= $page + 1; ?>&show=<?= $show; ?>">
+
+                                                Next
+
+                                            </a>
+
+                                        </li>
+
+                                    </ul>
+
+                                </nav>
+
+                            </div>
+
                         </div>
+
                     </div>
 
                 </div>
@@ -147,82 +861,12 @@
 
     <!-- App Settings FAB -->
     <div id="app-settings" style="display: none">
-        <app-settings
-            layout-active="fluid"
-            :layout-location="{
-      'default': 'index.html',
-      'fixed': 'fixed-dashboard.html',
-      'fluid': 'fluid-dashboard.html',
-      'mini': 'mini-dashboard.html'
-    }"></app-settings>
+        <app-settings layout-active="fluid"></app-settings>
     </div>
 
     <!-- ********************************** // MENU-Drawer ********************************** -->
     <?php include 'includes/drawer_menu.php'; ?>
     <!-- ********************************** //END MENU-drawer ********************************** -->
-
-    <!-- =========================
-    MODAL VALIDASI
-========================= -->
-
-    <div class="modal fade" id="modalSuccess" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-
-            <div class="modal-content border-0"
-                style="
-                border-radius:18px;
-                overflow:hidden;
-            ">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4 d-flex align-items-center justify-content-center"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#ecfdf3;
-                    ">
-
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#16a34a;
-                        ">
-                            check_circle
-                        </span>
-
-                    </div>
-
-                    <!-- TITLE -->
-                    <h4 class="font-weight-bold mb-2" id="successTitle">
-                        Berhasil
-                    </h4>
-
-                    <!-- TEXT -->
-                    <p class="text-muted mb-4" id="successText">
-                        Data berhasil disimpan
-                    </p>
-
-                    <!-- BUTTON -->
-                    <button type="button"
-                        class="btn btn-success px-4"
-                        data-dismiss="modal"
-                        style="
-                        min-width:120px;
-                        height:45px;
-                        border-radius:10px;
-                    ">
-                        Okay
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-    </div>
 
     <footer class="dashboard-footer mt-4">
         <div class="container-fluid">
@@ -267,288 +911,6 @@
     <script src="../assets/vendor/flatpickr/flatpickr.min.js"></script>
     <script src="../assets/js/flatpickr.js"></script>
 
-    <script>
-        const form = document.getElementById("formKlien");
-        const tableBody = document.getElementById("tableBody");
-
-        form.addEventListener("submit", function(e) {
-            e.preventDefault();
-
-            // AMBIL VALUE
-            const nama = document.getElementById("namaKlien").value;
-            const deskripsi = document.getElementById("deskripsi").value;
-            const gambarInput = document.getElementById("gambarKlien");
-
-            // VALIDASI
-            if (!nama || !deskripsi || gambarInput.files.length === 0) {
-                alert("Semua field wajib diisi!");
-                return;
-            }
-
-            // AMBIL FILE GAMBAR
-            const file = gambarInput.files[0];
-
-            // BUAT URL PREVIEW
-            const imageURL = URL.createObjectURL(file);
-
-            // TANGGAL
-            const tanggal = new Date().toLocaleDateString("id-ID", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric"
-            });
-
-            // NOMOR
-            const nomor = tableBody.rows.length + 1;
-
-            // ROW TABLE
-            const row = `
-            <tr>
-                <td>${nomor}</td>
-                <td>${nama}</td>
-
-                <td>
-                    <img src="${imageURL}" 
-                         width="80" 
-                         height="80"
-                         style="object-fit:cover; border-radius:8px;">
-                </td>
-
-                <td>${deskripsi}</td>
-
-                <td>${tanggal}</td>
-
-                <td>
-                    <button 
-                        class="btn btn-sm mr-1"
-                        style="background: var(--primary); color:#fff;"
-                        onclick="editRow(this)">
-                        <span class="material-icons" style="font-size:16px;">edit</span>
-                    </button>
-
-                    <button 
-                        class="btn btn-sm"
-                        style="background: var(--danger); color:#fff;"
-                        onclick="hapusRow(this)">
-                        <span class="material-icons" style="font-size:16px;">delete</span>
-                    </button>
-                </td>
-            </tr>
-        `;
-
-            // MASUKKAN KE TABLE
-            tableBody.innerHTML += row;
-
-            // RESET FORM
-            form.reset();
-
-            // MODAL TAMBAH
-            document.getElementById("successTitle").innerText = "Tambah Berhasil";
-
-            document.getElementById("successText").innerHTML =
-                `<b>${nama}</b> berhasil ditambahkan`;
-
-            $('#modalSuccess').modal('show');
-        });
-
-        // HAPUS ROW
-        function hapusRow(btn) {
-            if (confirm("Yakin ingin hapus data ini?")) {
-                btn.closest("tr").remove();
-
-                // RESET NOMOR
-                [...tableBody.rows].forEach((row, index) => {
-                    row.cells[0].innerText = index + 1;
-                });
-            }
-        }
-
-        // EDIT 
-        function editRow(btn) {
-
-            // HAPUS EDIT YANG SUDAH TERBUKA
-            document.querySelectorAll(".edit-row").forEach(el => el.remove());
-
-            const tr = btn.closest("tr");
-
-            const nama = tr.cells[1].innerText;
-            const gambar = tr.cells[2].querySelector("img").src;
-            const deskripsi = tr.cells[3].innerText;
-
-            // BUAT ROW EDIT
-            const editHTML = `
-        <tr class="edit-row">
-            <td colspan="6">
-
-                <div class="card p-4 mt-2" style="background:#f9fafc; border-radius:12px;">
-
-                    <h6 class="mb-4 d-flex align-items-center">
-                        <span class="material-icons mr-2" style="color:var(--primary);">
-                            edit
-                        </span>
-                        Edit Data Klien
-                    </h6>
-
-                    <div class="row">
-
-                        <!-- NAMA -->
-                        <div class="col-md-12 mb-3">
-                            <label>Nama Klien</label>
-                            <input 
-                                type="text" 
-                                class="form-control editNama" 
-                                value="${nama}">
-                        </div>
-
-                        <!-- PREVIEW -->
-                        <div class="col-md-12 mb-3">
-
-                            <label>Ganti Gambar</label>
-
-                            <div class="d-flex align-items-center">
-
-                                <!-- GAMBAR LAMA -->
-                                <div class="text-center">
-                                    <small class="d-block mb-2">Gambar Lama</small>
-
-                                    <img 
-                                        src="${gambar}" 
-                                        class="oldPreview"
-                                        width="100"
-                                        height="100"
-                                        style="object-fit:cover; border-radius:10px;">
-                                </div>
-
-                                <!-- ARROW -->
-                                <div class="px-4">
-                                    <span class="material-icons" style="font-size:40px; color:var(--primary);">
-                                        arrow_forward
-                                    </span>
-                                </div>
-
-                                <!-- GAMBAR BARU -->
-                                <div class="text-center">
-                                    <small class="d-block mb-2">Gambar Baru</small>
-
-                                    <img 
-                                        src="${gambar}" 
-                                        class="newPreview"
-                                        width="100"
-                                        height="100"
-                                        style="object-fit:cover; border-radius:10px; border:2px dashed #ddd;">
-                                </div>
-
-                            </div>
-
-                            <!-- INPUT FILE -->
-                            <input 
-                                type="file"
-                                class="form-control-file mt-3 editGambar"
-                                accept="image/*">
-
-                        </div>
-
-                        <!-- DESKRIPSI -->
-                        <div class="col-md-12 mb-3">
-                            <label>Deskripsi</label>
-
-                            <textarea 
-                                class="form-control editDeskripsi"
-                                rows="3">${deskripsi}</textarea>
-                        </div>
-
-                        <!-- BUTTON -->
-                        <div class="col-md-12">
-
-                            <button 
-                                class="btn mr-2"
-                                style="background:var(--primary); color:#fff;"
-                                onclick="simpanEdit(this)">
-                                <span class="material-icons" style="font-size:16px;">
-                                    save
-                                </span>
-                                Simpan
-                            </button>
-
-                            <button 
-                                class="btn btn-light"
-                                onclick="batalEdit(this)">
-                                Batal
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </td>
-        </tr>
-        `;
-
-            // INSERT SETELAH ROW
-            tr.insertAdjacentHTML("afterend", editHTML);
-
-            // PREVIEW GAMBAR BARU
-            const editRowElement = tr.nextElementSibling;
-
-            const fileInput = editRowElement.querySelector(".editGambar");
-            const preview = editRowElement.querySelector(".newPreview");
-
-            fileInput.addEventListener("change", function() {
-
-                if (this.files && this.files[0]) {
-
-                    preview.src = URL.createObjectURL(this.files[0]);
-
-                }
-
-            });
-        }
-
-        // SIMPAN EDIT
-        // SIMPAN EDIT
-        function simpanEdit(btn) {
-
-            const editRow = btn.closest(".edit-row");
-            const mainRow = editRow.previousElementSibling;
-
-            const nama = editRow.querySelector(".editNama").value;
-            const deskripsi = editRow.querySelector(".editDeskripsi").value;
-
-            const fileInput = editRow.querySelector(".editGambar");
-
-            // UPDATE TEXT
-            mainRow.cells[1].innerText = nama;
-            mainRow.cells[3].innerText = deskripsi;
-
-            // UPDATE GAMBAR
-            if (fileInput.files.length > 0) {
-
-                const newImage = URL.createObjectURL(fileInput.files[0]);
-
-                mainRow.cells[2].querySelector("img").src = newImage;
-            }
-
-            // HAPUS FORM EDIT
-            editRow.remove();
-
-            // MODAL EDIT
-            document.getElementById("successTitle").innerText = "Edit Berhasil";
-
-            document.getElementById("successText").innerHTML =
-                `<b>${nama}</b> berhasil di edit`;
-
-            $('#modalSuccess').modal('show');
-        }
-
-        // BATAL EDIT
-        function batalEdit(btn) {
-
-            btn.closest(".edit-row").remove();
-
-        }
-    </script>
 </body>
 
 </html>

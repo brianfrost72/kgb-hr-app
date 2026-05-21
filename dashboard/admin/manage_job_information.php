@@ -552,7 +552,10 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                                                         </button>
 
                                                         <!-- DELETE -->
-                                                        <button class="btn btn-outline-danger btn-sm">
+                                                        <button
+                                                            class="btn btn-outline-danger btn-sm"
+                                                            onclick="deleteRow(this)"
+                                                            data-id="<?= $job['id']; ?>">
 
                                                             <span class="material-icons"
                                                                 style="font-size:16px;vertical-align:middle;">
@@ -1319,8 +1322,13 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
         }
 
-        /* DELETE */
+        /* =========================================
+       DELETE JOB VACANCY
+    ========================================= */
         function deleteRow(button) {
+
+            const id =
+                button.getAttribute("data-id");
 
             const row =
                 button.closest("tr");
@@ -1329,7 +1337,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                 row.querySelector("strong")
                 .innerText;
 
-            /* VALIDASI */
+            /* =========================================
+               VALIDASI
+            ========================================= */
             const confirmDelete =
                 confirm(
                     `Yakin ingin menghapus lowongan "${title}" ?`
@@ -1339,23 +1349,48 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                 return;
             }
 
-            /* DELETE ANIMATION */
-            row.style.transition =
-                "all .3s ease";
+            /* =========================================
+               AJAX DELETE
+            ========================================= */
+            $.ajax({
 
-            row.style.opacity = "0";
+                url: "logic/delete_job_information.php",
+                type: "POST",
 
-            row.style.transform =
-                "translateX(40px)";
+                data: {
+                    id: id
+                },
 
-            setTimeout(() => {
+                success: function(response) {
 
-                row.remove();
+                    if (response == "success") {
 
-                /* UPDATE PAGINATION */
-                renderPagination();
+                        /* ANIMATION */
+                        row.style.transition =
+                            "all .3s ease";
 
-            }, 300);
+                        row.style.opacity = "0";
+
+                        row.style.transform =
+                            "translateX(40px)";
+
+                        setTimeout(() => {
+
+                            row.remove();
+
+                            renderTable();
+
+                        }, 300);
+
+                    } else {
+
+                        alert(response);
+
+                    }
+
+                }
+
+            });
 
         }
     </script>
