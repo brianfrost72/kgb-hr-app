@@ -857,15 +857,29 @@ $queryTablePayroll = mysqli_query($conn, "
 
                             <!-- FILTER DIVISI -->
                             <div class="mr-2">
-                                <select id="filterDivisi"
+                                <select id="filterDepartment"
                                     class="form-control"
                                     style="width:170px;">
 
-                                    <option value="">Semua Divisi</option>
-                                    <option value="Marketing">Marketing</option>
-                                    <option value="IT">IT</option>
-                                    <option value="Finance">Finance</option>
-                                    <option value="HRD">HRD</option>
+                                    <option value="">
+                                        Semua Department
+                                    </option>
+
+                                    <?php
+
+                                    mysqli_data_seek($queryDepartment, 0);
+
+                                    while ($department = mysqli_fetch_assoc($queryDepartment)) :
+
+                                    ?>
+
+                                        <option value="<?= strtolower($department['department_name']); ?>">
+
+                                            <?= $department['department_name']; ?>
+
+                                        </option>
+
+                                    <?php endwhile; ?>
 
                                 </select>
                             </div>
@@ -936,7 +950,11 @@ $queryTablePayroll = mysqli_query($conn, "
 
                                 ?>
 
-                                    <tr>
+                                    <tr data-name="<?= strtolower($row['full_name']); ?>"
+
+                                        data-department="<?= strtolower($row['department_name']); ?>"
+
+                                        data-period="<?= date('Y-m', strtotime($row['period_date'])); ?>">
 
                                         <!-- NO -->
                                         <td>
@@ -1645,26 +1663,6 @@ $queryTablePayroll = mysqli_query($conn, "
 
             takeHomePay.innerHTML = formatRupiah(takeHome.toString());
         }
-
-        // ======================================== PENJUMLAHAN ========================================
-        // DATA
-        let payrollData = [];
-
-        // DUMMY DATA
-        for (let i = 1; i <= 120; i++) {
-            payrollData.push({
-                nama: "Karyawan " + i,
-                divisi: i % 3 == 0 ? "Finance" : i % 2 == 0 ? "IT" : "Marketing",
-
-                periode: i % 2 == 0 ? "2025-05" : "2025-06",
-
-                tanggal: "31/05/2025",
-
-                total: 8000000 + i * 10000,
-
-                potongan: 1000000,
-            });
-        }
     </script>
 
     <script>
@@ -2025,6 +2023,309 @@ $queryTablePayroll = mysqli_query($conn, "
                 });
 
             });
+
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+
+            let currentPage = 1;
+
+            let rowsPerPage = parseInt($("#showEntries").val());
+
+            /* =========================================
+               GET ALL ROWS
+            ========================================= */
+
+            function getRows() {
+
+                return $("#payrollTableBody tr");
+
+            }
+
+            /* =========================================
+               RENDER TABLE
+            ========================================= */
+
+            function renderTable() {
+
+                let tableRows = getRows();
+
+                let search = $("#searchInput").val().toLowerCase();
+
+                let department = $("#filterDepartment").val();
+
+                let period = $("#filterPeriode").val();
+
+                let filteredRows = [];
+
+                tableRows.each(function() {
+
+                    let row = $(this);
+
+                    let name = String(row.data("name") || "").toLowerCase();
+
+                    let rowDepartment = String(row.data("department") || "").toLowerCase();
+
+                    let rowPeriod = String(row.data("period") || "");
+
+                    /* =========================================
+                       SEARCH
+                    ========================================= */
+
+                    let matchSearch =
+                        search == "" ||
+                        name.includes(search);
+
+                    /* =========================================
+                       FILTER DEPARTMENT
+                    ========================================= */
+
+                    let matchDepartment =
+                        department == "" ||
+                        rowDepartment == department;
+
+                    /* =========================================
+                       FILTER PERIODE
+                    ========================================= */
+
+                    let matchPeriod =
+                        period == "" ||
+                        rowPeriod == period;
+
+                    /* =========================================
+                       PUSH
+                    ========================================= */
+
+                    if (
+                        matchSearch &&
+                        matchDepartment &&
+                        matchPeriod
+                    ) {
+
+                        filteredRows.push(row);
+
+                    }
+
+                });
+
+                /* =========================================
+                   HIDE ALL
+                ========================================= */
+
+                tableRows.hide();
+
+                /* =========================================
+                   TOTAL PAGE
+                ========================================= */
+
+                let totalRows = filteredRows.length;
+
+                let totalPages = Math.ceil(totalRows / rowsPerPage);
+
+                if (totalPages < 1) {
+
+                    totalPages = 1;
+
+                }
+
+                if (currentPage > totalPages) {
+
+                    currentPage = totalPages;
+
+                }
+
+                /* =========================================
+                   START END
+                ========================================= */
+
+                let start = (currentPage - 1) * rowsPerPage;
+
+                let end = start + rowsPerPage;
+
+                /* =========================================
+                   SHOW ROW
+                ========================================= */
+
+                for (let i = start; i < end; i++) {
+
+                    if (filteredRows[i]) {
+
+                        filteredRows[i].show();
+
+                    }
+
+                }
+
+                /* =========================================
+                   INFO
+                ========================================= */
+
+                let showingStart =
+                    totalRows == 0 ?
+                    0 :
+                    start + 1;
+
+                let showingEnd =
+                    end > totalRows ?
+                    totalRows :
+                    end;
+
+                $("#paginationInfo").html(
+
+                    `Menampilkan ${showingStart}
+             sampai ${showingEnd}
+             dari ${totalRows} data`
+
+                );
+
+                /* =========================================
+                   PAGINATION
+                ========================================= */
+
+                renderPagination(totalPages);
+
+            }
+
+            /* =========================================
+               PAGINATION RENDER
+            ========================================= */
+
+            function renderPagination(totalPages) {
+
+                $("#pagination").html("");
+
+                function addButton(page) {
+
+                    let activeClass =
+                        page == currentPage ?
+                        'btn-primary' :
+                        'btn-light';
+
+                    $("#pagination").append(`
+
+                <button
+                    class="btn ${activeClass} btn-sm mx-1 pagination-btn"
+                    data-page="${page}">
+
+                    ${page}
+
+                </button>
+
+            `);
+
+                }
+
+                /* =========================================
+                   MAX 5 PAGE + ...
+                ========================================= */
+
+                if (totalPages <= 5) {
+
+                    for (let i = 1; i <= totalPages; i++) {
+
+                        addButton(i);
+
+                    }
+
+                } else {
+
+                    /* FIRST 5 */
+
+                    for (let i = 1; i <= 5; i++) {
+
+                        addButton(i);
+
+                    }
+
+                    /* DOT */
+
+                    $("#pagination").append(
+
+                        `<span class="mx-2">...</span>`
+
+                    );
+
+                    /* LAST 4 */
+
+                    for (let i = totalPages - 3; i <= totalPages; i++) {
+
+                        addButton(i);
+
+                    }
+
+                }
+
+            }
+
+            /* =========================================
+               SEARCH
+            ========================================= */
+
+            $("#searchInput").on("keyup", function() {
+
+                currentPage = 1;
+
+                renderTable();
+
+            });
+
+            /* =========================================
+               FILTER DEPARTMENT
+            ========================================= */
+
+            $("#filterDepartment").on("change", function() {
+
+                currentPage = 1;
+
+                renderTable();
+
+            });
+
+            /* =========================================
+               FILTER PERIODE
+            ========================================= */
+
+            $("#filterPeriode").on("change", function() {
+
+                currentPage = 1;
+
+                renderTable();
+
+            });
+
+            /* =========================================
+               SHOW ENTRIES
+            ========================================= */
+
+            $("#showEntries").on("change", function() {
+
+                rowsPerPage = parseInt($(this).val());
+
+                currentPage = 1;
+
+                renderTable();
+
+            });
+
+            /* =========================================
+               CLICK PAGINATION
+            ========================================= */
+
+            $(document).on("click", ".pagination-btn", function() {
+
+                currentPage = parseInt($(this).data("page"));
+
+                renderTable();
+
+            });
+
+            /* =========================================
+               FIRST LOAD
+            ========================================= */
+
+            renderTable();
 
         });
     </script>

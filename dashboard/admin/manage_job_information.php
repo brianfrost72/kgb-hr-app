@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "../koneksi.php";
+require_once __DIR__ . '/../koneksi.php';
 
 /* =========================================
    QUERY JOB VACANCY + REGION
@@ -51,7 +51,7 @@ $totalAktif = mysqli_fetch_assoc($totalAktifQuery);
 $totalSelesaiQuery = mysqli_query($conn, "
     SELECT COUNT(*) as total_selesai
     FROM job_vacancy
-    WHERE status = 'Selesai'
+    WHERE status = 'Tidak Aktif'
 ");
 
 $totalSelesai = mysqli_fetch_assoc($totalSelesaiQuery);
@@ -248,7 +248,7 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
                                 <div>
                                     <h3 class="mb-0"><?= $totalSelesai['total_selesai']; ?></h3>
-                                    <small class="text-muted">Selesai</small>
+                                    <small class="text-muted">Tidak Aktif</small>
                                 </div>
 
                             </div>
@@ -323,13 +323,40 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                                     <option>Magang</option>
                                 </select>
 
+                                <!-- LOCATION -->
+                                <select id="locationFilter" class="form-control"
+                                    style="width:190px;">
+
+                                    <option>--Lokasi--</option>
+                                    <option>Semua Lokasi</option>
+
+                                    <?php
+
+                                    $filterRegion = mysqli_query($conn, "
+        SELECT *
+        FROM regions
+        ORDER BY region_name ASC
+    ");
+
+                                    while ($fr = mysqli_fetch_assoc($filterRegion)) :
+
+                                    ?>
+
+                                        <option>
+                                            <?= htmlspecialchars($fr['region_name']); ?>
+                                        </option>
+
+                                    <?php endwhile; ?>
+
+                                </select>
+
                                 <!-- STATUS -->
                                 <select id="statusFilter" class="form-control"
                                     style="width:170px;">
                                     <option>--Status--</option>
                                     <option>Semua Status</option>
                                     <option>Aktif</option>
-                                    <option>Selesai</option>
+                                    <option>Tidak Aktif</option>
                                     <option>Akan Berakhir</option>
                                 </select>
 
@@ -356,161 +383,209 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
                                 <tbody id="jobTable">
 
-                                    <tr class="job-row">
-                                        <td>
-                                            <strong>Frontend Developer</strong><br>
-                                            <small class="text-muted">Bekasi</small>
-                                        </td>
+                                    <?php if (mysqli_num_rows($jobVacancy) > 0) : ?>
 
-                                        <td>Full Time</td>
-                                        <td>20 Mei 2025</td>
-                                        <td>5</td>
-                                        <td>20 Juni 2025</td>
+                                        <?php while ($job = mysqli_fetch_assoc($jobVacancy)) : ?>
 
-                                        <td>
-                                            <span class="badge badge-success"
-                                                style="padding:8px 14px;border-radius:8px;">
-                                                Aktif
-                                            </span>
-                                        </td>
+                                            <?php
 
-                                        <td>
-                                            <div class="d-flex justify-content-center">
+                                            $today = date('Y-m-d');
 
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="showDetailLowongan(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        visibility
+                                            /* =========================================
+   AUTO STATUS DATABASE
+========================================= */
+
+                                            /* SUDAH LEWAT */
+                                            if ($job['end_info'] < $today) {
+
+                                                mysqli_query($conn, "
+        UPDATE job_vacancy
+        SET status = 'Tidak Aktif'
+        WHERE id = '{$job['id']}'
+    ");
+
+                                                $job['status'] = 'Tidak Aktif';
+                                            }
+
+                                            /* BELUM MULAI */
+                                            if ($job['start_info'] > $today) {
+
+                                                mysqli_query($conn, "
+        UPDATE job_vacancy
+        SET status = 'Tidak Aktif'
+        WHERE id = '{$job['id']}'
+    ");
+
+                                                $job['status'] = 'Tidak Aktif';
+                                            }
+
+                                            /* MASIH AKTIF */
+                                            if (
+                                                $job['start_info'] <= $today &&
+                                                $job['end_info'] >= $today &&
+                                                $job['status'] != 'Tidak Aktif'
+                                            ) {
+
+                                                mysqli_query($conn, "
+        UPDATE job_vacancy
+        SET status = 'Aktif'
+        WHERE id = '{$job['id']}'
+    ");
+
+                                                $job['status'] = 'Aktif';
+                                            }
+
+                                            /* =========================================
+   BADGE STATUS
+========================================= */
+                                            $statusBadge = 'badge-secondary';
+                                            $statusText  = $job['status'];
+
+                                            if ($job['status'] == 'Aktif') {
+
+                                                $statusBadge = 'badge-success';
+                                            }
+
+                                            /* AKAN BERAKHIR */
+                                            if (
+                                                $job['status'] == 'Aktif' &&
+                                                $job['end_info'] >= $today &&
+                                                $job['end_info'] <= date('Y-m-d', strtotime('+7 days'))
+                                            ) {
+
+                                                $statusBadge = 'badge-warning';
+                                                $statusText  = 'Akan Berakhir';
+                                            }
+                                            ?>
+
+                                            <tr class="job-row">
+
+                                                <!-- JUDUL -->
+                                                <td>
+                                                    <strong>
+                                                        <?= htmlspecialchars($job['job_title']); ?>
+                                                    </strong>
+                                                    <br>
+
+                                                    <small class="text-muted">
+                                                        <?= htmlspecialchars($job['region_name']); ?>
+                                                    </small>
+                                                </td>
+
+                                                <!-- TIPE -->
+                                                <td>
+                                                    <?= htmlspecialchars($job['type_vacancy']); ?>
+                                                </td>
+
+                                                <!-- TANGGAL POST -->
+                                                <td>
+                                                    <?= date('d M Y', strtotime($job['start_info'])); ?>
+                                                </td>
+
+                                                <!-- KUOTA -->
+                                                <td>
+                                                    <?= $job['job_quota']; ?>
+                                                </td>
+
+                                                <!-- TANGGAL TUTUP -->
+                                                <td>
+                                                    <?= date('d M Y', strtotime($job['end_info'])); ?>
+                                                </td>
+
+                                                <!-- STATUS -->
+                                                <td>
+
+                                                    <span class="badge <?= $statusBadge; ?>"
+                                                        style="padding:8px 14px;border-radius:8px;">
+
+                                                        <?= $statusText; ?>
+
                                                     </span>
-                                                    Lihat Lowongan
-                                                </button>
 
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="toggleStatus(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        check
-                                                    </span>
-                                                    Selesai
-                                                </button>
+                                                </td>
 
-                                                <button class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteRow(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        delete
-                                                    </span>
-                                                    Hapus
-                                                </button>
+                                                <!-- AKSI -->
+                                                <td>
 
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                    <div class="d-flex justify-content-center">
 
-                                    <tr class="job-row">
-                                        <td>
-                                            <strong>UI/UX Designer</strong><br>
-                                            <small class="text-muted">Jakarta</small>
-                                        </td>
+                                                        <!-- DETAIL -->
+                                                        <button class="btn btn-outline-primary btn-sm mr-2"
+                                                            onclick="showDetailLowongan(this)"
 
-                                        <td>Part Time</td>
-                                        <td>18 Mei 2025</td>
-                                        <td>3</td>
-                                        <td>18 Juni 2025</td>
+                                                            data-id="<?= $job['id']; ?>"
+                                                            data-title="<?= htmlspecialchars($job['job_title']); ?>"
+                                                            data-location="<?= $job['id_region']; ?>"
+                                                            data-type="<?= htmlspecialchars($job['type_vacancy']); ?>"
+                                                            data-description="<?= htmlspecialchars(strip_tags($job['job_desc'])); ?>"
+                                                            data-quota="<?= $job['job_quota']; ?>"
+                                                            data-post="<?= $job['start_info']; ?>"
+                                                            data-close="<?= $job['end_info']; ?>"
+                                                            data-link="<?= htmlspecialchars($job['link_info']); ?>">
 
-                                        <td>
-                                            <span class="badge badge-warning"
-                                                style="padding:8px 14px;border-radius:8px;">
-                                                Akan Berakhir
-                                            </span>
-                                        </td>
 
-                                        <td>
-                                            <div class="d-flex justify-content-center">
+                                                            <span class="material-icons"
+                                                                style="font-size:16px;vertical-align:middle;">
 
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="showDetailLowongan(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        visibility
-                                                    </span>
-                                                    Lihat Lowongan
-                                                </button>
+                                                                visibility
 
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="toggleStatus(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        check
-                                                    </span>
-                                                    Selesai
-                                                </button>
+                                                            </span>
 
-                                                <button class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteRow(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        delete
-                                                    </span>
-                                                    Hapus
-                                                </button>
+                                                            Lihat Lowongan
 
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                        </button>
 
-                                    <tr class="job-row">
-                                        <td>
-                                            <strong>Backend Developer</strong><br>
-                                            <small class="text-muted">Bandung</small>
-                                        </td>
+                                                        <!-- STATUS -->
+                                                        <button class="btn btn-outline-primary btn-sm mr-2"
+                                                            onclick="toggleStatus(this)"
+                                                            data-id="<?= $job['id']; ?>">
 
-                                        <td>Kontrak</td>
-                                        <td>15 Mei 2025</td>
-                                        <td>2</td>
-                                        <td>30 Mei 2025</td>
+                                                            <span class="material-icons"
+                                                                style="font-size:16px;vertical-align:middle;">
 
-                                        <td>
-                                            <span class="badge badge-secondary"
-                                                style="padding:8px 14px;border-radius:8px;">
-                                                Selesai
-                                            </span>
-                                        </td>
+                                                                check
 
-                                        <td>
-                                            <div class="d-flex justify-content-center">
+                                                            </span>
 
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="showDetailLowongan(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        visibility
-                                                    </span>
-                                                    Lihat Lowongan
-                                                </button>
+                                                            Selesai
 
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="toggleStatus(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        check
-                                                    </span>
-                                                    Selesai
-                                                </button>
+                                                        </button>
 
-                                                <button class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteRow(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        delete
-                                                    </span>
-                                                    Hapus
-                                                </button>
+                                                        <!-- DELETE -->
+                                                        <button class="btn btn-outline-danger btn-sm">
 
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                            <span class="material-icons"
+                                                                style="font-size:16px;vertical-align:middle;">
+
+                                                                delete
+
+                                                            </span>
+
+                                                            Hapus
+
+                                                        </button>
+
+                                                    </div>
+
+                                                </td>
+
+                                            </tr>
+
+                                        <?php endwhile; ?>
+
+                                    <?php else : ?>
+
+                                        <tr>
+
+                                            <td colspan="7" class="text-center text-muted py-4">
+
+                                                Tidak ada data lowongan kerja
+
+                                            </td>
+
+                                        </tr>
+
+                                    <?php endif; ?>
 
                                 </tbody>
 
@@ -588,7 +663,7 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
         <div class="card-body">
 
             <form>
-
+                <input type="hidden" id="detailId">
                 <!-- JUDUL -->
                 <div class="form-group">
                     <label>Judul Lowongan Kerja</label>
@@ -601,22 +676,70 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
                 <!-- LOKASI -->
                 <div class="form-group">
+
                     <label>Lokasi</label>
-                    <input
+
+                    <select
                         id="detailLocation"
-                        type="text"
                         class="form-control"
-                        readonly>
+                        disabled>
+
+                        <option value="">-- Pilih Lokasi --</option>
+
+                        <?php
+
+                        $regionQuery = mysqli_query($conn, "
+            SELECT *
+            FROM regions
+            ORDER BY region_name ASC
+        ");
+
+                        while ($region = mysqli_fetch_assoc($regionQuery)) :
+
+                        ?>
+
+                            <option value="<?= $region['id']; ?>">
+
+                                <?= htmlspecialchars($region['region_name']); ?>
+
+                            </option>
+
+                        <?php endwhile; ?>
+
+                    </select>
+
                 </div>
 
                 <!-- JENIS -->
                 <div class="form-group">
+
                     <label>Jenis Lowongan</label>
-                    <input
+
+                    <select
                         id="detailType"
-                        type="text"
                         class="form-control"
-                        readonly>
+                        disabled>
+
+                        <option value="">-- Pilih Jenis Lowongan --</option>
+
+                        <option value="Full Time">
+                            Full Time
+                        </option>
+
+                        <option value="Part Time">
+                            Part Time
+                        </option>
+
+                        <option value="Freelance">
+                            Freelance
+                        </option>
+
+                        <option value="Magang">
+                            Magang
+                        </option>
+
+                    </select>
+
                 </div>
 
                 <!-- DESKRIPSI -->
@@ -778,137 +901,6 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
     <script src="../assets/js/flatpickr.js"></script>
 
     <script>
-        function filterTable() {
-
-            const search =
-                document.getElementById("searchInput")
-                .value.toLowerCase();
-
-            const type =
-                document.getElementById("typeFilter")
-                .value.toLowerCase();
-
-            const location =
-                document.getElementById("locationFilter")
-                .value.toLowerCase();
-
-            const status =
-                document.getElementById("statusFilter")
-                .value.toLowerCase();
-
-            const show =
-                parseInt(
-                    document.getElementById("showEntries").value
-                );
-
-            const rows =
-                document.querySelectorAll(".job-row");
-
-            let visibleCount = 0;
-
-            rows.forEach((row) => {
-
-                const title =
-                    row.querySelector("strong")
-                    .innerText
-                    .toLowerCase();
-
-                const lokasi =
-                    row.querySelector("small")
-                    .innerText
-                    .toLowerCase();
-
-                const tipe =
-                    row.children[1]
-                    .innerText
-                    .toLowerCase();
-
-                const statusText =
-                    row.children[5]
-                    .innerText
-                    .trim()
-                    .toLowerCase();
-
-                /* SEARCH */
-                const matchSearch =
-                    title.includes(search);
-
-                /* TYPE */
-                const matchType =
-                    type === "" ||
-                    type.includes("--type") ||
-                    type.includes("semua") ||
-                    tipe.includes(type);
-
-                /* LOCATION */
-                const matchLocation =
-                    location === "" ||
-                    location.includes("--lokasi") ||
-                    location.includes("semua") ||
-                    lokasi.includes(location);
-
-                /* STATUS */
-                const matchStatus =
-                    status === "" ||
-                    status.includes("--status") ||
-                    status.includes("semua") ||
-                    statusText.includes(status);
-
-                /* FINAL FILTER */
-                if (
-                    matchSearch &&
-                    matchType &&
-                    matchLocation &&
-                    matchStatus
-                ) {
-
-                    if (visibleCount < show) {
-
-                        row.style.display = "";
-                        visibleCount++;
-
-                    } else {
-
-                        row.style.display = "none";
-
-                    }
-
-                } else {
-
-                    row.style.display = "none";
-
-                }
-
-            });
-
-        }
-
-        /* EVENTS */
-        document
-            .getElementById("searchInput")
-            .addEventListener("keyup", filterTable);
-
-        document
-            .getElementById("typeFilter")
-            .addEventListener("change", filterTable);
-
-        document
-            .getElementById("locationFilter")
-            .addEventListener("change", filterTable);
-
-        document
-            .getElementById("statusFilter")
-            .addEventListener("change", filterTable);
-
-        document
-            .getElementById("showEntries")
-            .addEventListener("change", filterTable);
-
-        /* INIT */
-        window.onload = filterTable;
-    </script>
-
-    <script>
         let currentPage = 1;
         let perPage = 10;
 
@@ -927,6 +919,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
         const showEntries =
             document.getElementById("showEntries");
 
+        /* =========================================
+           GET FILTERED ROWS
+        ========================================= */
         function getFilteredRows() {
 
             const search =
@@ -967,23 +962,24 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                     .trim()
                     .toLowerCase();
 
+                /* SEARCH */
                 const matchSearch =
                     title.includes(search);
 
+                /* TYPE */
                 const matchType =
-                    type === "" ||
                     type.includes("--type") ||
                     type.includes("semua") ||
                     tipe.includes(type);
 
+                /* LOCATION */
                 const matchLocation =
-                    location === "" ||
                     location.includes("--lokasi") ||
                     location.includes("semua") ||
                     lokasi.includes(location);
 
+                /* STATUS */
                 const matchStatus =
-                    status === "" ||
                     status.includes("--status") ||
                     status.includes("semua") ||
                     statusText.includes(status);
@@ -999,9 +995,13 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
         }
 
+        /* =========================================
+           RENDER TABLE
+        ========================================= */
         function renderTable() {
 
-            const rows = getFilteredRows();
+            const rows =
+                getFilteredRows();
 
             perPage =
                 parseInt(showEntries.value);
@@ -1012,9 +1012,12 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
             const totalPages =
                 Math.ceil(totalData / perPage);
 
-            /* FIX PAGE OVERFLOW */
+            /* RESET PAGE */
             if (currentPage > totalPages) {
-                currentPage = totalPages || 1;
+
+                currentPage =
+                    totalPages || 1;
+
             }
 
             /* HIDE ALL */
@@ -1026,7 +1029,7 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
                 });
 
-            /* SHOW CURRENT PAGE */
+            /* SHOW DATA */
             const start =
                 (currentPage - 1) * perPage;
 
@@ -1044,6 +1047,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
         }
 
+        /* =========================================
+           PAGINATION
+        ========================================= */
         function renderPagination(totalPages, totalData) {
 
             const pagination =
@@ -1077,14 +1083,14 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
             pagination.appendChild(prevBtn);
 
-            /* PAGE BUTTON */
+            /* PAGE */
             for (let i = 1; i <= totalPages; i++) {
 
                 if (
                     i === 1 ||
                     i === totalPages ||
-                    (i >= currentPage - 1 &&
-                        i <= currentPage + 1)
+                    (i >= currentPage - 2 &&
+                        i <= currentPage + 2)
                 ) {
 
                     const btn =
@@ -1094,7 +1100,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                         "page-btn";
 
                     if (i === currentPage) {
+
                         btn.classList.add("active");
+
                     }
 
                     btn.innerText = i;
@@ -1108,12 +1116,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
                     pagination.appendChild(btn);
 
-                }
-
-                /* DOTS */
-                else if (
-                    i === currentPage - 2 ||
-                    i === currentPage + 2
+                } else if (
+                    i === currentPage - 3 ||
+                    i === currentPage + 3
                 ) {
 
                     const dots =
@@ -1167,7 +1172,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                 currentPage * perPage;
 
             if (endData > totalData) {
+
                 endData = totalData;
+
             }
 
             document.getElementById("paginationInfo")
@@ -1176,7 +1183,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
         }
 
-        /* EVENTS */
+        /* =========================================
+           EVENTS
+        ========================================= */
         searchInput.addEventListener(
             "keyup",
             () => {
@@ -1227,49 +1236,18 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
             }
         );
 
-        /* DELETE */
-        function deleteRow(button) {
-
-            const row =
-                button.closest("tr");
-
-            const title =
-                row.querySelector("strong")
-                .innerText;
-
-            if (
-                !confirm(
-                    `Yakin ingin menghapus lowongan "${title}" ?`
-                )
-            ) {
-                return;
-            }
-
-            row.style.transition =
-                "all .3s ease";
-
-            row.style.opacity = "0";
-
-            row.style.transform =
-                "translateX(40px)";
-
-            setTimeout(() => {
-
-                row.remove();
-
-                renderTable();
-
-            }, 300);
-
-        }
-
-        /* INIT */
+        /* =========================================
+           INIT
+        ========================================= */
         renderTable();
     </script>
 
     <script>
         /* TOGGLE STATUS */
         function toggleStatus(button) {
+
+            const id =
+                button.getAttribute("data-id");
 
             const row =
                 button.closest("tr");
@@ -1281,7 +1259,27 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
             const currentStatus =
                 badge.innerText.trim();
 
-            /* VALIDASI */
+            let newStatus = "Aktif";
+
+            /* =========================================
+               DEFAULT = TIDAK AKTIF
+            ========================================= */
+            if (
+                currentStatus === "Aktif" ||
+                currentStatus === "Akan Berakhir"
+            ) {
+
+                newStatus = "Tidak Aktif";
+
+            } else {
+
+                newStatus = "Aktif";
+
+            }
+
+            /* =========================================
+               VALIDASI
+            ========================================= */
             if (
                 !confirm(
                     "Yakin ingin mengubah status lowongan ini?"
@@ -1290,55 +1288,34 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                 return;
             }
 
-            /* AKTIF -> SELESAI */
-            if (
-                currentStatus === "Aktif" ||
-                currentStatus === "Akan Berakhir"
-            ) {
+            /* =========================================
+               AJAX UPDATE STATUS
+            ========================================= */
+            $.ajax({
 
-                badge.classList.remove(
-                    "badge-success",
-                    "badge-warning"
-                );
+                url: "logic/toggle_job_status.php",
+                type: "POST",
 
-                badge.classList.add(
-                    "badge-secondary"
-                );
+                data: {
+                    id: id,
+                    status: newStatus
+                },
 
-                badge.innerText = "Selesai";
+                success: function(response) {
 
-                button.innerHTML = `
-            <span class="material-icons"
-                style="font-size:16px;vertical-align:middle;">
-                refresh
-            </span>
-            Aktifkan
-        `;
+                    if (response == "success") {
 
-            }
+                        location.reload();
 
-            /* SELESAI -> AKTIF */
-            else {
+                    } else {
 
-                badge.classList.remove(
-                    "badge-secondary"
-                );
+                        alert(response);
 
-                badge.classList.add(
-                    "badge-success"
-                );
+                    }
 
-                badge.innerText = "Aktif";
+                }
 
-                button.innerHTML = `
-            <span class="material-icons"
-                style="font-size:16px;vertical-align:middle;">
-                check
-            </span>
-            Selesai
-        `;
-
-            }
+            });
 
         }
 
@@ -1386,34 +1363,40 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
     <script>
         function showDetailLowongan(button) {
 
-            const row =
-                button.closest("tr");
-
-            /* DATA */
+            /* =========================================
+               AMBIL DATA DARI BUTTON
+            ========================================= */
+            const id =
+                button.getAttribute("data-id");
             const title =
-                row.querySelector("strong")
-                .innerText;
+                button.getAttribute("data-title");
+            document.getElementById("detailId")
+                .value = id;
 
             const location =
-                row.querySelector("small")
-                .innerText;
+                button.getAttribute("data-location");
 
             const type =
-                row.children[1].innerText;
+                button.getAttribute("data-type");
 
-            const postDate =
-                row.children[2].innerText;
+            const description =
+                button.getAttribute("data-description");
 
             const quota =
-                row.children[3].innerText;
+                button.getAttribute("data-quota");
+
+            const postDate =
+                button.getAttribute("data-post");
 
             const closeDate =
-                row.children[4].innerText;
+                button.getAttribute("data-close");
 
-            const status =
-                row.children[5].innerText.trim();
+            const link =
+                button.getAttribute("data-link");
 
-            /* SET VALUE */
+            /* =========================================
+               SET VALUE DETAIL
+            ========================================= */
             document.getElementById("detailTitle")
                 .value = title;
 
@@ -1424,10 +1407,7 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                 .value = type;
 
             document.getElementById("detailDescription")
-                .value =
-                "Deskripsi lowongan kerja untuk posisi " +
-                title +
-                ". Silakan membaca seluruh persyaratan dan ketentuan yang berlaku.";
+                .value = description;
 
             document.getElementById("detailQuota")
                 .value = quota;
@@ -1439,17 +1419,19 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                 .value = closeDate;
 
             document.getElementById("detailLink")
-                .value =
-                "https://example.com/lowongan/" +
-                title.toLowerCase().replace(/\s/g, "-");
+                .value = link;
 
-            /* SHOW DROPDOWN */
+            /* =========================================
+               SHOW DETAIL CARD
+            ========================================= */
             const detail =
                 document.getElementById("detailLowongan");
 
             detail.style.display = "block";
 
-            /* ANIMATION */
+            /* =========================================
+               ANIMATION
+            ========================================= */
             detail.style.opacity = "0";
             detail.style.transform = "translateY(-20px)";
 
@@ -1459,12 +1441,15 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                     "all .3s ease";
 
                 detail.style.opacity = "1";
+
                 detail.style.transform =
                     "translateY(0px)";
 
             }, 10);
 
-            /* SCROLL */
+            /* =========================================
+               SCROLL
+            ========================================= */
             detail.scrollIntoView({
                 behavior: "smooth",
                 block: "start"
@@ -1472,13 +1457,16 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
         }
 
-        /* CLOSE */
+        /* =========================================
+           CLOSE DETAIL
+        ========================================= */
         function closeDetailLowongan() {
 
             const detail =
                 document.getElementById("detailLowongan");
 
             detail.style.opacity = "0";
+
             detail.style.transform =
                 "translateY(-20px)";
 
@@ -1494,12 +1482,14 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
     <script>
         let editMode = false;
 
-        /* TOGGLE EDIT */
+        /* =========================================
+           TOGGLE EDIT
+        ========================================= */
         function toggleEditDetail() {
 
             const inputs =
                 document.querySelectorAll(
-                    "#detailLowongan input, #detailLowongan textarea"
+                    "#detailLowongan input:not(#detailId), #detailLowongan textarea, #detailLowongan select"
                 );
 
             const btnText =
@@ -1511,7 +1501,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
             const btnCancel =
                 document.getElementById("btnCancelDetail");
 
-            /* EDIT MODE */
+            /* =========================================
+               EDIT MODE
+            ========================================= */
             if (!editMode) {
 
                 inputs.forEach((input) => {
@@ -1519,6 +1511,12 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                     input.removeAttribute("readonly");
 
                 });
+
+                document.getElementById("detailLocation")
+                    .removeAttribute("disabled");
+
+                document.getElementById("detailType")
+                    .removeAttribute("disabled");
 
                 btnText.innerText = "Simpan";
 
@@ -1531,7 +1529,9 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
             }
 
-            /* SAVE MODE */
+            /* =========================================
+               SAVE MODE
+            ========================================= */
             else {
 
                 if (
@@ -1542,33 +1542,109 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
                     return;
                 }
 
-                inputs.forEach((input) => {
+                /* =========================================
+                   AMBIL DATA
+                ========================================= */
+                const id =
+                    document.getElementById("detailId").value;
 
-                    input.setAttribute(
-                        "readonly",
-                        true
-                    );
+                const title =
+                    document.getElementById("detailTitle").value;
+
+                const location =
+                    document.getElementById("detailLocation").value;
+
+                const type =
+                    document.getElementById("detailType").value;
+
+                const description =
+                    document.getElementById("detailDescription").value;
+
+                const quota =
+                    document.getElementById("detailQuota").value;
+
+                const post =
+                    document.getElementById("detailPost").value;
+
+                const close =
+                    document.getElementById("detailClose").value;
+
+                const link =
+                    document.getElementById("detailLink").value;
+
+                /* =========================================
+                   AJAX UPDATE
+                ========================================= */
+                $.ajax({
+
+                    url: "logic/update_job_information.php",
+                    type: "POST",
+
+                    data: {
+
+                        id: id,
+                        job_title: title,
+                        id_region: location,
+                        type_vacancy: type,
+                        job_desc: description,
+                        job_quota: quota,
+                        start_info: post,
+                        end_info: close,
+                        link_info: link
+
+                    },
+
+                    success: function(response) {
+
+                        if (response == "success") {
+
+                            inputs.forEach((input) => {
+
+                                input.setAttribute(
+                                    "readonly",
+                                    true
+                                );
+
+                            });
+
+                            btnText.innerText = "Edit";
+
+                            btnIcon.innerText = "edit";
+
+                            btnCancel.style.display =
+                                "none";
+
+                            editMode = false;
+
+                            document.getElementById("detailLocation")
+                                .setAttribute("disabled", true);
+
+                            document.getElementById("detailType")
+                                .setAttribute("disabled", true);
+
+                            alert(
+                                "Perubahan berhasil disimpan"
+                            );
+
+                            location.reload();
+
+                        } else {
+
+                            alert(response);
+
+                        }
+
+                    }
 
                 });
-
-                btnText.innerText = "Edit";
-
-                btnIcon.innerText = "edit";
-
-                btnCancel.style.display =
-                    "none";
-
-                editMode = false;
-
-                alert(
-                    "Perubahan berhasil disimpan"
-                );
 
             }
 
         }
 
-        /* CANCEL EDIT */
+        /* =========================================
+           CANCEL EDIT
+        ========================================= */
         function cancelEditDetail() {
 
             if (
@@ -1581,7 +1657,7 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
 
             const inputs =
                 document.querySelectorAll(
-                    "#detailLowongan input, #detailLowongan textarea"
+                    "#detailLowongan input:not(#detailId), #detailLowongan textarea"
                 );
 
             inputs.forEach((input) => {
@@ -1606,6 +1682,11 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
             ).style.display = "none";
 
             editMode = false;
+
+            document.getElementById("detailLocation")
+                .setAttribute("disabled", true);
+            document.getElementById("detailType")
+                .setAttribute("disabled", true);
 
         }
     </script>
