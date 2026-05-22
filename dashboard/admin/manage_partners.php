@@ -2,6 +2,139 @@
 session_start();
 require_once __DIR__ . '/../koneksi.php';
 
+date_default_timezone_set('Asia/Jakarta');
+
+/* =========================================
+   TAMBAH PARTNER
+========================================= */
+if (isset($_POST['add_partner'])) {
+
+    $name_partner = mysqli_real_escape_string($conn, $_POST['name_partner']);
+
+    $insert = mysqli_query($conn, "
+        INSERT INTO list_partners (
+            name_partner,
+            created_at
+        ) VALUES (
+            '$name_partner',
+            NOW()
+        )
+    ");
+
+    if ($insert) {
+        $_SESSION['success'] = "Partner berhasil ditambahkan.";
+    } else {
+        $_SESSION['error'] = "Partner gagal ditambahkan.";
+    }
+
+    header("Location: manage_partners.php");
+    exit;
+}
+
+/* =========================================
+   EDIT PARTNER
+========================================= */
+if (isset($_POST['edit_partner'])) {
+
+    $id           = intval($_POST['id']);
+    $name_partner = mysqli_real_escape_string($conn, $_POST['name_partner']);
+
+    $update = mysqli_query($conn, "
+        UPDATE list_partners 
+        SET 
+            name_partner = '$name_partner'
+        WHERE id = '$id'
+    ");
+
+    if ($update) {
+        $_SESSION['success'] = "Partner berhasil diupdate.";
+    } else {
+        $_SESSION['error'] = "Partner gagal diupdate.";
+    }
+
+    header("Location: manage_partners.php");
+    exit;
+}
+
+/* =========================================
+   HAPUS PARTNER
+========================================= */
+if (isset($_GET['delete'])) {
+
+    $id = intval($_GET['delete']);
+
+    $delete = mysqli_query($conn, "
+        DELETE FROM list_partners 
+        WHERE id = '$id'
+    ");
+
+    if ($delete) {
+        $_SESSION['success'] = "Partner berhasil dihapus.";
+    } else {
+        $_SESSION['error'] = "Partner gagal dihapus.";
+    }
+
+    header("Location: manage_partners.php");
+    exit;
+}
+
+/* =========================================
+   SEARCH + SHOW ENTRIES + PAGINATION
+========================================= */
+
+$search = isset($_GET['search'])
+    ? mysqli_real_escape_string($conn, $_GET['search'])
+    : '';
+
+$show = isset($_GET['show'])
+    ? (int) $_GET['show']
+    : 10;
+
+$page = isset($_GET['page'])
+    ? (int) $_GET['page']
+    : 1;
+
+if ($page < 1) {
+    $page = 1;
+}
+
+$offset = ($page - 1) * $show;
+
+/* =========================================
+   TOTAL DATA
+========================================= */
+
+$totalQuery = mysqli_query($conn, "
+    SELECT COUNT(*) as total
+    FROM list_partners
+    WHERE name_partner LIKE '%$search%'
+");
+
+$totalData = mysqli_fetch_assoc($totalQuery)['total'];
+
+$totalPages = ceil($totalData / $show);
+
+
+/* =========================================
+   AMBIL DATA PARTNER
+========================================= */
+
+$partners = mysqli_query($conn, "
+    SELECT 
+        id,
+        name_partner,
+        created_at
+    FROM list_partners
+
+    WHERE name_partner LIKE '%$search%'
+
+    ORDER BY id ASC
+
+    LIMIT $offset, $show
+");
+?>
+
+
 ?>
 
 <!doctype html>
@@ -88,11 +221,17 @@ require_once __DIR__ . '/../koneksi.php';
                         </small>
                     </div>
 
-                    <button id="btnToggleForm" class="btn btn-warning d-flex align-items-center">
+                    <button
+                        type="button"
+                        id="btnToggleForm"
+                        class="btn btn-warning d-flex align-items-center">
+
                         <span class="material-icons mr-2" style="font-size:20px;">
                             add
                         </span>
+
                         Tambah Mitra
+
                     </button>
                 </div>
 
@@ -112,29 +251,58 @@ require_once __DIR__ . '/../koneksi.php';
                                         Daftar Mitra
                                     </h5>
 
-                                    <div class="d-flex">
+                                    <form method="GET" class="d-flex align-items-center">
 
-                                        <div class="position-relative mr-2">
+                                        <!-- SHOW ENTRIES -->
+                                        <select
+                                            name="show"
+                                            class="form-control mr-2"
+                                            onchange="this.form.submit()"
+                                            style="width:90px;">
+
+                                            <option value="10" <?= $show == 10 ? 'selected' : ''; ?>>
+                                                10
+                                            </option>
+
+                                            <option value="25" <?= $show == 25 ? 'selected' : ''; ?>>
+                                                25
+                                            </option>
+
+                                            <option value="50" <?= $show == 50 ? 'selected' : ''; ?>>
+                                                50
+                                            </option>
+
+                                            <option value="100" <?= $show == 100 ? 'selected' : ''; ?>>
+                                                100
+                                            </option>
+
+                                        </select>
+
+                                        <!-- SEARCH -->
+                                        <div class="position-relative">
 
                                             <span class="material-icons"
                                                 style="
-                                    position:absolute;
-                                    top:9px;
-                                    left:10px;
-                                    font-size:18px;
-                                    color:#999;
-                                ">
+                position:absolute;
+                top:9px;
+                left:10px;
+                font-size:18px;
+                color:#999;
+            ">
                                                 search
                                             </span>
 
-                                            <input id="searchMitra" type="text"
+                                            <input
+                                                type="text"
+                                                name="search"
+                                                value="<?= htmlspecialchars($search); ?>"
                                                 class="form-control"
                                                 placeholder="Cari Perusahaan..."
                                                 style="padding-left:38px; width:250px;">
 
                                         </div>
 
-                                    </div>
+                                    </form>
 
                                 </div>
 
@@ -157,31 +325,196 @@ require_once __DIR__ . '/../koneksi.php';
 
                                         <tbody id="tableBody">
 
-                                            <!-- <tr>
-                                                <td>02</td>
-                                                <td>PT. KAI</td>
+                                            <?php if (mysqli_num_rows($partners) > 0): ?>
 
-                                                <td>
-                                                    <button class="btn btn-sm btn-light">
-                                                        <span class="material-icons"
-                                                            style="font-size:18px;">
-                                                            edit
-                                                        </span>
-                                                    </button>
+                                                <?php $no = 1; ?>
+                                                <?php while ($row = mysqli_fetch_assoc($partners)): ?>
 
-                                                    <button class="btn btn-sm btn-light text-danger">
-                                                        <span class="material-icons"
-                                                            style="font-size:18px;">
-                                                            delete
-                                                        </span>
-                                                    </button>
+                                                    <tr>
 
-                                                </td>
-                                            </tr> ini di pindahkan ke JS DOM-->
+                                                        <td>
+                                                            <?= str_pad($no++, 2, '0', STR_PAD_LEFT); ?>
+                                                        </td>
+
+                                                        <td>
+                                                            <?= htmlspecialchars($row['name_partner']); ?>
+                                                        </td>
+
+                                                        <td>
+
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-sm btn-light btnEdit"
+
+                                                                data-id="<?= $row['id']; ?>"
+                                                                data-name="<?= htmlspecialchars($row['name_partner']); ?>">
+
+                                                                <span class="material-icons"
+                                                                    style="font-size:18px;">
+                                                                    edit
+                                                                </span>
+
+                                                            </button>
+
+                                                            <a href="?delete=<?= $row['id']; ?>"
+                                                                class="btn btn-sm btn-light text-danger"
+                                                                onclick="return confirm('Yakin ingin menghapus partner ini?')">
+
+                                                                <span class="material-icons"
+                                                                    style="font-size:18px;">
+                                                                    delete
+                                                                </span>
+
+                                                            </a>
+
+                                                        </td>
+
+                                                    </tr>
+
+                                                <?php endwhile; ?>
+
+                                            <?php else: ?>
+
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted py-4">
+                                                        Data partner belum tersedia
+                                                    </td>
+                                                </tr>
+
+                                            <?php endif; ?>
 
                                         </tbody>
 
                                     </table>
+
+                                    <!-- PAGINATION -->
+                                    <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap">
+
+                                        <!-- INFO -->
+                                        <small class="text-muted mb-2">
+
+                                            Menampilkan
+                                            <?= $offset + 1; ?>
+
+                                            sampai
+
+                                            <?= min($offset + $show, $totalData); ?>
+
+                                            dari
+
+                                            <?= $totalData; ?> data
+
+                                        </small>
+
+                                        <!-- PAGINATION -->
+                                        <nav>
+
+                                            <ul class="pagination pagination-sm mb-0">
+
+                                                <!-- PREV -->
+                                                <?php if ($page > 1): ?>
+
+                                                    <li class="page-item">
+
+                                                        <a class="page-link"
+                                                            href="?page=<?= $page - 1; ?>&show=<?= $show; ?>&search=<?= urlencode($search); ?>">
+
+                                                            &laquo;
+
+                                                        </a>
+
+                                                    </li>
+
+                                                <?php endif; ?>
+
+                                                <?php
+
+                                                $start = max(1, $page - 2);
+                                                $end   = min($totalPages, $page + 2);
+
+                                                ?>
+
+                                                <!-- FIRST -->
+                                                <?php if ($start > 1): ?>
+
+                                                    <li class="page-item">
+                                                        <a class="page-link"
+                                                            href="?page=1&show=<?= $show; ?>&search=<?= urlencode($search); ?>">
+                                                            1
+                                                        </a>
+                                                    </li>
+
+                                                    <?php if ($start > 2): ?>
+
+                                                        <li class="page-item disabled">
+                                                            <span class="page-link">...</span>
+                                                        </li>
+
+                                                    <?php endif; ?>
+
+                                                <?php endif; ?>
+
+                                                <!-- NUMBER -->
+                                                <?php for ($i = $start; $i <= $end; $i++): ?>
+
+                                                    <li class="page-item <?= $i == $page ? 'active' : ''; ?>">
+
+                                                        <a class="page-link"
+                                                            href="?page=<?= $i; ?>&show=<?= $show; ?>&search=<?= urlencode($search); ?>">
+
+                                                            <?= $i; ?>
+
+                                                        </a>
+
+                                                    </li>
+
+                                                <?php endfor; ?>
+
+                                                <!-- LAST -->
+                                                <?php if ($end < $totalPages): ?>
+
+                                                    <?php if ($end < $totalPages - 1): ?>
+
+                                                        <li class="page-item disabled">
+                                                            <span class="page-link">...</span>
+                                                        </li>
+
+                                                    <?php endif; ?>
+
+                                                    <li class="page-item">
+
+                                                        <a class="page-link"
+                                                            href="?page=<?= $totalPages; ?>&show=<?= $show; ?>&search=<?= urlencode($search); ?>">
+
+                                                            <?= $totalPages; ?>
+
+                                                        </a>
+
+                                                    </li>
+
+                                                <?php endif; ?>
+
+                                                <!-- NEXT -->
+                                                <?php if ($page < $totalPages): ?>
+
+                                                    <li class="page-item">
+
+                                                        <a class="page-link"
+                                                            href="?page=<?= $page + 1; ?>&show=<?= $show; ?>&search=<?= urlencode($search); ?>">
+
+                                                            &raquo;
+
+                                                        </a>
+
+                                                    </li>
+
+                                                <?php endif; ?>
+
+                                            </ul>
+
+                                        </nav>
+
+                                    </div>
 
                                 </div>
 
@@ -198,7 +531,7 @@ require_once __DIR__ . '/../koneksi.php';
 
                             <div class="card-body">
 
-                                <h5 class="mb-1">
+                                <h5 class="mb-1" id="formTitle">
                                     Tambah Mitra
                                 </h5>
 
@@ -209,26 +542,45 @@ require_once __DIR__ . '/../koneksi.php';
                                 <hr>
 
                                 <!-- FORM -->
-                                <div class="form-group">
-                                    <label>Nama Perusahaan</label>
+                                <form method="POST">
 
-                                    <input id="namaMitra" type="text"
-                                        class="form-control"
-                                        placeholder="Masukkan Nama Perusahaan">
-                                </div>
+                                    <input type="hidden"
+                                        name="id"
+                                        id="partnerId">
 
-                                <!-- BUTTON -->
-                                <div class="d-flex justify-content-end mt-4">
+                                    <div class="form-group">
+                                        <label>Nama Perusahaan</label>
 
-                                    <button id="btnCloseForm" class="btn btn-light border mr-2">
-                                        Tutup
-                                    </button>
+                                        <input
+                                            id="partnerName"
+                                            name="name_partner"
+                                            type="text"
+                                            class="form-control"
+                                            placeholder="Masukkan Nama Perusahaan"
+                                            required>
+                                    </div>
 
-                                    <button id="btnSimpan" class="btn btn-warning">
-                                        Simpan
-                                    </button>
+                                    <!-- BUTTON -->
+                                    <div class="d-flex justify-content-end mt-4">
 
-                                </div>
+                                        <button type="button"
+                                            id="btnCloseForm"
+                                            class="btn btn-light border mr-2">
+                                            Tutup
+                                        </button>
+
+                                        <button type="submit"
+                                            id="submitButton"
+                                            name="add_partner"
+                                            class="btn btn-warning">
+
+                                            Simpan
+
+                                        </button>
+
+                                    </div>
+
+                                </form>
 
                             </div>
 
@@ -305,151 +657,63 @@ require_once __DIR__ . '/../koneksi.php';
     <script src="../assets/js/flatpickr.js"></script>
 
     <script>
-        // =========================
-        // ELEMENT
-        // =========================
+        const formTitle = document.getElementById('formTitle');
+        const formMitra = document.getElementById('formMitra');
 
-        const tableBody = document.getElementById('tableBody');
+        const partnerId = document.getElementById('partnerId');
+        const partnerName = document.getElementById('partnerName');
+
+        const submitButton = document.getElementById('submitButton');
 
         const btnToggleForm = document.getElementById('btnToggleForm');
         const btnCloseForm = document.getElementById('btnCloseForm');
 
-        const formMitra = document.getElementById('formMitra');
-
-        const namaMitra = document.getElementById('namaMitra');
-        const searchMitra = document.getElementById('searchMitra');
-
-        const btnSimpan = document.getElementById('btnSimpan');
-
         // =========================
-        // DATA ARRAY
-        // =========================
-
-        let dataMitra = [{
-                nama: 'PT. KAI'
-            },
-            {
-                nama: 'PT. Kuda Lumping'
-            }
-        ];
-
-        // =========================
-        // EDIT INDEX
-        // =========================
-
-        let editIndex = null;
-
-        // =========================
-        // FORM AWAL
+        // DEFAULT
         // =========================
 
         formMitra.style.display = 'none';
 
         // =========================
-        // RENDER TABLE
-        // =========================
-
-        function renderTable(keyword = '') {
-
-            tableBody.innerHTML = '';
-
-            // filter data
-            const filteredData = dataMitra.filter((item) => {
-
-                return (
-                    item.nama.toLowerCase().includes(keyword.toLowerCase())
-                );
-
-            });
-
-            // looping data
-            filteredData.forEach((item, index) => {
-
-                const nomorUrut = String(index + 1).padStart(2, '0');
-
-                tableBody.innerHTML += `
-
-            <tr>
-
-                <td>${nomorUrut}</td>
-
-                <td>${item.nama}</td>
-
-                <td>
-
-                    <button class="btn btn-sm btn-light btnEdit"
-                        data-index="${dataMitra.indexOf(item)}">
-
-                        <span class="material-icons"
-                            style="font-size:18px;">
-                            edit
-                        </span>
-
-                    </button>
-
-                    <button class="btn btn-sm btn-light text-danger btnDelete"
-                        data-index="${dataMitra.indexOf(item)}">
-
-                        <span class="material-icons"
-                            style="font-size:18px;">
-                            delete
-                        </span>
-
-                    </button>
-
-                </td>
-
-            </tr>
-
-        `;
-
-            });
-
-            // jika kosong
-            if (filteredData.length === 0) {
-
-                tableBody.innerHTML = `
-
-            <tr>
-                <td colspan="4" class="text-center text-muted py-4">
-                    Data tidak ditemukan
-                </td>
-            </tr>
-
-        `;
-
-            }
-
-        }
-
-        searchMitra.addEventListener('keyup', function() {
-
-            const keyword = this.value;
-
-            renderTable(keyword);
-
-        });
-
-        // =========================
-        // LOAD AWAL
-        // =========================
-
-        renderTable();
-
-        // =========================
-        // TOGGLE FORM
+        // MODE TAMBAH
         // =========================
 
         btnToggleForm.addEventListener('click', function() {
 
             formMitra.style.display = 'block';
 
-            document.querySelector('#formMitra h5').innerText =
-                'Tambah Mitra';
+            formTitle.innerText = 'Tambah Mitra';
 
-            clearForm();
+            partnerId.value = '';
+            partnerName.value = '';
 
-            editIndex = null;
+            submitButton.innerText = 'Simpan';
+            submitButton.name = 'add_partner';
+
+        });
+
+        // =========================
+        // MODE EDIT
+        // =========================
+
+        document.querySelectorAll('.btnEdit').forEach(button => {
+
+            button.addEventListener('click', function() {
+
+                formMitra.style.display = 'block';
+
+                const id = this.dataset.id;
+                const name = this.dataset.name;
+
+                formTitle.innerText = 'Edit Mitra';
+
+                partnerId.value = id;
+                partnerName.value = name;
+
+                submitButton.innerText = 'Update';
+                submitButton.name = 'edit_partner';
+
+            });
 
         });
 
@@ -462,119 +726,6 @@ require_once __DIR__ . '/../koneksi.php';
             formMitra.style.display = 'none';
 
         });
-
-        // =========================
-        // SIMPAN DATA
-        // =========================
-
-        btnSimpan.addEventListener('click', function() {
-
-            const nama = namaMitra.value.trim();
-
-            // VALIDASI
-            if (nama === '') {
-
-                alert('Form wajib diisi');
-
-                return;
-
-            }
-
-            // =====================
-            // EDIT
-            // =====================
-
-            if (editIndex !== null) {
-
-                dataMitra[editIndex].nama = nama;
-
-                alert('Data berhasil diupdate');
-
-            }
-
-            // =====================
-            // TAMBAH
-            // =====================
-            else {
-
-                dataMitra.push({
-                    nama: nama
-                });
-
-                alert('Data berhasil ditambahkan');
-
-            }
-
-            // RENDER ULANG
-            renderTable();
-
-            // RESET
-            clearForm();
-
-            formMitra.style.display = 'none';
-
-        });
-
-        // =========================
-        // EVENT TABLE
-        // =========================
-
-        tableBody.addEventListener('click', function(e) {
-
-            // =====================
-            // EDIT
-            // =====================
-
-            if (e.target.closest('.btnEdit')) {
-
-                const index =
-                    e.target.closest('.btnEdit').dataset.index;
-
-                editIndex = index;
-
-                namaMitra.value =
-                    dataMitra[index].nama;
-
-                formMitra.style.display = 'block';
-
-                document.querySelector('#formMitra h5').innerText =
-                    'Edit Mitra';
-
-            }
-
-            // =====================
-            // DELETE
-            // =====================
-
-            if (e.target.closest('.btnDelete')) {
-
-                const index =
-                    e.target.closest('.btnDelete').dataset.index;
-
-                const confirmDelete =
-                    confirm('Yakin ingin menghapus data?');
-
-                if (confirmDelete) {
-
-                    dataMitra.splice(index, 1);
-
-                    renderTable();
-
-                }
-
-            }
-
-        });
-
-        // =========================
-        // CLEAR FORM
-        // =========================
-
-        function clearForm() {
-
-            namaMitra.value = '';
-
-        }
     </script>
 </body>
 
