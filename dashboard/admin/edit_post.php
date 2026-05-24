@@ -4,7 +4,38 @@ require_once __DIR__ . '/../koneksi.php';
 
 /*
 |--------------------------------------------------------------------------
-| LOAD DATA CATEGORY + SUBCATEGORY
+| GET ID POST
+|--------------------------------------------------------------------------
+*/
+$idPost = isset($_GET['id'])
+    ? intval($_GET['id'])
+    : 0;
+
+if ($idPost <= 0) {
+    die('ID post tidak valid');
+}
+
+/*
+|--------------------------------------------------------------------------
+| LOAD DATA POST
+|--------------------------------------------------------------------------
+*/
+$queryPost = mysqli_query($conn, "
+    SELECT *
+    FROM post
+    WHERE id = '$idPost'
+    LIMIT 1
+");
+
+$dataPost = mysqli_fetch_assoc($queryPost);
+
+if (!$dataPost) {
+    die('Data post tidak ditemukan');
+}
+
+/*
+|--------------------------------------------------------------------------
+| LOAD CATEGORY
 |--------------------------------------------------------------------------
 */
 $queryCategory = mysqli_query($conn, "
@@ -13,8 +44,13 @@ $queryCategory = mysqli_query($conn, "
     ORDER BY name_category ASC
 ");
 
+/*
+|--------------------------------------------------------------------------
+| LOAD SUBCATEGORY
+|--------------------------------------------------------------------------
+*/
 $querySubcategory = mysqli_query($conn, "
-    SELECT 
+    SELECT
         ps.id,
         ps.id_postcategory,
         ps.name_subcategory,
@@ -27,24 +63,27 @@ $querySubcategory = mysqli_query($conn, "
 
 /*
 |--------------------------------------------------------------------------
-| SIMPAN POST
+| UPDATE POST
 |--------------------------------------------------------------------------
 */
-if (isset($_POST['submit_post'])) {
+if (isset($_POST['update_post'])) {
 
     $titlePost         = mysqli_real_escape_string($conn, $_POST['title_post']);
     $idPostCategory    = intval($_POST['id_post_category']);
     $idPostSubcategory = intval($_POST['id_post_subcategory']);
     $postDesc          = mysqli_real_escape_string($conn, $_POST['post_desc']);
 
-    $namaGambar = '';
+    $namaGambar = $dataPost['post_img'];
 
     /*
     |--------------------------------------------------------------------------
-    | UPLOAD IMAGE
+    | UPLOAD IMAGE BARU
     |--------------------------------------------------------------------------
     */
-    if (isset($_FILES['post_img']) && $_FILES['post_img']['error'] == 0) {
+    if (
+        isset($_FILES['post_img']) &&
+        $_FILES['post_img']['error'] == 0
+    ) {
 
         $folderUpload = $_SERVER['DOCUMENT_ROOT'] . '/my-dashboard/fixed-v2/dashboard/assets/images/uploads/posts/';
 
@@ -61,9 +100,10 @@ if (isset($_POST['submit_post'])) {
         $allowed = ['jpg', 'jpeg', 'png'];
 
         if (!in_array($ext, $allowed)) {
+
             echo "
             <script>
-                alert('Format gambar harus JPG, JPEG atau PNG');
+                alert('Format gambar harus JPG/JPEG/PNG');
             </script>
             ";
         } else if ($fileSize > 2097152) {
@@ -74,6 +114,19 @@ if (isset($_POST['submit_post'])) {
             </script>
             ";
         } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | HAPUS GAMBAR LAMA
+            |--------------------------------------------------------------------------
+            */
+            if (
+                !empty($dataPost['post_img']) &&
+                file_exists($folderUpload . $dataPost['post_img'])
+            ) {
+
+                unlink($folderUpload . $dataPost['post_img']);
+            }
 
             $namaGambar = time() . '_' . rand(1000, 9999) . '.' . $ext;
 
@@ -86,48 +139,32 @@ if (isset($_POST['submit_post'])) {
 
     /*
     |--------------------------------------------------------------------------
-    | INSERT DATABASE
+    | UPDATE DATABASE
     |--------------------------------------------------------------------------
     */
-    $insert = mysqli_query($conn, "
-        INSERT INTO post
-        (
-            title_post,
-            id_post_category,
-            id_post_subcategory,
-            post_desc,
-            post_img,
-            created_at,
-            update_at
-        )
-        VALUES
-        (
-            '$titlePost',
-            '$idPostCategory',
-            '$idPostSubcategory',
-            '$postDesc',
-            '$namaGambar',
-            NOW(),
-            NOW()
-        )
+    $update = mysqli_query($conn, "
+        UPDATE post
+        SET
+            title_post = '$titlePost',
+            id_post_category = '$idPostCategory',
+            id_post_subcategory = '$idPostSubcategory',
+            post_desc = '$postDesc',
+            post_img = '$namaGambar',
+            update_at = NOW()
+        WHERE id = '$idPost'
     ");
 
-    if ($insert) {
+    if ($update) {
 
         echo "
-        <script>
-            window.onload = function() {
-                $('#modalSuccessPosting').modal('show');
-            }
-        </script>
-        ";
+    <script>
+        alert('Post berhasil diupdate');
+        window.location.href='manage_post.php';
+    </script>
+    ";
     } else {
 
-        echo "
-        <script>
-            alert('Gagal menyimpan postingan');
-        </script>
-        ";
+        die(mysqli_error($conn));
     }
 }
 
@@ -142,7 +179,7 @@ if (isset($_POST['submit_post'])) {
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Tambah Postingan - Dashboard | Konig Guard Bureau</title>
+    <title>Edit Postingan - Dashboard | Konig Guard Bureau</title>
 
     <link
         href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"
@@ -222,7 +259,7 @@ if (isset($_POST['submit_post'])) {
                     <!-- HEADER -->
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div>
-                            <h4 class="mb-1">Tambah Postingan</h4>
+                            <h4 class="mb-1">Edit Postingan</h4>
                             <p class="text-muted mb-0">
                                 Lengkapi informasi untuk menambahkan Postingan baru.
                             </p>
@@ -254,7 +291,8 @@ if (isset($_POST['submit_post'])) {
                                         name="title_post"
                                         type="text"
                                         class="form-control"
-                                        placeholder="Masukkan judul postingan"
+                                        placeholder="Masukkan judul artikel atau berita"
+                                        value="<?= htmlspecialchars($dataPost['title_post']); ?>"
                                         required>
                                 </div>
                             </div>
@@ -281,8 +319,12 @@ if (isset($_POST['submit_post'])) {
 
                                             <?php while ($category = mysqli_fetch_assoc($queryCategory)) : ?>
 
-                                                <option value="<?= $category['id']; ?>">
+                                                <option
+                                                    value="<?= $category['id']; ?>"
+                                                    <?= ($dataPost['id_post_category'] == $category['id']) ? 'selected' : ''; ?>>
+
                                                     <?= $category['name_category']; ?>
+
                                                 </option>
 
                                             <?php endwhile; ?>
@@ -312,7 +354,8 @@ if (isset($_POST['submit_post'])) {
 
                                                 <option
                                                     value="<?= $sub['id']; ?>"
-                                                    data-category="<?= $sub['id_postcategory']; ?>">
+                                                    data-category="<?= $sub['id_postcategory']; ?>"
+                                                    <?= ($dataPost['id_post_subcategory'] == $sub['id']) ? 'selected' : ''; ?>>
 
                                                     <?= $sub['name_subcategory']; ?>
                                                     (<?= $sub['name_category']; ?>)
@@ -335,7 +378,7 @@ if (isset($_POST['submit_post'])) {
 
                                 <textarea
                                     id="summernote"
-                                    name="post_desc"></textarea>
+                                    name="post_desc"><?= $dataPost['post_desc']; ?></textarea>
                             </div>
 
                             <!-- UPLOAD IMAGE -->
@@ -385,6 +428,42 @@ if (isset($_POST['submit_post'])) {
                                                     Format JPG, PNG, JPEG maksimal 2MB
                                                 </small>
                                             </div>
+
+                                        </div>
+
+                                        <div class="mb-3">
+
+                                            <label class="font-weight-bold d-block mb-2">
+                                                Thumbnail Saat Ini
+                                            </label>
+
+                                            <?php if (!empty($dataPost['post_img'])) : ?>
+
+                                                <img
+                                                    id="previewThumbnail"
+                                                    src="../assets/images/uploads/posts/<?= $dataPost['post_img']; ?>"
+                                                    style="
+                width:220px;
+                height:140px;
+                object-fit:cover;
+                border-radius:10px;
+                border:1px solid #ddd;
+            ">
+
+                                            <?php else : ?>
+
+                                                <img
+                                                    id="previewThumbnail"
+                                                    src=""
+                                                    style="
+                width:220px;
+                height:140px;
+                object-fit:cover;
+                border-radius:10px;
+                border:1px solid #ddd;
+            ">
+
+                                            <?php endif; ?>
 
                                         </div>
 
@@ -472,13 +551,13 @@ if (isset($_POST['submit_post'])) {
                             <div class="d-flex align-items-center">
 
                                 <button type="submit"
-                                    name="submit_post"
+                                    name="update_post"
                                     id="btnSimpanPostingan"
                                     class="btn btn-primary d-flex align-items-center mr-2">
                                     <span class="material-icons mr-2" style="font-size:20px;">
                                         save
                                     </span>
-                                    Simpan Postingan
+                                    Update Postingan
                                 </button>
 
                             </div>
@@ -545,7 +624,7 @@ if (isset($_POST['submit_post'])) {
 
                     <!-- TEXT -->
                     <p class="text-muted mb-4" id="successPostingText">
-                        Postingan berhasil ditambahkan
+                        Postingan berhasil dieditkan
                     </p>
 
                     <!-- BUTTON -->
@@ -619,6 +698,12 @@ if (isset($_POST['submit_post'])) {
             placeholder: 'Tulis isi artikel atau berita...',
             tabsize: 2,
             height: 350,
+
+            callbacks: {
+                onChange: function(contents) {
+                    $('#summernote').val(contents);
+                }
+            },
 
             fontNames: [
                 'Arial',
@@ -694,34 +779,28 @@ if (isset($_POST['submit_post'])) {
     </script>
 
     <script>
-        // SIMPAN POSTINGAN
-        document.getElementById("btnSimpanPostingan")
-            .addEventListener("click", function() {
+        $('#uploadThumbnail').on('change', function(e) {
 
-                let judul = document.getElementById("judulPostingan").value.trim();
+            const file = e.target.files[0];
 
-                // VALIDASI JUDUL
-                if (judul === "") {
-                    alert("Judul postingan wajib diisi!");
-                    return;
+            if (file) {
+
+                let reader = new FileReader();
+
+                reader.onload = function(event) {
+
+                    $('#previewThumbnail').attr(
+                        'src',
+                        event.target.result
+                    );
+
                 }
 
-                // SET TEXT MODAL
-                document.getElementById("successPostingText").innerHTML =
-                    `<b>${judul}</b> berhasil diposting`;
+                reader.readAsDataURL(file);
 
-                // SHOW MODAL
-                $('#modalSuccessPosting').modal('show');
+            }
 
-            });
-
-        // BUTTON OKAY
-        document.getElementById("btnOkayPosting")
-            .addEventListener("click", function() {
-
-                window.location.href = "manage_post.php";
-
-            });
+        });
     </script>
 
     <script>

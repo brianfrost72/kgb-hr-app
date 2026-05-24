@@ -1,3 +1,97 @@
+<?php
+session_start();
+require_once __DIR__ . '/../koneksi.php';
+
+
+$dataDokumen = [];
+
+$query = mysqli_query($conn, "
+    SELECT *
+    FROM company_legality
+    ORDER BY id DESC
+");
+
+while ($row = mysqli_fetch_assoc($query)) {
+
+    $dataDokumen[] = [
+        'id'     => $row['id'],
+        'nama'   => $row['doc_name'],
+        'nomor'  => $row['no_doc']
+    ];
+}
+
+// ===============================
+// SIMPAN DATA
+// ===============================
+
+if (isset($_POST['btn_simpan'])) {
+
+    $id       = $_POST['id'];
+    $doc_name = mysqli_real_escape_string($conn, $_POST['doc_name']);
+    $no_doc   = mysqli_real_escape_string($conn, $_POST['no_doc']);
+
+    // VALIDASI
+    if ($doc_name != '' && $no_doc != '') {
+
+        // =========================
+        // UPDATE
+        // =========================
+
+        if ($id != '') {
+
+            $update = mysqli_query($conn, "
+                UPDATE company_legality
+                SET
+                    doc_name = '$doc_name',
+                    no_doc   = '$no_doc'
+                WHERE id = '$id'
+            ");
+
+            if ($update) {
+
+                echo "
+                    <script>
+                        alert('Data berhasil diupdate');
+                        window.location='manage_legality.php';
+                    </script>
+                ";
+
+                exit;
+            }
+        }
+
+        // =========================
+        // INSERT
+        // =========================
+
+        else {
+
+            $insert = mysqli_query($conn, "
+                INSERT INTO company_legality (
+                    doc_name,
+                    no_doc
+                ) VALUES (
+                    '$doc_name',
+                    '$no_doc'
+                )
+            ");
+
+            if ($insert) {
+
+                echo "
+                    <script>
+                        alert('Data berhasil ditambahkan');
+                        window.location='manage_legality.php';
+                    </script>
+                ";
+
+                exit;
+            }
+        }
+    }
+}
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -205,34 +299,45 @@
                                 <hr>
 
                                 <!-- FORM -->
-                                <div class="form-group">
-                                    <label>Nama Dokumen</label>
+                                <form method="POST" action="">
+                                    <input type="hidden" name="id" id="idDokumen">
+                                    <div class="form-group">
+                                        <label>Nama Dokumen</label>
 
-                                    <input id="namaDokumen" type="text"
-                                        class="form-control"
-                                        placeholder="Masukkan nama dokumen">
-                                </div>
+                                        <input id="namaDokumen" name="doc_name" type="text"
+                                            class="form-control"
+                                            placeholder="Masukkan nama dokumen">
+                                    </div>
 
-                                <div class="form-group">
-                                    <label>Nomor Dokumen</label>
+                                    <div class="form-group">
+                                        <label>Nomor Dokumen</label>
 
-                                    <input id="nomorDokumen" type="text"
-                                        class="form-control"
-                                        placeholder="Masukkan nomor dokumen">
-                                </div>
+                                        <input id="nomorDokumen" name="no_doc" type="text"
+                                            class="form-control"
+                                            placeholder="Masukkan nomor dokumen">
+                                    </div>
 
-                                <!-- BUTTON -->
-                                <div class="d-flex justify-content-end mt-4">
+                                    <!-- BUTTON -->
+                                    <div class="d-flex justify-content-end mt-4">
 
-                                    <button id="btnCloseForm" class="btn btn-light border mr-2">
-                                        Tutup
-                                    </button>
+                                        <button
+                                            type="button"
+                                            id="btnCloseForm"
+                                            class="btn btn-light border mr-2">
+                                            Tutup
+                                        </button>
 
-                                    <button id="btnSimpan" class="btn btn-warning">
-                                        Simpan
-                                    </button>
+                                        <button
+                                            id="btnSimpan"
+                                            type="submit"
+                                            name="btn_simpan"
+                                            class="btn btn-warning">
+                                            Simpan
+                                        </button>
 
-                                </div>
+                                    </div>
+
+                                </form>
 
                             </div>
 
@@ -320,6 +425,7 @@
 
         const formDokumen = document.getElementById('formDokumen');
 
+        const idDokumen = document.getElementById('idDokumen');
         const namaDokumen = document.getElementById('namaDokumen');
         const nomorDokumen = document.getElementById('nomorDokumen');
         const searchDokumen = document.getElementById('searchDokumen');
@@ -330,37 +436,13 @@
         // DATA ARRAY
         // =========================
 
-        let dataDokumen = [{
-                nama: 'Management ISO',
-                nomor: '0000000000'
-            },
-            {
-                nama: 'Pengesahan Akta Pendirian Perusahaan',
-                nomor: '0000000000'
-            }
-        ];
-
-        // =========================
-        // EDIT INDEX
-        // =========================
-
-        let editIndex = null;
-
-        // =========================
-        // FORM AWAL
-        // =========================
-
-        formDokumen.style.display = 'none';
-
-        // =========================
-        // RENDER TABLE
-        // =========================
+        let dataDokumen = <?= json_encode($dataDokumen); ?>;
 
         function renderTable(keyword = '') {
 
             tableBody.innerHTML = '';
 
-            // filter data
+            // FILTER DATA
             const filteredData = dataDokumen.filter((item) => {
 
                 return (
@@ -370,7 +452,24 @@
 
             });
 
-            // looping data
+            // JIKA DATA KOSONG
+            if (filteredData.length === 0) {
+
+                tableBody.innerHTML = `
+            <tr>
+                <td colspan="4"
+                    class="text-center text-muted py-4">
+
+                    Data tidak ditemukan
+
+                </td>
+            </tr>
+        `;
+
+                return;
+            }
+
+            // LOOP DATA
             filteredData.forEach((item, index) => {
 
                 const nomorUrut = String(index + 1).padStart(2, '0');
@@ -387,8 +486,9 @@
 
                 <td>
 
-                    <button class="btn btn-sm btn-light btnEdit"
-                        data-index="${dataDokumen.indexOf(item)}">
+                    <button
+                        class="btn btn-sm btn-light btnEdit"
+                        data-id="${item.id}">
 
                         <span class="material-icons"
                             style="font-size:18px;">
@@ -397,8 +497,9 @@
 
                     </button>
 
-                    <button class="btn btn-sm btn-light text-danger btnDelete"
-                        data-index="${dataDokumen.indexOf(item)}">
+                    <button
+                        class="btn btn-sm btn-light text-danger btnDelete"
+                        data-id="${item.id}">
 
                         <span class="material-icons"
                             style="font-size:18px;">
@@ -415,36 +516,27 @@
 
             });
 
-            // jika kosong
-            if (filteredData.length === 0) {
-
-                tableBody.innerHTML = `
-
-            <tr>
-                <td colspan="4" class="text-center text-muted py-4">
-                    Data tidak ditemukan
-                </td>
-            </tr>
-
-        `;
-
-            }
-
         }
+
+        renderTable();
 
         searchDokumen.addEventListener('keyup', function() {
 
-            const keyword = this.value;
-
-            renderTable(keyword);
+            renderTable(this.value);
 
         });
 
         // =========================
-        // LOAD AWAL
+        // EDIT INDEX
         // =========================
 
-        renderTable();
+        let editIndex = null;
+
+        // =========================
+        // FORM AWAL
+        // =========================
+
+        formDokumen.style.display = 'none';
 
         // =========================
         // TOGGLE FORM
@@ -457,7 +549,10 @@
             document.querySelector('#formDokumen h5').innerText =
                 'Tambah Dokumen';
 
+
             clearForm();
+
+            idDokumen.value = '';
 
             editIndex = null;
 
@@ -468,61 +563,6 @@
         // =========================
 
         btnCloseForm.addEventListener('click', function() {
-
-            formDokumen.style.display = 'none';
-
-        });
-
-        // =========================
-        // SIMPAN DATA
-        // =========================
-
-        btnSimpan.addEventListener('click', function() {
-
-            const nama = namaDokumen.value.trim();
-            const nomor = nomorDokumen.value.trim();
-
-            // VALIDASI
-            if (nama === '' || nomor === '') {
-
-                alert('Form wajib diisi');
-
-                return;
-
-            }
-
-            // =====================
-            // EDIT
-            // =====================
-
-            if (editIndex !== null) {
-
-                dataDokumen[editIndex].nama = nama;
-                dataDokumen[editIndex].nomor = nomor;
-
-                alert('Data berhasil diupdate');
-
-            }
-
-            // =====================
-            // TAMBAH
-            // =====================
-            else {
-
-                dataDokumen.push({
-                    nama: nama,
-                    nomor: nomor
-                });
-
-                alert('Data berhasil ditambahkan');
-
-            }
-
-            // RENDER ULANG
-            renderTable();
-
-            // RESET
-            clearForm();
 
             formDokumen.style.display = 'none';
 
@@ -540,21 +580,16 @@
 
             if (e.target.closest('.btnEdit')) {
 
-                const index =
-                    e.target.closest('.btnEdit').dataset.index;
+                const id =
+                    e.target.closest('.btnEdit').dataset.id;
 
-                editIndex = index;
+                const data = dataDokumen.find(item => item.id == id);
 
-                namaDokumen.value =
-                    dataDokumen[index].nama;
+                idDokumen.value = data.id;
 
-                nomorDokumen.value =
-                    dataDokumen[index].nomor;
+                namaDokumen.value = data.nama;
 
-                formDokumen.style.display = 'block';
-
-                document.querySelector('#formDokumen h5').innerText =
-                    'Edit Dokumen';
+                nomorDokumen.value = data.nomor;
 
             }
 
@@ -587,6 +622,8 @@
         // =========================
 
         function clearForm() {
+
+            idDokumen.value = '';
 
             namaDokumen.value = '';
             nomorDokumen.value = '';

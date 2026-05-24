@@ -475,12 +475,12 @@
                         </a>
                         <ul class="sidebar-submenu collapse" id="article_menu">
                             <li class="sidebar-menu-item">
-                                <a class="sidebar-menu-button" href="manage_article_category.php">
+                                <a class="sidebar-menu-button" href="manage_post_category.php">
                                     <span class="sidebar-menu-text">Manage Kategori</span>
                                 </a>
                             </li>
                             <li class="sidebar-menu-item">
-                                <a class="sidebar-menu-button" href="manage_article_subcategory.php">
+                                <a class="sidebar-menu-button" href="manage_post_subcategory.php">
                                     <span class="sidebar-menu-text">Manage Sub-Kategori</span>
                                 </a>
                             </li>

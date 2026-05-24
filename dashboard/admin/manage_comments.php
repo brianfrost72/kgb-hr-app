@@ -1,3 +1,72 @@
+<?php
+session_start();
+require_once __DIR__ . '/../koneksi.php';
+
+// ==========================================
+// AMBIL DATA POSTINGAN
+// ==========================================
+
+$queryPost = mysqli_query($conn, "
+    SELECT id, title_post
+    FROM post
+    ORDER BY title_post ASC
+");
+
+$dataPost = [];
+
+while ($rowPost = mysqli_fetch_assoc($queryPost)) {
+    $dataPost[] = $rowPost;
+}
+
+
+// ==========================================
+// AMBIL DATA KOMENTAR
+// ==========================================
+
+$queryKomentar = mysqli_query($conn, "
+    SELECT
+        pc.id,
+        pc.name_commenters,
+        pc.pict_commenters,
+        pc.email_commenters,
+        pc.comment,
+        pc.status,
+        pc.id_post,
+        pc.commenters_date,
+        p.title_post
+    FROM post_commenters pc
+    LEFT JOIN post p
+        ON p.id = pc.id_post
+    ORDER BY pc.commenters_date DESC
+");
+
+$komentarMasuk = [];
+$komentarHidden = [];
+
+while ($row = mysqli_fetch_assoc($queryKomentar)) {
+
+    $item = [
+        'id'         => $row['id'],
+        'nama'       => $row['name_commenters'],
+        'avatar'     => !empty($row['pict_commenters'])
+            ? '../uploads/commenters/' . $row['pict_commenters']
+            : '../assets/images/default-user.jpg',
+        'email'      => $row['email_commenters'],
+        'komentar'   => $row['comment'],
+        'status'     => $row['status'],
+        'postingan'  => $row['title_post'] ?? '-',
+        'tanggal'    => $row['commenters_date']
+    ];
+
+    if ($row['status'] === 'Disembunyikan') {
+        $komentarHidden[] = $item;
+    } else {
+        $komentarMasuk[] = $item;
+    }
+}
+
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -9,6 +78,7 @@
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Komentar - Dashboard | Konig Guard Bureau</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <!-- Perfect Scrollbar -->
     <link
@@ -91,11 +161,14 @@
 
                             <div class="col-md-3">
                                 <label>Filter Postingan</label>
-                                <select class="form-control" id="filterPostingan">
+                                <select class="form-control select2-post" id="filterPostingan">
                                     <option value="Semua">Semua Postingan</option>
-                                    <option value="Tips Produktivitas">Tips Produktivitas</option>
-                                    <option value="Belajar Efektif">Belajar Efektif</option>
-                                    <option value="Manajemen Waktu">Manajemen Waktu</option>
+
+                                    <?php foreach ($dataPost as $post): ?>
+                                        <option value="<?= htmlspecialchars($post['title_post']) ?>">
+                                            <?= htmlspecialchars($post['title_post']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
@@ -170,11 +243,14 @@
 
                             <div class="col-md-3">
                                 <label>Filter Postingan</label>
-                                <select class="form-control" id="hiddenFilterPostingan">
+                                <select class="form-control select2-post" id="hiddenFilterPostingan">
                                     <option value="Semua">Semua Postingan</option>
-                                    <option value="Tips Produktivitas">Tips Produktivitas</option>
-                                    <option value="Belajar Efektif">Belajar Efektif</option>
-                                    <option value="Manajemen Waktu">Manajemen Waktu</option>
+
+                                    <?php foreach ($dataPost as $post): ?>
+                                        <option value="<?= htmlspecialchars($post['title_post']) ?>">
+                                            <?= htmlspecialchars($post['title_post']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
@@ -262,6 +338,7 @@
 
     <!-- jQuery -->
     <script src="../assets/vendor/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Bootstrap -->
     <script src="../assets/vendor/popper.min.js"></script>
@@ -291,37 +368,9 @@
     <script src="../assets/js/flatpickr.js"></script>
 
     <script>
-        // =========================================
-        // DATA
-        // =========================================
+        let komentarMasuk = <?= json_encode($komentarMasuk); ?>;
 
-        let komentarMasuk = [{
-                id: 1,
-                nama: "Budi Santoso",
-                avatar: "https://i.pravatar.cc/50?img=1",
-                email: "budi@example.com",
-                komentar: "Artikelnya sangat membantu.",
-                status: "Aktif",
-                postingan: "Tips Produktivitas",
-                tanggal: "2026-05-24 14:35"
-            },
-            {
-                id: 2,
-                nama: "Siti Nurhaliza",
-                avatar: "https://i.pravatar.cc/50?img=5",
-                email: "siti@example.com",
-                komentar: "Kontennya bagus sekali.",
-                status: "Aktif",
-                postingan: "Belajar Efektif",
-                tanggal: "2026-05-23 11:20"
-            }
-        ];
-
-
-        let komentarHidden = [];
-
-
-
+        let komentarHidden = <?= json_encode($komentarHidden); ?>;
         // =========================================
         // PAGINATION STATE
         // =========================================
@@ -597,7 +646,14 @@
     `;
         }
 
+        // =========================================
+        // INIT SELECT2
+        // =========================================
 
+        $('.select2-post').select2({
+            placeholder: "Cari postingan...",
+            width: '100%'
+        });
 
         function changeMasukPage(page) {
 
@@ -605,112 +661,6 @@
 
             renderKomentarMasuk();
         }
-
-
-
-        // =========================================
-        // RENDER KOMENTAR HIDDEN
-        // =========================================
-
-        function renderKomentarHidden() {
-
-            let data = [...komentarHidden];
-
-
-            // FILTER
-            if (hiddenFilterPostingan.value !== "Semua") {
-
-                data = data.filter(item =>
-                    item.postingan === hiddenFilterPostingan.value
-                );
-            }
-
-
-            // SORT
-            data.sort((a, b) => {
-
-                const dateA = new Date(a.tanggal);
-                const dateB = new Date(b.tanggal);
-
-                return hiddenFilterWaktu.value === "baru" ?
-                    dateB - dateA :
-                    dateA - dateB;
-            });
-
-
-            // PAGINATION
-            const limit = parseInt(hiddenShowEntries.value);
-
-            const start = (currentHiddenPage - 1) * limit;
-
-            const end = start + limit;
-
-            const paginatedData = data.slice(start, end);
-
-
-            hiddenBody.innerHTML = "";
-
-
-            paginatedData.forEach(item => {
-
-                hiddenBody.innerHTML += `
-                <tr>
-
-                    <td>${item.nama}</td>
-
-                    <td>
-                        <img src="${item.avatar}"
-                             width="45"
-                             height="45"
-                             style="border-radius:50%; object-fit:cover;">
-                    </td>
-
-                    <td>${item.email}</td>
-
-                    <td>${item.komentar}</td>
-
-                    <td>
-                        <span class="badge badge-danger px-3 py-2">
-                            Disembunyikan
-                        </span>
-                    </td>
-
-                    <td>${item.postingan}</td>
-
-                    <td>${formatTanggal(item.tanggal)}</td>
-
-                    <td>
-
-                        <button
-                            class="btn btn-sm btn-success d-flex align-items-center"
-                            onclick="upKomentar(${item.id})">
-
-                            <span class="material-icons mr-1"
-                                  style="font-size:18px;">
-                                arrow_upward
-                            </span>
-
-                            Up Komentar
-
-                        </button>
-
-                    </td>
-
-                </tr>
-            `;
-            });
-
-
-            renderHiddenPagination(data.length, limit);
-
-
-            hiddenPaginationInfo.innerHTML =
-                `Showing ${data.length === 0 ? 0 : start + 1}
-            to ${Math.min(end, data.length)}
-            of ${data.length} entries`;
-        }
-
-
 
         // =========================================
         // PAGINATION HIDDEN
@@ -840,24 +790,41 @@
             if (!confirmArsip) return;
 
 
-            const index =
-                komentarMasuk.findIndex(item => item.id === id);
+            fetch('update_comment_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `id=${id}&status=Disembunyikan`
+                })
+                .then(res => res.text())
+                .then(response => {
 
-            if (index === -1) return;
+                    if (response.trim() === 'success') {
 
+                        const index =
+                            komentarMasuk.findIndex(item => item.id === id);
 
-            const komentar = komentarMasuk[index];
+                        if (index === -1) return;
 
+                        const komentar = komentarMasuk[index];
 
-            komentarHidden.unshift(komentar);
+                        komentar.status = "Disembunyikan";
 
+                        komentarHidden.unshift(komentar);
 
-            komentarMasuk.splice(index, 1);
+                        komentarMasuk.splice(index, 1);
 
+                        renderKomentarMasuk();
 
-            renderKomentarMasuk();
+                        renderKomentarHidden();
 
-            renderKomentarHidden();
+                    } else {
+
+                        alert('Gagal menyembunyikan komentar');
+
+                    }
+                });
         }
 
 
@@ -874,33 +841,46 @@
             if (!confirmUp) return;
 
 
-            const index =
-                komentarHidden.findIndex(item => item.id === id);
+            fetch('logic/update_comment_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `id=${id}&status=Aktif`
+                })
+                .then(res => res.text())
+                .then(response => {
 
-            if (index === -1) return;
+                    if (response.trim() === 'success') {
 
+                        const index =
+                            komentarHidden.findIndex(item => item.id === id);
 
-            const komentar = komentarHidden[index];
+                        if (index === -1) return;
 
+                        const komentar = komentarHidden[index];
 
-            komentar.new = true;
+                        komentar.status = "Aktif";
 
+                        komentar.new = true;
 
-            komentarMasuk.unshift(komentar);
+                        komentarMasuk.unshift(komentar);
 
+                        komentarHidden.splice(index, 1);
 
-            komentarHidden.splice(index, 1);
+                        currentMasukPage = 1;
 
+                        renderKomentarMasuk();
 
-            currentMasukPage = 1;
+                        renderKomentarHidden();
 
+                    } else {
 
-            renderKomentarMasuk();
+                        alert('Gagal mengaktifkan komentar');
 
-            renderKomentarHidden();
+                    }
+                });
         }
-
-
 
         // =========================================
         // EVENT FILTER MASUK
@@ -953,63 +933,6 @@
 
             renderKomentarHidden();
         });
-
-
-
-        // =========================================
-        // SIMULASI KOMENTAR BARU
-        // =========================================
-
-        function simulasiPesanMasuk() {
-
-            const randomId = Math.floor(Math.random() * 70);
-
-            komentarMasuk.unshift({
-
-                id: Date.now(),
-
-                nama: "Komentar Baru",
-
-                avatar: `https://i.pravatar.cc/50?img=${randomId}`,
-
-                email: "baru@example.com",
-
-                komentar: "Ini simulasi komentar baru masuk.",
-
-                status: "Aktif",
-
-                postingan: "Tips Produktivitas",
-
-                tanggal: new Date(),
-
-                new: true
-            });
-
-
-            currentMasukPage = 1;
-
-
-            renderKomentarMasuk();
-        }
-
-
-
-        // AUTO SIMULASI
-        setInterval(() => {
-
-            simulasiPesanMasuk();
-
-        }, 10000);
-
-
-
-        // =========================================
-        // INITIAL
-        // =========================================
-
-        renderKomentarMasuk();
-
-        renderKomentarHidden();
     </script>
 
 </body>

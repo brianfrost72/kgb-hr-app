@@ -1,3 +1,167 @@
+<?php
+session_start();
+require_once __DIR__ . '/../koneksi.php';
+
+/* =========================================
+   FILTER
+========================================= */
+
+$search         = $_GET['search'] ?? '';
+$categoryFilter = $_GET['category'] ?? '';
+$subFilter      = $_GET['subcategory'] ?? '';
+
+/* =========================================
+   PAGINATION
+========================================= */
+
+$show = isset($_GET['show']) ? (int)$_GET['show'] : 10;
+
+if ($show <= 0) {
+    $show = 10;
+}
+
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+if ($page <= 0) {
+    $page = 1;
+}
+
+$start = ($page - 1) * $show;
+
+/* =========================================
+   QUERY TOTAL
+========================================= */
+
+$where = " WHERE 1=1 ";
+
+if (!empty($search)) {
+    $searchEsc = mysqli_real_escape_string($conn, $search);
+
+    $where .= " AND (
+        p.title_post LIKE '%$searchEsc%'
+        OR pc.name_category LIKE '%$searchEsc%'
+        OR ps.name_subcategory LIKE '%$searchEsc%'
+    )";
+}
+
+if (!empty($categoryFilter)) {
+
+    $categoryFilter = (int)$categoryFilter;
+
+    $where .= " AND p.id_post_category = '$categoryFilter'";
+}
+
+if (!empty($subFilter)) {
+
+    $subFilter = (int)$subFilter;
+
+    $where .= " AND p.id_post_subcategory = '$subFilter'";
+}
+
+/* =========================================
+   TOTAL DATA
+========================================= */
+
+$totalQuery = mysqli_query($conn, "
+    SELECT COUNT(*) as total
+    FROM post p
+    LEFT JOIN post_category pc
+        ON p.id_post_category = pc.id
+    LEFT JOIN post_subcategory ps
+        ON p.id_post_subcategory = ps.id
+    $where
+");
+
+$totalData = mysqli_fetch_assoc($totalQuery)['total'];
+
+$totalPages = ceil($totalData / $show);
+
+/* =========================================
+   QUERY DATA POST
+========================================= */
+
+$queryPost = mysqli_query($conn, "
+    SELECT
+    p.id,
+    p.title_post,
+    p.id_post_category,
+    p.id_post_subcategory,
+    p.post_desc,
+    p.post_img,
+    p.created_at,
+    p.update_at,
+
+    pc.name_category,
+
+    ps.name_subcategory,
+
+    COUNT(pcmt.id) as total_comment
+
+FROM post p
+
+LEFT JOIN post_category pc
+    ON p.id_post_category = pc.id
+
+LEFT JOIN post_subcategory ps
+    ON p.id_post_subcategory = ps.id
+
+LEFT JOIN post_commenters pcmt
+    ON p.id = pcmt.id_post
+
+    $where
+
+GROUP BY p.id
+
+ORDER BY p.id DESC
+");
+
+/* =========================================
+   STATISTIK
+========================================= */
+
+$totalPost = mysqli_fetch_assoc(
+    mysqli_query($conn, "
+        SELECT COUNT(*) as total
+        FROM post
+    ")
+)['total'];
+
+$totalCategory = mysqli_fetch_assoc(
+    mysqli_query($conn, "
+        SELECT COUNT(*) as total
+        FROM post_category
+    ")
+)['total'];
+
+$totalSubCategory = mysqli_fetch_assoc(
+    mysqli_query($conn, "
+        SELECT COUNT(*) as total
+        FROM post_subcategory
+    ")
+)['total'];
+
+/* =========================================
+   DATA CATEGORY
+========================================= */
+
+$queryCategory = mysqli_query($conn, "
+    SELECT *
+    FROM post_category
+    ORDER BY name_category ASC
+");
+
+/* =========================================
+   DATA SUB CATEGORY
+========================================= */
+
+$querySubCategory = mysqli_query($conn, "
+    SELECT *
+    FROM post_subcategory
+    ORDER BY name_subcategory ASC
+");
+
+?>
+
 <!doctype html>
 <html lang="id">
 
@@ -67,6 +231,8 @@
                             </nav>
                             <h1 class="m-0">Daftar Postingan</h1>
                         </div>
+                        <a href="add_post.php"
+                            class="btn btn-primary ml-1">Tambah Postingan?</a>
                     </div>
                 </div>
             </div>
@@ -100,54 +266,12 @@
                 <!-- STATISTIC -->
                 <div class="row mb-4">
 
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card stats-card" style="border-radius:12px;">
                             <div class="card-body d-flex align-items-center">
 
                                 <div style="width:60px;height:60px;border-radius:12px;
                     background:#eef2ff;display:flex;align-items:center;
-                    justify-content:center;margin-right:15px;">
-                                    <span class="material-icons" style="color:var(--primary);font-size:30px;">
-                                        layers
-                                    </span>
-                                </div>
-
-                                <div>
-                                    <h3 class="mb-0">12</h3>
-                                    <small class="text-muted">Total Postingan</small>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="card stats-card" style="border-radius:12px;">
-                            <div class="card-body d-flex align-items-center">
-
-                                <div style="width:60px;height:60px;border-radius:12px;
-                    background:#eafaf1;display:flex;align-items:center;
-                    justify-content:center;margin-right:15px;">
-                                    <span class="material-icons" style="color:var(--primary);font-size:30px;">
-                                        collections
-                                    </span>
-                                </div>
-
-                                <div>
-                                    <h3 class="mb-0">8</h3>
-                                    <small class="text-muted">Kategori</small>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3">
-                        <div class="card stats-card" style="border-radius:12px;">
-                            <div class="card-body d-flex align-items-center">
-
-                                <div style="width:60px;height:60px;border-radius:12px;
-                    background:#f3f4f6;display:flex;align-items:center;
                     justify-content:center;margin-right:15px;">
                                     <span class="material-icons" style="color:var(--success);font-size:30px;">
                                         cast_connected
@@ -155,34 +279,57 @@
                                 </div>
 
                                 <div>
-                                    <h3 class="mb-0">4</h3>
-                                    <small class="text-muted">Postingan Aktif</small>
+                                    <h3 class="mb-0"><?= $totalPost; ?></h3>
+                                    <small class="text-muted">Total Postingan</small>
                                 </div>
 
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-4">
+                        <div class="card stats-card" style="border-radius:12px;">
+                            <div class="card-body d-flex align-items-center">
+
+                                <div style="width:60px;height:60px;border-radius:12px;
+                    background:#eafaf1;display:flex;align-items:center;
+                    justify-content:center;margin-right:15px;">
+                                    <span class="material-icons" style="color:var(--primary);font-size:30px;">
+                                        layers
+                                    </span>
+                                </div>
+
+                                <div>
+                                    <h3 class="mb-0"><?= $totalCategory; ?></h3>
+                                    <small class="text-muted">Kategori</small>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
                         <div class="card stats-card" style="border-radius:12px;">
                             <div class="card-body d-flex align-items-center">
 
                                 <div style="width:60px;height:60px;border-radius:12px;
                     background:#f3f4f6;display:flex;align-items:center;
                     justify-content:center;margin-right:15px;">
-                                    <span class="material-icons" style="color:var(--danger);font-size:30px;">
-                                        cast
+                                    <span class="material-icons" style="color:var(--primary);font-size:30px;">
+                                        layers
                                     </span>
                                 </div>
 
                                 <div>
-                                    <h3 class="mb-0">4</h3>
-                                    <small class="text-muted">Postingan Tidak Aktif</small>
+                                    <h3 class="mb-0"><?= $totalSubCategory; ?></h3>
+                                    <small class="text-muted">Total Sub Kategori</small>
                                 </div>
 
                             </div>
                         </div>
                     </div>
+
+
 
                 </div>
 
@@ -204,12 +351,25 @@
                                         Show
                                     </label>
 
-                                    <select id="showEntries" class="form-control"
+                                    <select
+                                        id="showEntries"
+                                        class="form-control"
                                         style="width:80px;">
-                                        <option>10</option>
-                                        <option>25</option>
-                                        <option>50</option>
-                                        <option>100</option>
+                                        <option value="10" <?= ($show == 10) ? 'selected' : ''; ?>>
+                                            10
+                                        </option>
+
+                                        <option value="25" <?= ($show == 25) ? 'selected' : ''; ?>>
+                                            25
+                                        </option>
+
+                                        <option value="50" <?= ($show == 50) ? 'selected' : ''; ?>>
+                                            50
+                                        </option>
+
+                                        <option value="100" <?= ($show == 100) ? 'selected' : ''; ?>>
+                                            100
+                                        </option>
                                     </select>
 
                                     <label class="mb-0 ml-2 text-muted" style="white-space:nowrap;">
@@ -229,10 +389,11 @@
                                         search
                                     </span>
 
-                                    <input id="searchInput" type="text"
+                                    <input
+                                        id="searchInput"
+                                        type="text"
                                         class="form-control"
-                                        placeholder="Cari Postingan..."
-                                        style="padding-left:40px;width:260px;">
+                                        value="<?= htmlspecialchars($search); ?>">
                                 </div>
 
                             </div>
@@ -241,33 +402,40 @@
                             <div class="d-flex align-items-center flex-wrap"
                                 style="gap:15px;">
 
-                                <!-- TYPE -->
-                                <select id="categoryFilter" class="form-control"
-                                    style="width:190px;">
-                                    <option>--Pilih Kategori--</option>
-                                    <option>Semua Tipe</option>
-                                    <option>Berita</option>
-                                    <option>Artikel</option>
-                                    <option>Blog</option>
+                                <select
+                                    id="categoryFilter"
+                                    class="form-control"
+                                    style="width:190px;"
+                                    onchange="filterData()">
+                                    <option value="">--Pilih Kategori--</option>
+
+                                    <?php while ($cat = mysqli_fetch_assoc($queryCategory)) : ?>
+
+                                        <option
+                                            value="<?= $cat['id']; ?>"
+                                            <?= ($categoryFilter == $cat['id']) ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars($cat['name_category']); ?>
+                                        </option>
+
+                                    <?php endwhile; ?>
                                 </select>
 
-                                <!-- LOKASI -->
-                                <select id="subCategoryFilter" class="form-control"
-                                    style="width:190px;">
-                                    <option>--Pilih Sub Kategori--</option>
-                                    <option>Semua Sub Kategori</option>
-                                    <option></option>
-                                    <option></option>
-                                    <option></option>
-                                </select>
+                                <select
+                                    id="subCategoryFilter"
+                                    class="form-control"
+                                    style="width:190px;"
+                                    onchange="filterData()">
+                                    <option value="">--Pilih Sub Kategori--</option>
 
-                                <!-- STATUS -->
-                                <select id="statusFilter" class="form-control"
-                                    style="width:170px;">
-                                    <option>--Status--</option>
-                                    <option>Semua Status</option>
-                                    <option>Aktif</option>
-                                    <option>Tidak Aktif</option>
+                                    <?php while ($sub = mysqli_fetch_assoc($querySubCategory)) : ?>
+
+                                        <option
+                                            value="<?= $sub['id']; ?>"
+                                            <?= ($subFilter == $sub['id']) ? 'selected' : ''; ?>>
+                                            <?= htmlspecialchars($sub['name_subcategory']); ?>
+                                        </option>
+
+                                    <?php endwhile; ?>
                                 </select>
 
                             </div>
@@ -277,7 +445,7 @@
                         <!-- TABLE CONTAIN -->
                         <div class="table-responsive">
 
-                            <table class="table table-hover">
+                            <table class="table table-hover" style="white-space:normal;">
 
                                 <thead style="background:#f8f9fc;">
                                     <tr>
@@ -286,174 +454,189 @@
                                         <th>Sub Kategori</th>
                                         <th>Gambar</th>
                                         <th>Deskripsi</th>
-                                        <th>Status</th>
+                                        <th>Komentar</th>
+                                        <th style="white-space:nowrap;">Terakhir Diperbarui</th>
                                         <th style="text-align:center;">Aksi</th>
                                     </tr>
                                 </thead>
 
                                 <tbody id="jobTable">
 
-                                    <tr class="post-row">
-                                        <td>
-                                            <strong>Kisah Pengalaman Kerja</strong>
-                                        </td>
+                                    <?php if (mysqli_num_rows($queryPost) > 0) : ?>
 
-                                        <td>Berita</td>
-                                        <td>Pembobolan</td>
-                                        <td>
-                                            <img src="assets/images/posts/luke-chesser-2347.jpg"
-                                                alt="Thumbnail"
-                                                style="
-            width:70px;
-            height:50px;
-            object-fit:cover;
-            border-radius:8px;
-            border:1px solid #e5e7eb;
+                                        <?php while ($row = mysqli_fetch_assoc($queryPost)) : ?>
+
+                                            <tr class="post-row">
+
+                                                <!-- JUDUL -->
+                                                <td style="min-width:220px; white-space:nowrap;">
+                                                    <strong>
+                                                        <?= htmlspecialchars($row['title_post']); ?>
+                                                    </strong>
+
+                                                    <br>
+
+                                                    <small class="text-muted" style="white-space:nowrap;">
+                                                        <?= date('d M Y H:i', strtotime($row['created_at'])); ?>
+                                                    </small>
+                                                </td>
+
+                                                <!-- KATEGORI -->
+                                                <td style="white-space:nowrap;">
+                                                    <?= htmlspecialchars($row['name_category']); ?>
+                                                </td>
+
+                                                <!-- SUB KATEGORI -->
+                                                <td style="white-space:nowrap;">
+                                                    <?= htmlspecialchars($row['name_subcategory']); ?>
+                                                </td>
+
+                                                <!-- IMAGE -->
+                                                <td>
+                                                    <?php if (!empty($row['post_img'])) : ?>
+
+                                                        <img
+                                                            src="../assets/images/uploads/posts/<?= htmlspecialchars($row['post_img']); ?>"
+                                                            alt="Post Image"
+                                                            style="
+                            width:80px;
+                            height:60px;
+                            object-fit:cover;
+                            border-radius:10px;
+                            border:1px solid #e5e7eb;
+                        ">
+
+                                                    <?php else : ?>
+
+                                                        <div
+                                                            style="
+                            width:80px;
+                            height:60px;
+                            background:#f3f4f6;
+                            border-radius:10px;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                        ">
+                                                            <span class="material-icons text-muted">
+                                                                image
+                                                            </span>
+                                                        </div>
+
+                                                    <?php endif; ?>
+                                                </td>
+
+                                                <!-- DESC -->
+                                                <td style="min-width:260px; max-width:260px;">
+
+                                                    <div
+                                                        style="
+            display:-webkit-box;
+            -webkit-line-clamp:2;
+            -webkit-box-orient:vertical;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:normal;
+            line-height:1.5em;
+            max-height:3em;
         ">
-                                        </td>
-                                        <td>
-                                            Kejadian ini terjadi pada tahun 2010. Setelah sekitar 5 tahun lalu, saya terlibat dalam pembobolan di sebuah perusahaan.
-                                        </td>
 
-                                        <td>
-                                            <span class="badge badge-success"
-                                                style="padding:8px 14px;border-radius:8px;">
-                                                Aktif
-                                            </span>
-                                        </td>
+                                                        <?= strip_tags($row['post_desc']); ?>
 
-                                        <td>
-                                            <div class="d-flex justify-content-center">
+                                                    </div>
 
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="toggleStatus(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        block
+                                                </td>
+
+                                                <!-- KOMENTAR -->
+                                                <td>
+
+                                                    <span class="badge badge-primary px-3 py-2">
+
+                                                        <?= $row['total_comment']; ?>
+
+                                                        Komentar
+
                                                     </span>
-                                                    Tidak Aktif
-                                                </button>
 
-                                                <button class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteRow(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        delete
+                                                </td>
+
+                                                <!-- UPDATED -->
+                                                <td>
+                                                    <small class="text-muted" style="white-space:nowrap;">
+                                                        <?= date('d M Y H:i', strtotime($row['update_at'])); ?>
+                                                    </small>
+                                                </td>
+
+                                                <!-- AKSI -->
+                                                <td>
+
+                                                    <div class="d-flex justify-content-center">
+
+                                                        <a
+                                                            href="edit_post.php?id=<?= $row['id']; ?>"
+                                                            class="mr-2">
+                                                            <button
+                                                                class="btn btn-outline-primary btn-sm"
+                                                                title="Edit">
+                                                                <span class="material-icons"
+                                                                    style="font-size:16px;">
+                                                                    edit
+                                                                </span>
+                                                            </button>
+                                                        </a>
+
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-outline-danger btn-sm"
+                                                            title="Hapus"
+                                                            onclick="openDeleteModal(
+        <?= $row['id']; ?>,
+        '<?= htmlspecialchars(addslashes($row['title_post'])); ?>'
+    )">
+                                                            <span class="material-icons"
+                                                                style="font-size:16px;">
+                                                                delete
+                                                            </span>
+                                                        </button>
+
+                                                    </div>
+
+                                                </td>
+
+                                            </tr>
+
+                                        <?php endwhile; ?>
+
+                                    <?php else : ?>
+
+                                        <tr>
+                                            <td colspan="7" class="text-center py-5">
+
+                                                <div class="d-flex flex-column align-items-center">
+
+                                                    <span
+                                                        class="material-icons mb-2"
+                                                        style="
+                        font-size:60px;
+                        color:#d1d5db;
+                    ">
+                                                        article
                                                     </span>
-                                                    Hapus
-                                                </button>
 
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                    <h5 class="mb-1">
+                                                        Data postingan kosong
+                                                    </h5>
 
-                                    <tr class="post-row">
-                                        <td>
-                                            <strong>Telah terjadi kerusuhan</strong><br>
-                                        </td>
+                                                    <small class="text-muted">
+                                                        Belum ada data postingan tersedia.
+                                                    </small>
 
-                                        <td>Artikel</td>
-                                        <td>Kisah Nyata</td>
-                                        <td>
-                                            <img src="assets/images/posts/linkedin-sales-navigator-402873.jpg"
-                                                alt="Thumbnail"
-                                                style="
-            width:70px;
-            height:50px;
-            object-fit:cover;
-            border-radius:8px;
-            border:1px solid #e5e7eb;
-        ">
-                                        </td>
-                                        <td>
-                                            Kejadian ini terjadi pada tahun 2010. Setelah sekitar 5 tahun lalu, saya terlibat dalam pembobolan di sebuah perusahaan.
-                                        </td>
+                                                </div>
 
-                                        <td>
-                                            <span class="badge badge-danger"
-                                                style="padding:8px 14px;border-radius:8px;">
-                                                Tidak Aktif
-                                            </span>
-                                        </td>
+                                            </td>
+                                        </tr>
 
-                                        <td>
-                                            <div class="d-flex justify-content-center">
-
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="toggleStatus(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        block
-                                                    </span>
-                                                    Tidak Aktif
-                                                </button>
-
-                                                <button class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteRow(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        delete
-                                                    </span>
-                                                    Hapus
-                                                </button>
-
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <tr class="post-row">
-                                        <td>
-                                            <strong>Ini Blog saya</strong><br>
-                                        </td>
-
-                                        <td>Blog</td>
-                                        <td>Kisah Pengalaman Kerja</td>
-                                        <td>
-                                            <img src="assets/images/posts/fabian-irsara-92113.jpg"
-                                                alt="Thumbnail"
-                                                style="
-            width:70px;
-            height:50px;
-            object-fit:cover;
-            border-radius:8px;
-            border:1px solid #e5e7eb;
-        ">
-                                        </td>
-                                        <td>
-                                            Ini adalah kisah saya. Setelah sekitar 5 tahun lalu, saya terlibat dalam pembobolan di sebuah perusahaan.
-                                        </td>
-
-                                        <td>
-                                            <span class="badge badge-success"
-                                                style="padding:8px 14px;border-radius:8px;">
-                                                Aktif
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <div class="d-flex justify-content-center">
-
-                                                <button class="btn btn-outline-primary btn-sm mr-2"
-                                                    onclick="toggleStatus(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        block
-                                                    </span>
-                                                    Tidak Aktif
-                                                </button>
-
-                                                <button class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteRow(this)">
-                                                    <span class="material-icons"
-                                                        style="font-size:16px;vertical-align:middle;">
-                                                        delete
-                                                    </span>
-                                                    Hapus
-                                                </button>
-
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <?php endif; ?>
 
                                 </tbody>
 
@@ -462,20 +645,82 @@
                         </div>
 
                         <!-- PAGINATION -->
-                        <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap"
-                            style="gap:15px;">
+                        <div id="pagination"
+                            class="d-flex align-items-center flex-wrap"
+                            style="gap:6px; max-width:100%; overflow-x:auto; padding-bottom:4px;">
 
-                            <!-- INFO -->
-                            <small class="text-muted" id="paginationInfo">
-                                Menampilkan 1 - 10 dari 120 data
-                            </small>
+                            <?php if ($totalPages > 1) : ?>
 
-                            <!-- PAGINATION -->
-                            <div id="pagination"
-                                class="d-flex align-items-center flex-wrap"
-                                style="gap:6px; max-width:100%; overflow-x:auto; padding-bottom:4px;">
+                                <!-- PREV -->
+                                <a
+                                    href="?page=<?= max(1, $page - 1); ?>&search=<?= urlencode($search); ?>&category=<?= $categoryFilter; ?>&subcategory=<?= $subFilter; ?>&show=<?= $show; ?>"
+                                    class="btn btn-sm btn-light">
+                                    «
+                                </a>
 
-                            </div>
+                                <?php
+
+                                $visiblePages = [];
+
+                                if ($totalPages <= 10) {
+
+                                    for ($i = 1; $i <= $totalPages; $i++) {
+                                        $visiblePages[] = $i;
+                                    }
+                                } else {
+
+                                    $visiblePages = [1, 2, 3, 4, 5];
+
+                                    if ($page > 6 && $page < $totalPages - 4) {
+
+                                        $visiblePages[] = '...';
+
+                                        for ($i = $page - 1; $i <= $page + 1; $i++) {
+                                            $visiblePages[] = $i;
+                                        }
+                                    }
+
+                                    $visiblePages[] = '...';
+
+                                    for ($i = $totalPages - 3; $i <= $totalPages; $i++) {
+                                        $visiblePages[] = $i;
+                                    }
+
+                                    $visiblePages = array_unique($visiblePages);
+                                }
+
+                                ?>
+
+                                <?php foreach ($visiblePages as $p) : ?>
+
+                                    <?php if ($p === '...') : ?>
+
+                                        <span
+                                            class="btn btn-sm btn-light disabled"
+                                            style="pointer-events:none;">
+                                            ...
+                                        </span>
+
+                                    <?php else : ?>
+
+                                        <a
+                                            href="?page=<?= $p; ?>&search=<?= urlencode($search); ?>&category=<?= $categoryFilter; ?>&subcategory=<?= $subFilter; ?>&show=<?= $show; ?>"
+                                            class="btn btn-sm <?= ($p == $page) ? 'btn-primary' : 'btn-light'; ?>">
+                                            <?= $p; ?>
+                                        </a>
+
+                                    <?php endif; ?>
+
+                                <?php endforeach; ?>
+
+                                <!-- NEXT -->
+                                <a
+                                    href="?page=<?= min($totalPages, $page + 1); ?>&search=<?= urlencode($search); ?>&category=<?= $categoryFilter; ?>&subcategory=<?= $subFilter; ?>&show=<?= $show; ?>"
+                                    class="btn btn-sm btn-light">
+                                    »
+                                </a>
+
+                            <?php endif; ?>
 
                         </div>
 
@@ -490,14 +735,7 @@
 
     <!-- App Settings FAB -->
     <div id="app-settings" style="display: none">
-        <app-settings
-            layout-active="fluid"
-            :layout-location="{
-      'default': 'index.html',
-      'fixed': 'fixed-dashboard.html',
-      'fluid': 'fluid-dashboard.html',
-      'mini': 'mini-dashboard.html'
-    }"></app-settings>
+        <app-settings layout-active="fluid"></app-settings>
     </div>
 
     <!-- ********************************** // MENU-Drawer ********************************** -->
@@ -505,277 +743,7 @@
     <!-- ********************************** //END MENU-drawer ********************************** -->
 
     <!-- =========================
-    MODAL KONFIRMASI AKTIFKAN
-========================= -->
-    <div class="modal fade" id="confirmAktifModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0"
-                style="border-radius:20px;overflow:hidden;">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#ecfdf3;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                    ">
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#16a34a;
-                        ">
-                            help
-                        </span>
-                    </div>
-
-                    <h3 class="mb-2">
-                        Aktifkan Postingan?
-                    </h3>
-
-                    <p class="text-muted mb-4">
-                        Apakah postingan
-                        <strong id="aktifPostTitle"></strong>
-                        ingin diaktifkan?
-                    </p>
-
-                    <div class="d-flex justify-content-center"
-                        style="gap:12px;">
-
-                        <button type="button"
-                            class="btn btn-light"
-                            data-dismiss="modal"
-                            style="
-                            height:45px;
-                            border-radius:10px;
-                            min-width:110px;
-                            font-weight:600;
-                        ">
-                            Batal
-                        </button>
-
-                        <button type="button"
-                            class="btn btn-success"
-                            id="btnConfirmAktif"
-                            style="
-                            height:45px;
-                            border-radius:10px;
-                            min-width:110px;
-                            font-weight:600;
-                        ">
-                            Ya, Aktifkan
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================
-    MODAL KONFIRMASI NONAKTIF
-========================= -->
-    <div class="modal fade" id="confirmNonaktifModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0"
-                style="border-radius:20px;overflow:hidden;">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#fff1f2;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                    ">
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#dc2626;
-                        ">
-                            help
-                        </span>
-                    </div>
-
-                    <h3 class="mb-2">
-                        Nonaktifkan Postingan?
-                    </h3>
-
-                    <p class="text-muted mb-4">
-                        Apakah postingan
-                        <strong id="nonaktifPostTitle"></strong>
-                        ingin dinonaktifkan?
-                    </p>
-
-                    <div class="d-flex justify-content-center"
-                        style="gap:12px;">
-
-                        <button type="button"
-                            class="btn btn-light"
-                            data-dismiss="modal"
-                            style="
-                            height:45px;
-                            border-radius:10px;
-                            min-width:110px;
-                            font-weight:600;
-                        ">
-                            Batal
-                        </button>
-
-                        <button type="button"
-                            class="btn btn-danger"
-                            id="btnConfirmNonaktif"
-                            style="
-                            height:45px;
-                            border-radius:10px;
-                            min-width:110px;
-                            font-weight:600;
-                        ">
-                            Ya, Nonaktifkan
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================
-    MODAL VALIDASI AKTIF
-========================= -->
-    <div class="modal fade" id="modalAktif" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0"
-                style="border-radius:20px;overflow:hidden;">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#ecfdf3;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                    ">
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#16a34a;
-                        ">
-                            check_circle
-                        </span>
-                    </div>
-
-                    <!-- TITLE -->
-                    <p class="text-muted mb-4">
-                        Postingan
-                        <strong id="successAktifTitle"></strong>
-                        berhasil diaktifkan.
-                    </p>
-
-                    <!-- DESC -->
-                    <p class="text-muted mb-4">
-                        Status postingan telah berhasil diubah menjadi aktif.
-                    </p>
-
-                    <!-- BUTTON -->
-                    <button type="button"
-                        class="btn btn-success px-4"
-                        data-dismiss="modal"
-                        style="
-                        border-radius:10px;
-                        height:45px;
-                        font-weight:600;
-                    ">
-                        Oke
-                    </button>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================
-    MODAL VALIDASI TIDAK AKTIF
-========================= -->
-    <div class="modal fade" id="modalNonaktif" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0"
-                style="border-radius:20px;overflow:hidden;">
-
-                <div class="modal-body text-center p-5">
-
-                    <!-- ICON -->
-                    <div class="mx-auto mb-4"
-                        style="
-                        width:90px;
-                        height:90px;
-                        border-radius:50%;
-                        background:#fff1f2;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                    ">
-                        <span class="material-icons"
-                            style="
-                            font-size:50px;
-                            color:#dc2626;
-                        ">
-                            block
-                        </span>
-                    </div>
-
-                    <!-- TITLE -->
-                    <p class="text-muted mb-4">
-                        Postingan
-                        <strong id="successNonaktifTitle"></strong>
-                        berhasil dinonaktifkan.
-                    </p>
-
-                    <!-- DESC -->
-                    <p class="text-muted mb-4">
-                        Status postingan berhasil diubah menjadi tidak aktif.
-                    </p>
-
-                    <!-- BUTTON -->
-                    <button type="button"
-                        class="btn btn-danger px-4"
-                        data-dismiss="modal"
-                        style="
-                        border-radius:10px;
-                        height:45px;
-                        font-weight:600;
-                    ">
-                        Oke
-                    </button>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- =========================
-    MODAL KONFIRMASI HAPUS
+    MODAL KONFIRMASI HAPUS PAKAI INI
 ========================= -->
     <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -949,356 +917,73 @@
     <script src="../assets/js/flatpickr.js"></script>
 
     <script>
-        let currentPage = 1;
-        let perPage = 10;
+        function filterData() {
 
-        const searchInput = document.getElementById("searchInput");
-        const categoryFilter = document.getElementById("categoryFilter");
-        const subCategoryFilter = document.getElementById("subCategoryFilter");
-        const statusFilter = document.getElementById("statusFilter");
-        const showEntries = document.getElementById("showEntries");
+            const search =
+                document.getElementById('searchInput').value;
 
-        function getFilteredRows() {
+            const category =
+                document.getElementById('categoryFilter').value;
 
-            const search = searchInput.value.toLowerCase();
-            const category = categoryFilter.value.toLowerCase();
-            const subCategory = subCategoryFilter.value.toLowerCase();
-            const status = statusFilter.value.toLowerCase();
+            const subcategory =
+                document.getElementById('subCategoryFilter').value;
 
-            const rows = document.querySelectorAll(".post-row");
+            const show =
+                document.getElementById('showEntries').value;
 
-            return Array.from(rows).filter((row) => {
+            let url =
+                'manage_post.php?';
 
-                const title = row.children[0].innerText.toLowerCase();
-                const kategori = row.children[1].innerText.toLowerCase();
-                const subkategori = row.children[2].innerText.toLowerCase();
-                const statusText = row.children[5].innerText.trim().toLowerCase();
+            url += 'search=' + encodeURIComponent(search);
+            url += '&category=' + category;
+            url += '&subcategory=' + subcategory;
+            url += '&show=' + show;
 
-                const matchSearch =
-                    title.includes(search);
-
-                const matchCategory =
-                    category.includes("--pilih") ||
-                    category.includes("semua") ||
-                    kategori.includes(category);
-
-                const matchSubCategory =
-                    subCategory.includes("--pilih") ||
-                    subCategory.includes("semua") ||
-                    subkategori.includes(subCategory);
-
-                const matchStatus =
-                    status.includes("--status") ||
-                    status.includes("semua") ||
-                    statusText.includes(status);
-
-                return (
-                    matchSearch &&
-                    matchCategory &&
-                    matchSubCategory &&
-                    matchStatus
-                );
-            });
+            window.location.href = url;
         }
 
-        function renderTable() {
+        /* SEARCH ENTER */
+        document.getElementById('searchInput')
+            .addEventListener('keyup', function(e) {
 
-            const rows = getFilteredRows();
-
-            perPage = parseInt(showEntries.value);
-
-            const totalData = rows.length;
-            const totalPages = Math.ceil(totalData / perPage);
-
-            if (currentPage > totalPages) {
-                currentPage = 1;
-            }
-
-            document.querySelectorAll(".post-row")
-                .forEach((row) => {
-                    row.style.display = "none";
-                });
-
-            const start = (currentPage - 1) * perPage;
-            const end = start + perPage;
-
-            rows.slice(start, end)
-                .forEach((row) => {
-                    row.style.display = "";
-                });
-
-            renderPagination(totalPages, totalData);
-        }
-
-        function renderPagination(totalPages, totalData) {
-
-            const pagination =
-                document.getElementById("pagination");
-
-            pagination.innerHTML = "";
-
-            /* PREV */
-            const prevBtn = document.createElement("button");
-
-            prevBtn.className = "page-btn";
-            prevBtn.innerHTML = "«";
-
-            prevBtn.disabled = currentPage === 1;
-
-            prevBtn.onclick = () => {
-                currentPage--;
-                renderTable();
-            };
-
-            pagination.appendChild(prevBtn);
-
-            /* NUMBER */
-            for (let i = 1; i <= totalPages; i++) {
-
-                const btn =
-                    document.createElement("button");
-
-                btn.className = "page-btn";
-
-                if (i === currentPage) {
-                    btn.classList.add("active");
+                if (e.key === 'Enter') {
+                    filterData();
                 }
 
-                btn.innerText = i;
-
-                btn.onclick = () => {
-                    currentPage = i;
-                    renderTable();
-                };
-
-                pagination.appendChild(btn);
-            }
-
-            /* NEXT */
-            const nextBtn = document.createElement("button");
-
-            nextBtn.className = "page-btn";
-            nextBtn.innerHTML = "»";
-
-            nextBtn.disabled =
-                currentPage === totalPages ||
-                totalPages === 0;
-
-            nextBtn.onclick = () => {
-                currentPage++;
-                renderTable();
-            };
-
-            pagination.appendChild(nextBtn);
-
-            /* INFO */
-            const startData =
-                totalData === 0 ?
-                0 :
-                ((currentPage - 1) * perPage) + 1;
-
-            let endData = currentPage * perPage;
-
-            if (endData > totalData) {
-                endData = totalData;
-            }
-
-            document.getElementById("paginationInfo")
-                .innerText =
-                `Menampilkan ${startData} - ${endData} dari ${totalData} data`;
-        }
-
-        let selectedButton = null;
-        let selectedRow = null;
-
-        /* TOGGLE STATUS */
-        function toggleStatus(button) {
-
-            selectedButton = button;
-
-            const row = button.closest("tr");
-
-            const title =
-                row.children[0].innerText.trim();
-
-            const badge =
-                row.children[5].querySelector(".badge");
-
-            const currentStatus =
-                badge.innerText.trim();
-
-            if (currentStatus === "Aktif") {
-
-                document.getElementById(
-                    "nonaktifPostTitle"
-                ).innerText = `"${title}"`;
-
-                $("#confirmNonaktifModal").modal("show");
-
-            } else {
-
-                document.getElementById(
-                    "aktifPostTitle"
-                ).innerText = `"${title}"`;
-
-                $("#confirmAktifModal").modal("show");
-            }
-        }
-
-        /* KONFIRMASI AKTIFKAN */
-        document.getElementById("btnConfirmAktif")
-            .addEventListener("click", function() {
-
-                const row =
-                    selectedButton.closest("tr");
-
-                const title =
-                    row.children[0].innerText.trim();
-
-                const badge =
-                    row.children[5].querySelector(".badge");
-
-                badge.classList.remove("badge-danger");
-                badge.classList.add("badge-success");
-
-                badge.innerText = "Aktif";
-
-                selectedButton.innerHTML = `
-                <span class="material-icons"
-                    style="font-size:16px;vertical-align:middle;">
-                    block
-                </span>
-                Tidak Aktif
-            `;
-
-                document.getElementById(
-                    "successAktifTitle"
-                ).innerText = `"${title}"`;
-
-                $("#confirmAktifModal").modal("hide");
-
-                setTimeout(() => {
-                    $("#modalAktif").modal("show");
-                }, 400);
-
-                renderTable();
             });
 
-        /* KONFIRMASI NONAKTIF */
-        document.getElementById("btnConfirmNonaktif")
-            .addEventListener("click", function() {
+        /* SHOW ENTRIES */
+        document.getElementById('showEntries')
+            .addEventListener('change', function() {
 
-                const row =
-                    selectedButton.closest("tr");
+                filterData();
 
-                const title =
-                    row.children[0].innerText.trim();
-
-                const badge =
-                    row.children[5].querySelector(".badge");
-
-                badge.classList.remove("badge-success");
-                badge.classList.add("badge-danger");
-
-                badge.innerText = "Tidak Aktif";
-
-                selectedButton.innerHTML = `
-                <span class="material-icons"
-                    style="font-size:16px;vertical-align:middle;">
-                    check
-                </span>
-                Aktifkan
-            `;
-
-                document.getElementById(
-                    "successNonaktifTitle"
-                ).innerText = `"${title}"`;
-
-                $("#confirmNonaktifModal").modal("hide");
-
-                setTimeout(() => {
-                    $("#modalNonaktif").modal("show");
-                }, 400);
-
-                renderTable();
             });
+    </script>
 
-        /* DELETE */
-        function deleteRow(button) {
+    <script>
+        let deleteId = null;
 
-            selectedRow =
-                button.closest("tr");
+        function openDeleteModal(id, title) {
 
-            const title =
-                selectedRow.children[0].innerText.trim();
+            deleteId = id;
 
-            document.getElementById(
-                "deletePostTitle"
-            ).innerText = `"${title}"`;
+            document.getElementById('deletePostTitle')
+                .innerText = '"' + title + '"';
 
-            $("#confirmDeleteModal").modal("show");
+            $('#confirmDeleteModal').modal('show');
         }
 
-        /* KONFIRMASI DELETE */
-        document.getElementById("btnConfirmDelete")
-            .addEventListener("click", function() {
+        document.getElementById('btnConfirmDelete')
+            .addEventListener('click', function() {
 
-                const title =
-                    selectedRow.children[0].innerText.trim();
+                if (deleteId) {
 
-                document.getElementById(
-                    "deletedPostTitle"
-                ).innerText = `"${title}"`;
+                    window.location.href =
+                        'logic/delete_post.php?id=' + deleteId;
+                }
 
-                $("#confirmDeleteModal").modal("hide");
-
-                selectedRow.style.transition =
-                    "all .3s ease";
-
-                selectedRow.style.opacity = "0";
-
-                selectedRow.style.transform =
-                    "translateX(30px)";
-
-                setTimeout(() => {
-
-                    selectedRow.remove();
-
-                    renderTable();
-
-                    $("#modalDeleteSuccess").modal("show");
-
-                }, 300);
             });
-
-        /* EVENTS */
-        searchInput.addEventListener("keyup", () => {
-            currentPage = 1;
-            renderTable();
-        });
-
-        categoryFilter.addEventListener("change", () => {
-            currentPage = 1;
-            renderTable();
-        });
-
-        subCategoryFilter.addEventListener("change", () => {
-            currentPage = 1;
-            renderTable();
-        });
-
-        statusFilter.addEventListener("change", () => {
-            currentPage = 1;
-            renderTable();
-        });
-
-        showEntries.addEventListener("change", () => {
-            currentPage = 1;
-            renderTable();
-        });
-
-        /* INIT */
-        renderTable();
     </script>
 </body>
 
