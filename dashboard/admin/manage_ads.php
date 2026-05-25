@@ -21,7 +21,7 @@ if (isset($_GET['delete'])) {
     if ($ads) {
 
         // path gambar
-        $imagePath = "../assets/images/uploads/ads/" . $ads['ad_img'];
+        $imagePath = "../assets/images/uploads/ads/" . htmlspecialchars($ads['ad_img']);
 
         // hapus file jika ada
         if (file_exists($imagePath)) {

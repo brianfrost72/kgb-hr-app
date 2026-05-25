@@ -96,7 +96,7 @@ if (isset($_POST['tambah_user'])) {
                 $clean_name . '.' . $ext;
 
             $upload_path =
-                "../assets/images/profile/users/" . $photo_name;
+                "../assets/images/uploads/user_photos/" . $photo_name;
 
             move_uploaded_file($tmp, $upload_path);
 
@@ -269,7 +269,7 @@ if (isset($_POST['update_user'])) {
                 ) {
 
                     $oldPath =
-                        "../assets/images/profile/users/" .
+                        "../assets/images/uploads/user_photos/" .
                         $oldData['photo_profile'];
 
                     if (file_exists($oldPath)) {
@@ -297,7 +297,7 @@ if (isset($_POST['update_user'])) {
                     $clean_name . '.' . $ext;
 
                 $upload_path =
-                    "../assets/images/profile/users/" .
+                    "../assets/images/uploads/user_photos/" .
                     $photo_name;
 
                 move_uploaded_file($tmp, $upload_path);
@@ -374,7 +374,7 @@ if (isset($_POST['delete_single'])) {
 
     if (!empty($profile['photo_profile'])) {
 
-        $path = "../assets/images/profile/users/" . $profile['photo_profile'];
+        $path = "../assets/images/uploads/user_photos/" . $profile['photo_profile'];
 
         if (file_exists($path)) {
 
@@ -763,7 +763,7 @@ $regions = mysqli_query($conn, "
                                                     <td class="d-flex align-items-center">
 
                                                         <img
-                                                            src="../assets/images/profile/users/<?= !empty($row['photo_profile'])
+                                                            src="../assets/images/uploads/user_photos/<?= !empty($row['photo_profile'])
                                                                                                     ? $row['photo_profile']
                                                                                                     : 'default.png'; ?>"
                                                             class="rounded-circle mr-2"
@@ -1758,7 +1758,7 @@ $regions = mysqli_query($conn, "
                                         </small>
 
                                         <img
-                                            src="../assets/images/profile/users/<?= !empty($row['photo_profile'])
+                                            src="../assets/images/uploads/user_photos/<?= !empty($row['photo_profile'])
                                                                                     ? $row['photo_profile']
                                                                                     : 'default.png'; ?>"
                                             class="rounded border"
@@ -1778,7 +1778,7 @@ $regions = mysqli_query($conn, "
 
                                         <img
                                             id="previewPhotoEdit<?= $row['id']; ?>"
-                                            src="../assets/images/profile/users/default.png"
+                                            src="../assets/images/uploads/user_photos/default.png"
                                             class="rounded border"
                                             style="
                 width:80px;
@@ -2212,7 +2212,7 @@ $regions = mysqli_query($conn, "
             setTimeout(() => {
 
                 document.getElementById("viewPhoto").src =
-                    "../assets/images/profile/users/" +
+                    "../assets/images/uploads/user_photos/" +
                     (user.photo ? user.photo : "default.png");
 
                 document.getElementById("viewNama").innerHTML =
