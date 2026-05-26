@@ -1330,6 +1330,31 @@ $getBanners = mysqli_query($conn, "
             setInterval(updateCountdown, 1000);
 
         });
+
+        const heroSlider = document.querySelector(".hero-slider");
+
+        let navTimeout;
+
+        // tampilkan tombol
+        function showSliderNav() {
+
+            heroSlider.classList.add("show-nav");
+
+            clearTimeout(navTimeout);
+
+            navTimeout = setTimeout(() => {
+                heroSlider.classList.remove("show-nav");
+            }, 2000); // hilang setelah 2 detik diam
+        }
+
+        // mouse gerak
+        heroSlider.addEventListener("mousemove", showSliderNav);
+
+        // touch screen
+        heroSlider.addEventListener("touchstart", showSliderNav);
+
+        // pertama kali load sebentar muncul lalu hilang
+        showSliderNav();
     </script>
 
 </body>

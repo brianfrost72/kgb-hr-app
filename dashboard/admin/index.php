@@ -4,7 +4,302 @@ if (!isset($_SESSION['login'])) {
   header("Location: ../../index.php");
   exit;
 }
+require_once __DIR__ . '/../koneksi.php';
 
+date_default_timezone_set('Asia/Jakarta');
+
+// ================================
+// GET ROLE USER LOGIN
+// ================================
+
+$userRole = '';
+
+// DETEKSI SEMUA KEMUNGKINAN SESSION ID
+$user_id =
+  $_SESSION['id']
+  ?? $_SESSION['user_id']
+  ?? $_SESSION['users_id']
+  ?? $_SESSION['admin_id']
+  ?? 0;
+
+if (!empty($user_id)) {
+
+  $queryUserRole = mysqli_query($conn, "
+        SELECT
+            users.id,
+            users.role_id,
+            roles.role_name
+        FROM users
+        LEFT JOIN roles
+            ON roles.id = users.role_id
+        WHERE users.id = '$user_id'
+        LIMIT 1
+    ");
+
+  if ($queryUserRole && mysqli_num_rows($queryUserRole) > 0) {
+
+    $dataUserRole = mysqli_fetch_assoc($queryUserRole);
+
+    $userRole = strtolower(trim($dataUserRole['role_name']));
+  }
+}
+
+// ================================
+// FUNCTION CHECK ROLE
+// ================================
+function hasRole($roles = [])
+{
+  global $userRole;
+
+  $roles = array_map(function ($role) {
+    return strtolower(trim($role));
+  }, $roles);
+
+  return in_array($userRole, $roles);
+}
+
+/* =========================================================
+   VISITOR ANALYTICS QUERY
+========================================================= */
+
+$chart_labels  = [];
+$chart_data    = [];
+$queryPages    = null;
+$queryDevices  = null;
+
+if (hasRole(['Super Admin', 'moderator', 'admin'])) {
+
+  $filter_page   = $_GET['page_url'] ?? 'all';
+  $filter_device = $_GET['device'] ?? 'all';
+  $filter_type   = $_GET['type'] ?? 'daily';
+
+
+  /* =========================
+       PAGE FILTER
+    ========================= */
+
+  $queryPages = mysqli_query($conn, "
+        SELECT DISTINCT page_url
+        FROM visitors
+        ORDER BY page_url ASC
+    ");
+
+
+  /* =========================
+       DEVICE FILTER
+    ========================= */
+
+  $queryDevices = mysqli_query($conn, "
+        SELECT DISTINCT device
+        FROM visitors
+        ORDER BY device ASC
+    ");
+
+
+  /* =========================
+       WHERE
+    ========================= */
+
+  $where = "WHERE 1=1";
+
+  if ($filter_page != 'all') {
+
+    $filter_page_safe = mysqli_real_escape_string($conn, $filter_page);
+
+    $where .= " AND page_url = '$filter_page_safe'";
+  }
+
+  if ($filter_device != 'all') {
+
+    $filter_device_safe = mysqli_real_escape_string($conn, $filter_device);
+
+    $where .= " AND device = '$filter_device_safe'";
+  }
+
+
+  /* =========================
+       GROUPING
+    ========================= */
+
+  if ($filter_type == 'monthly') {
+
+    $group_select = "DATE_FORMAT(visit_date, '%Y-%m')";
+    $group_order  = "DATE_FORMAT(visit_date, '%Y-%m')";
+  } elseif ($filter_type == 'yearly') {
+
+    $group_select = "YEAR(visit_date)";
+    $group_order  = "YEAR(visit_date)";
+  } else {
+
+    $group_select = "DATE(visit_date)";
+    $group_order  = "DATE(visit_date)";
+  }
+
+
+  /* =========================
+       CHART QUERY
+    ========================= */
+
+  $queryChart = mysqli_query($conn, "
+        SELECT
+            $group_select as label_chart,
+            COUNT(*) as total_visitor
+        FROM visitors
+        $where
+        GROUP BY label_chart
+        ORDER BY $group_order ASC
+    ");
+
+
+  while ($row = mysqli_fetch_assoc($queryChart)) {
+
+    $chart_labels[] = $row['label_chart'];
+    $chart_data[]   = (int)$row['total_visitor'];
+  }
+}
+
+/* =========================================================
+   TOTAL PENDAPATAN CHART
+========================================================= */
+
+$revenue_labels = [];
+$revenue_data   = [];
+$total_revenue_all = 0;
+
+// FILTER TANGGAL
+$date_from = $_GET['date_from'] ?? '';
+$date_to   = $_GET['date_to'] ?? '';
+
+// WHERE
+$where_income = "WHERE 1=1";
+
+if (!empty($date_from)) {
+
+  $date_from_safe = mysqli_real_escape_string($conn, $date_from);
+
+  $where_income .= " AND DATE(date_income) >= '$date_from_safe'";
+}
+
+if (!empty($date_to)) {
+
+  $date_to_safe = mysqli_real_escape_string($conn, $date_to);
+
+  $where_income .= " AND DATE(date_income) <= '$date_to_safe'";
+}
+
+// QUERY CHART
+$queryRevenue = mysqli_query($conn, "
+    SELECT
+        DATE_FORMAT(date_income, '%Y-%m') as label_chart,
+        SUM(amount_income) as total_income
+    FROM report_income
+    $where_income
+    GROUP BY DATE_FORMAT(date_income, '%Y-%m')
+    ORDER BY DATE_FORMAT(date_income, '%Y-%m') ASC
+");
+
+while ($rowRevenue = mysqli_fetch_assoc($queryRevenue)) {
+
+  $revenue_labels[] = $rowRevenue['label_chart'];
+
+  $revenue_data[] = (float)$rowRevenue['total_income'];
+}
+
+// TOTAL SEMUA PENDAPATAN
+$queryTotalRevenue = mysqli_query($conn, "
+    SELECT
+        SUM(amount_income) as total_all_income
+    FROM report_income
+    $where_income
+");
+
+$dataTotalRevenue = mysqli_fetch_assoc($queryTotalRevenue);
+
+$total_revenue_all = $dataTotalRevenue['total_all_income'] ?? 0;
+
+
+// LAPORAN BULANAN
+/* =========================================================
+   LAPORAN KEUANGAN BULANAN
+========================================================= */
+
+$finance_data = [];
+
+// QUERY INCOME
+$queryFinanceIncome = mysqli_query($conn, "
+    SELECT
+        DATE_FORMAT(date_income, '%Y-%m') as month_key,
+        SUM(amount_income) as total_income
+    FROM report_income
+    GROUP BY DATE_FORMAT(date_income, '%Y-%m')
+");
+
+// SIMPAN INCOME
+while ($income = mysqli_fetch_assoc($queryFinanceIncome)) {
+
+  $month = $income['month_key'];
+
+  $finance_data[$month]['income'] = (float)$income['total_income'];
+}
+
+// QUERY EXPENSE
+$queryFinanceExpense = mysqli_query($conn, "
+    SELECT
+        DATE_FORMAT(date_expense, '%Y-%m') as month_key,
+        type_expense,
+        SUM(amount_expense) as total_expense
+    FROM report_expense
+    GROUP BY
+        DATE_FORMAT(date_expense, '%Y-%m'),
+        type_expense
+");
+
+// SIMPAN EXPENSE
+while ($expense = mysqli_fetch_assoc($queryFinanceExpense)) {
+
+  $month = $expense['month_key'];
+
+  if (!isset($finance_data[$month]['salary'])) {
+    $finance_data[$month]['salary'] = 0;
+  }
+
+  if (!isset($finance_data[$month]['office'])) {
+    $finance_data[$month]['office'] = 0;
+  }
+
+  $type = strtolower(trim($expense['type_expense']));
+
+  // PENGELUARAN GAJI
+  if (
+    strpos($type, 'gaji') !== false ||
+    strpos($type, 'salary') !== false
+  ) {
+
+    $finance_data[$month]['salary'] +=
+      (float)$expense['total_expense'];
+  }
+
+  // PENGELUARAN KANTOR
+  else {
+
+    $finance_data[$month]['office'] +=
+      (float)$expense['total_expense'];
+  }
+}
+
+// NORMALISASI DATA
+foreach ($finance_data as $month => $data) {
+
+  $income = $data['income'] ?? 0;
+  $salary = $data['salary'] ?? 0;
+  $office = $data['office'] ?? 0;
+
+  $finance_data[$month] = [
+    'income' => $income,
+    'salary' => $salary,
+    'office' => $office
+  ];
+}
 ?>
 
 <!doctype html>
@@ -88,145 +383,174 @@ if (!isset($_SESSION['login'])) {
 
       <!-- ********************************// START page__content //******************************* -->
       <div class="container-fluid page__container">
-        <div class="row mt-3 mb-3">
-          <h3>Quick Access</h3>
-        </div>
+        <?php if (hasRole(['Super Admin', 'moderator', 'admin'])): ?>
+          <div class="row mt-3 mb-3">
+            <h3>Quick Access</h3>
+          </div>
+        <?php endif; ?>
         <div class="row card-group-row">
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-primary">
-                    <i class="material-icons text-white icon-18pt">accessibility</i>
-                  </span>
+          <!-- BUAT ACCESS MENU INI -->
+          <?php if (hasRole(['Super Admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary">
+                      <i class="material-icons text-white icon-18pt">accessibility</i>
+                    </span>
+                  </div>
+                  <a href="manage_roles.php" class="text-dark">
+                    <strong>Manage Role</strong>
+                  </a>
                 </div>
-                <a href="manage_roles.php" class="text-dark">
-                  <strong>Manage Role</strong>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-success">
-                    <i class="material-icons text-white icon-18pt">person_add</i>
-                  </span>
+          <?php endif; ?>
+
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-success">
+                      <i class="material-icons text-white icon-18pt">person_add</i>
+                    </span>
+                  </div>
+                  <a href="manage_employees.php" class="text-dark">
+                    <strong>Tambah Personel</strong>
+                  </a>
                 </div>
-                <a href="manage_employees.php" class="text-dark">
-                  <strong>Tambah Personel</strong>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-info">
-                    <i class="material-icons text-white icon-18pt">photo_library</i>
-                  </span>
+          <?php endif; ?>
+
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-info">
+                      <i class="material-icons text-white icon-18pt">photo_library</i>
+                    </span>
+                  </div>
+                  <a href="manage_gallery.php" class="text-dark">
+                    <strong>Manage Galeri</strong>
+                  </a>
                 </div>
-                <a href="manage_gallery.php" class="text-dark">
-                  <strong>Manage Galeri</strong>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-blue">
-                    <i class="material-icons text-white icon-18pt">work</i>
-                  </span>
+          <?php endif; ?>
+
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-blue">
+                      <i class="material-icons text-white icon-18pt">work</i>
+                    </span>
+                  </div>
+                  <a href="manage_job_information.php" class="text-dark">
+                    <strong>Manage Lowongan Kerja</strong>
+                  </a>
                 </div>
-                <a href="manage_job_information.php" class="text-dark">
-                  <strong>Manage Lowongan Kerja</strong>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-warning">
-                    <i class="material-icons text-white icon-18pt">work</i>
-                  </span>
+          <?php endif; ?>
+
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-warning">
+                      <i class="material-icons text-white icon-18pt">work</i>
+                    </span>
+                  </div>
+                  <a href="manage_company_structure.php" class="text-dark">
+                    <strong>Manage Struktur Organisasi</strong>
+                  </a>
                 </div>
-                <a href="manage_company_structure.php" class="text-dark">
-                  <strong>Manage Struktur Organisasi</strong>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-primary">
-                    <i class="material-icons text-white icon-18pt">inbox</i>
-                  </span>
+          <?php endif; ?>
+
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary">
+                      <i class="material-icons text-white icon-18pt">inbox</i>
+                    </span>
+                  </div>
+                  <a href="manage_inbox.php" class="text-dark">
+                    <strong>Kotak Masuk</strong>
+                  </a>
                 </div>
-                <a href="manage_inbox.php" class="text-dark">
-                  <strong>Kotak Masuk</strong>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-primary">
-                    <i class="material-icons text-white icon-18pt">layers</i>
-                  </span>
+          <?php endif; ?>
+
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary">
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="manage_post.php" class="text-dark">
+                    <strong>Manage Postingan</strong>
+                  </a>
                 </div>
-                <a href="manage_post.php" class="text-dark">
-                  <strong>Manage Postingan</strong>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-primary">
-                    <i class="material-icons text-white icon-18pt">layers</i>
-                  </span>
+          <?php endif; ?>
+
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary">
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="manage_our_clients.php" class="text-dark">
+                    <strong>Manage Klien Kami</strong>
+                  </a>
                 </div>
-                <a href="manage_our_clients.php" class="text-dark">
-                  <strong>Manage Klien Kami</strong>
-                </a>
               </div>
             </div>
-          </div>
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-primary">
-                    <i class="material-icons text-white icon-18pt">layers</i>
-                  </span>
+          <?php endif; ?>
+
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary">
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="manage_partners.php" class="text-dark">
+                    <strong>Manage Mitra Kami</strong>
+                  </a>
                 </div>
-                <a href="manage_partners.php" class="text-dark">
-                  <strong>Manage Mitra Kami</strong>
-                </a>
               </div>
             </div>
-          </div>
+          <?php endif; ?>
           <!-- <div class="col-lg-3 col-md-4 card-group-row__col">
               <div class="card card-group-row__card">
                 <div class="p-2 d-flex flex-row align-items-center">
@@ -243,58 +567,186 @@ if (!isset($_SESSION['login'])) {
                 </div>
               </div>
             </div> -->
-          <div class="col-lg-3 col-md-4 card-group-row__col">
-            <div class="card card-group-row__card">
-              <div class="p-2 d-flex flex-row align-items-center">
-                <div class="avatar avatar-xs mr-2">
-                  <span
-                    class="avatar-title rounded-circle text-center bg-primary">
-                    <i class="material-icons text-white icon-18pt">layers</i>
-                  </span>
+          <?php if (hasRole(['super admin', 'moderator', 'admin'])): ?>
+            <div class="col-lg-3 col-md-4 card-group-row__col">
+              <div class="card card-group-row__card">
+                <div class="p-2 d-flex flex-row align-items-center">
+                  <div class="avatar avatar-xs mr-2">
+                    <span
+                      class="avatar-title rounded-circle text-center bg-primary">
+                      <i class="material-icons text-white icon-18pt">layers</i>
+                    </span>
+                  </div>
+                  <a href="manage_legality.php" class="text-dark">
+                    <strong>Manage Legalitas Perusahaan</strong>
+                  </a>
                 </div>
-                <a href="manage_legality.php" class="text-dark">
-                  <strong>Manage Legalitas Perusahaan</strong>
-                </a>
               </div>
             </div>
-          </div>
+          <?php endif; ?>
         </div>
 
-        <!-- ****************************ANALISTIK DAN LAPORAN**************************** -->
+        <!-- **************************** ANALITIK DAN LAPORAN **************************** -->
 
-        <div class="row mt-4 mb-3">
-          <h3>Analitik & Laporan</h3>
-        </div>
-        <div class="row card-group-row">
-          <div class="col-lg-12">
-            <div class="card">
-              <!-- HEADER -->
-              <div
-                class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="m-0">Visitor Analytics</h4>
+        <?php if (hasRole(['Super Admin', 'moderator', 'admin'])): ?>
 
-                <!-- TOGGLE -->
-                <ul class="nav nav-pills" id="chartToggle">
-                  <li class="nav-item">
-                    <a class="nav-link active" data-type="daily" href="#">Harian</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" data-type="weekly" href="#">Mingguan</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" data-type="monthly" href="#">Bulanan</a>
-                  </li>
-                </ul>
+          <div class="row mt-4 mb-3">
+
+            <div class="col-lg-12">
+
+              <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+                <div>
+
+                  <h3 class="mb-1">
+                    Analitik & Laporan
+                  </h3>
+
+                  <p class="text-muted mb-0">
+                    Statistik visitor website berdasarkan halaman dan device.
+                  </p>
+
+                </div>
+
               </div>
 
-              <!-- BODY -->
-              <div class="card-body">
-                <canvas id="visitorChart" height="100"></canvas>
-              </div>
             </div>
-          </div>
-        </div>
 
+          </div>
+
+
+
+          <div class="row card-group-row">
+
+            <div class="col-lg-12">
+
+              <div class="card shadow-sm border-0">
+
+                <!-- HEADER -->
+                <div class="card-header bg-white border-bottom">
+
+                  <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+                    <h4 class="m-0 font-weight-bold mb-3">
+                      Visitor Analytics
+                    </h4>
+
+
+                    <!-- FILTER -->
+                    <form method="GET" class="d-flex flex-wrap align-items-center">
+
+                      <!-- PAGE -->
+                      <div class="mr-2 mb-2">
+
+                        <select
+                          name="page_url"
+                          class="form-control"
+                          onchange="this.form.submit()">
+
+                          <option value="all">
+                            Semua Halaman
+                          </option>
+
+                          <?php while ($page = mysqli_fetch_assoc($queryPages)): ?>
+
+                            <option
+                              value="<?= htmlspecialchars($page['page_url']) ?>"
+                              <?= ($filter_page == $page['page_url']) ? 'selected' : '' ?>>
+
+                              <?= htmlspecialchars($page['page_url']) ?>
+
+                            </option>
+
+                          <?php endwhile; ?>
+
+                        </select>
+
+                      </div>
+
+
+
+                      <!-- DEVICE -->
+                      <div class="mr-2 mb-2">
+
+                        <select
+                          name="device"
+                          class="form-control"
+                          onchange="this.form.submit()">
+
+                          <option value="all">
+                            Semua Device
+                          </option>
+
+                          <?php while ($device = mysqli_fetch_assoc($queryDevices)): ?>
+
+                            <option
+                              value="<?= htmlspecialchars($device['device']) ?>"
+                              <?= ($filter_device == $device['device']) ? 'selected' : '' ?>>
+
+                              <?= htmlspecialchars($device['device']) ?>
+
+                            </option>
+
+                          <?php endwhile; ?>
+
+                        </select>
+
+                      </div>
+
+
+
+                      <!-- TYPE -->
+                      <div class="mb-2">
+
+                        <select
+                          name="type"
+                          class="form-control"
+                          onchange="this.form.submit()">
+
+                          <option value="daily" <?= ($filter_type == 'daily') ? 'selected' : '' ?>>
+                            Harian
+                          </option>
+
+                          <option value="monthly" <?= ($filter_type == 'monthly') ? 'selected' : '' ?>>
+                            Bulanan
+                          </option>
+
+                          <option value="yearly" <?= ($filter_type == 'yearly') ? 'selected' : '' ?>>
+                            Tahunan
+                          </option>
+
+                        </select>
+
+                      </div>
+
+                    </form>
+
+                  </div>
+
+                </div>
+
+
+
+                <!-- BODY -->
+                <div class="card-body">
+
+                  <div style="height: 380px;">
+
+                    <canvas id="visitorChart"></canvas>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        <?php endif; ?>
+
+        <!-- ****************************PENDAPATAN**************************** -->
         <div class="row">
           <div class="col-lg-12">
             <div class="card">
@@ -302,19 +754,7 @@ if (!isset($_SESSION['login'])) {
               <div
                 class="card-header d-flex justify-content-between align-items-center flex-wrap">
                 <h4 class="m-0">Total Pendapatan</h4>
-
-                <!-- TOGGLE -->
-                <ul class="nav nav-pills" id="revenueToggle">
-                  <li class="nav-item">
-                    <a class="nav-link active" data-type="personal" href="#">Personal</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" data-type="company" href="#">Perusahaan</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" data-type="all" href="#">Total</a>
-                  </li>
-                </ul>
+                <a href="manage_income_reports.php" class="btn btn-sm btn-primary">Lihat</a>
               </div>
 
               <!-- FILTER -->
@@ -350,98 +790,6 @@ if (!isset($_SESSION['login'])) {
           </div>
         </div>
 
-        <div class="row justify-content-center">
-          <div class="col-lg-4">
-            <div class="card">
-              <!-- HEADER -->
-              <div
-                class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="m-0">Total Personil</h4>
-                <a href="#" class="btn btn-sm btn-primary">View</a>
-              </div>
-
-              <!-- FILTER -->
-              <div class="card-body border-bottom">
-                <div class="row">
-                  <div class="col-4">
-                    <select id="filterGender" class="form-control">
-                      <option value="">Semua Gender</option>
-                      <option value="L">Laki-laki</option>
-                      <option value="P">Perempuan</option>
-                    </select>
-                  </div>
-
-                  <div class="col-4">
-                    <select id="filterDept" class="form-control">
-                      <option value="">Semua Dept</option>
-                      <option value="Security">Security</option>
-                      <option value="Bodyguard">Bodyguard</option>
-                      <option value="Driver">Driver</option>
-                      <option value="Pramubakti">Pramubakti</option>
-                      <option value="Cleaning">Cleaning Service</option>
-                      <option value="Pengacara">Pengacara</option>
-                    </select>
-                  </div>
-
-                  <div class="col-4">
-                    <select id="filterStatus" class="form-control">
-                      <option value="">Semua Status</option>
-                      <option value="kontrak">Kontrak</option>
-                      <option value="tetap">Tetap</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <!-- CHART -->
-              <div class="card-body text-center">
-                <canvas id="personnelChart" height="200"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-4">
-            <div class="card">
-              <!-- HEADER -->
-              <div
-                class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="m-0">Total Klien</h4>
-                <a href="#" class="btn btn-sm btn-primary">View</a>
-              </div>
-
-              <!-- TOGGLE TYPE -->
-              <div class="card-body border-bottom">
-                <ul
-                  class="nav nav-pills justify-content-center mb-2"
-                  id="clientTypeToggle">
-                  <li class="nav-item">
-                    <a class="nav-link active" data-type="personal" href="#">Personal</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" data-type="company" href="#">Perusahaan</a>
-                  </li>
-                </ul>
-
-                <!-- STATUS FILTER -->
-                <div class="text-center">
-                  <select
-                    id="clientStatusFilter"
-                    class="form-control w-50 mx-auto">
-                    <option value="">Semua Status</option>
-                    <option value="aktif">Aktif</option>
-                    <option value="nonaktif">Nonaktif</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- CHART -->
-              <div class="card-body text-center">
-                <canvas id="clientChart" height="200"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="row">
           <div class="col-lg-12">
             <div class="card">
@@ -449,7 +797,7 @@ if (!isset($_SESSION['login'])) {
               <div
                 class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="m-0">Laporan Keuangan Bulanan</h4>
-                <a href="#" class="btn btn-sm btn-primary">Lihat</a>
+                <a href="manage_deposite_reports.php" class="btn btn-sm btn-primary">Lihat</a>
               </div>
 
               <!-- FILTER -->
@@ -542,6 +890,7 @@ if (!isset($_SESSION['login'])) {
 
   <!-- jQuery -->
   <script src="../assets/vendor/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Bootstrap -->
   <script src="../assets/vendor/popper.min.js"></script>
@@ -580,578 +929,202 @@ if (!isset($_SESSION['login'])) {
   <!-- Chart.js -->
   <script src="../assets/vendor/Chart.min.js"></script>
 
+  <!-- CHART SCRIPT GLOBAL -->
   <script>
-    // VISITOR WEB
-    const ctx = document.getElementById("visitorChart").getContext("2d");
+    document.addEventListener('DOMContentLoaded', function() {
 
-    let chart;
+      const visitorCanvas = document.getElementById('visitorChart');
 
-    // DATA SIMULASI
-    const dataSets = {
-      daily: {
-        labels: [
-          "00",
-          "02",
-          "04",
-          "06",
-          "08",
-          "10",
-          "12",
-          "14",
-          "16",
-          "18",
-          "20",
-          "22",
-        ],
-        data: [12, 19, 8, 15, 25, 30, 40, 35, 50, 45, 38, 28],
-      },
-      weekly: {
-        labels: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
-        data: [120, 190, 300, 250, 220, 310, 400],
-      },
-      monthly: {
-        labels: ["M1", "M2", "M3", "M4"],
-        data: [1200, 1900, 1500, 2200],
-      },
-    };
-
-    // INIT CHART
-    function loadChart(type = "daily") {
-      if (chart) chart.destroy();
-
-      chart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: dataSets[type].labels,
-          datasets: [{
-            label: "Visitors",
-            data: dataSets[type].data,
-            borderColor: "#6774DF",
-            backgroundColor: "rgba(103,116,223,0.1)",
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4,
-            pointRadius: 3,
-          }, ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-            },
-          },
-        },
-      });
-    }
-
-    // LOAD DEFAULT
-    loadChart();
-
-    document.querySelectorAll("#chartToggle .nav-link").forEach((btn) => {
-      btn.addEventListener("click", function(e) {
-        e.preventDefault();
-
-        // remove active
-        document
-          .querySelectorAll("#chartToggle .nav-link")
-          .forEach((el) => el.classList.remove("active"));
-
-        this.classList.add("active");
-
-        const type = this.getAttribute("data-type");
-        loadChart(type);
-      });
-    });
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <script>
-    // TOTAL PENDAPATAN
-    // =======================
-    // DATA SIMULASI
-    // =======================
-    const revenueData = {
-      personal: [{
-          date: "2026-01-10",
-          value: 200
-        },
-        {
-          date: "2026-02-05",
-          value: 350
-        },
-        {
-          date: "2026-03-12",
-          value: 500
-        },
-        {
-          date: "2026-04-04",
-          value: 300
-        },
-        {
-          date: "2026-05-20",
-          value: 450
-        },
-      ],
-      company: [{
-          date: "2026-01-15",
-          value: 1000
-        },
-        {
-          date: "2026-02-10",
-          value: 1200
-        },
-        {
-          date: "2026-03-22",
-          value: 900
-        },
-        {
-          date: "2026-04-18",
-          value: 1500
-        },
-        {
-          date: "2026-05-25",
-          value: 1800
-        },
-      ],
-    };
-
-    // =======================
-    // SETUP CHART
-    // =======================
-    const ctxRevenue = document
-      .getElementById("revenueChart")
-      .getContext("2d");
-
-    let revenueChart;
-    let currentType = "all"; // default langsung total
-
-    // =======================
-    // FORMAT RUPIAH
-    // =======================
-    function formatRupiah(num) {
-      return "Rp " + num.toLocaleString("id-ID");
-    }
-
-    // =======================
-    // FILTER DATA
-    // =======================
-    function getDataByType(type, from, to) {
-      let data = [];
-
-      if (type === "all") {
-        data = [...revenueData.personal, ...revenueData.company];
-      } else {
-        data = revenueData[type];
+      if (!visitorCanvas) {
+        return;
       }
 
-      return data.filter((item) => {
-        if (!from && !to) return true;
+      const visitorCtx = visitorCanvas.getContext('2d');
 
-        const date = new Date(item.date);
-        const fromDate = from ? new Date(from) : null;
-        const toDate = to ? new Date(to) : null;
+      new Chart(visitorCtx, {
 
-        return (!fromDate || date >= fromDate) && (!toDate || date <= toDate);
-      });
-    }
+        type: 'line',
 
-    // =======================
-    // GROUP BY BULAN (JAN-DEC)
-    // =======================
-    function groupByMonth(data) {
-      const months = Array(12).fill(0);
-
-      data.forEach((item) => {
-        const month = new Date(item.date).getMonth(); // 0-11
-        months[month] += item.value;
-      });
-
-      return months;
-    }
-
-    // =======================
-    // LOAD CHART
-    // =======================
-    function loadRevenueChart(type, from = null, to = null) {
-      const filtered = getDataByType(type, from, to);
-      const monthlyData = groupByMonth(filtered);
-
-      const labels = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "Mei",
-        "Jun",
-        "Jul",
-        "Agu",
-        "Sep",
-        "Okt",
-        "Nov",
-        "Des",
-      ];
-
-      // TOTAL SEMUA
-      const total = monthlyData.reduce((a, b) => a + b, 0);
-
-      document.getElementById("totalRevenueAll").innerText =
-        formatRupiah(total);
-
-      // HAPUS CHART LAMA
-      if (revenueChart) revenueChart.destroy();
-
-      // WARNA DINAMIS
-      let color = "#6774DF";
-      if (type === "personal") color = "#7DC668";
-      if (type === "company") color = "#F5B666";
-
-      // CREATE CHART
-      revenueChart = new Chart(ctxRevenue, {
-        type: "bar",
         data: {
-          labels: labels,
+
+          labels: <?= json_encode($chart_labels) ?>,
+
           datasets: [{
-            label: "Pendapatan",
-            data: monthlyData,
-            backgroundColor: color,
-            borderRadius: 6,
-          }, ],
+            label: 'Total Visitor',
+            data: <?= json_encode($chart_data) ?>,
+            borderWidth: 3,
+            tension: 0.35,
+            pointRadius: 4,
+            fill: false
+          }]
         },
+
         options: {
+
           responsive: true,
-          animation: {
-            duration: 1200,
-            easing: "easeOutQuart",
+
+          maintainAspectRatio: false,
+
+          interaction: {
+            mode: 'index',
+            intersect: false
           },
+
           plugins: {
+
             legend: {
-              display: false
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return formatRupiah(context.raw);
-                },
-              },
-            },
+              display: true
+            }
           },
+
           scales: {
-            y: {
+
+            yAxes: [{
+
+              ticks: {
+
+                beginAtZero: true,
+
+                min: 0,
+
+                stepSize: 1,
+
+                callback: function(value) {
+
+                  if (Number.isInteger(value)) {
+                    return value;
+                  }
+
+                  return null;
+                }
+              }
+            }]
+          }
+        }
+      });
+
+    });
+  </script>
+
+  <script>
+    // FORMAT RUPIAH
+    function formatRupiah(number) {
+
+      return 'Rp ' + Number(number).toLocaleString('id-ID');
+    }
+
+    // TOTAL ALL
+    document.getElementById('totalRevenueAll').innerText =
+      formatRupiah(<?= $total_revenue_all ?>);
+
+    // CHART
+    const revenueCtx = document
+      .getElementById('revenueChart')
+      .getContext('2d');
+
+    const revenueChart = new Chart(revenueCtx, {
+
+      type: 'line',
+
+      data: {
+
+        labels: <?= json_encode($revenue_labels) ?>,
+
+        datasets: [{
+
+          label: 'Pendapatan',
+
+          data: <?= json_encode($revenue_data) ?>,
+
+          borderWidth: 3,
+
+          tension: 0.35,
+
+          fill: true,
+
+          pointRadius: 4,
+
+          backgroundColor: 'rgba(103,116,223,0.15)',
+
+          borderColor: '#6774DF'
+        }]
+      },
+
+      options: {
+
+        responsive: true,
+
+        plugins: {
+
+          legend: {
+            display: true
+          }
+        },
+
+        scales: {
+
+          yAxes: [{
+
+            ticks: {
+
               beginAtZero: true,
-            },
-          },
-        },
-      });
-    }
 
-    // =======================
-    // INIT
-    // =======================
-    loadRevenueChart("all");
+              min: 0,
 
-    // =======================
-    // TOGGLE BUTTON
-    // =======================
-    document.querySelectorAll("#revenueToggle .nav-link").forEach((btn) => {
-      btn.addEventListener("click", function(e) {
-        e.preventDefault();
+              max: Math.ceil(
+                Math.max(...<?= json_encode($revenue_data) ?>) / 1000000
+              ) * 1000000 + 1000000,
 
-        // remove active hanya di revenue toggle
-        document
-          .querySelectorAll("#revenueToggle .nav-link")
-          .forEach((el) => el.classList.remove("active"));
+              stepSize: 1000000,
 
-        this.classList.add("active");
+              callback: function(value) {
 
-        currentType = this.dataset.type;
-
-        const from = document.getElementById("dateFrom").value;
-        const to = document.getElementById("dateTo").value;
-
-        loadRevenueChart(currentType, from, to);
-      });
+                return 'Rp. ' + Number(value).toLocaleString('id-ID');
+              }
+            }
+          }]
+        }
+      }
     });
 
-    // =======================
+
     // FILTER BUTTON
-    // =======================
     document
-      .getElementById("filterBtn")
-      .addEventListener("click", function() {
-        const from = document.getElementById("dateFrom").value;
-        const to = document.getElementById("dateTo").value;
+      .getElementById('filterBtn')
+      .addEventListener('click', function() {
 
-        loadRevenueChart(currentType, from, to);
-      });
-  </script>
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
 
-  <script>
-    // TOTAL KARYAWAN ATAU PERSONEL
-    const personnelData = [{
-        dept: "Security",
-        gender: "L",
-        status: "tetap"
-      },
-      {
-        dept: "Security",
-        gender: "P",
-        status: "kontrak"
-      },
-      {
-        dept: "Bodyguard",
-        gender: "L",
-        status: "tetap"
-      },
-      {
-        dept: "Driver",
-        gender: "L",
-        status: "kontrak"
-      },
-      {
-        dept: "Pramubakti",
-        gender: "P",
-        status: "tetap"
-      },
-      {
-        dept: "Cleaning",
-        gender: "P",
-        status: "kontrak"
-      },
-      {
-        dept: "Pengacara",
-        gender: "L",
-        status: "tetap"
-      },
-      {
-        dept: "Driver",
-        gender: "L",
-        status: "tetap"
-      },
-      {
-        dept: "Security",
-        gender: "L",
-        status: "kontrak"
-      },
-      {
-        dept: "Cleaning",
-        gender: "P",
-        status: "tetap"
-      },
-    ];
+        const url = new URL(window.location.href);
 
-    function getFilteredData() {
-      const gender = document.getElementById("filterGender").value;
-      const dept = document.getElementById("filterDept").value;
-      const status = document.getElementById("filterStatus").value;
+        if (from) {
+          url.searchParams.set('date_from', from);
+        } else {
+          url.searchParams.delete('date_from');
+        }
 
-      return personnelData.filter((p) => {
-        return (
-          (!gender || p.gender === gender) &&
-          (!dept || p.dept === dept) &&
-          (!status || p.status === status)
-        );
-      });
-    }
+        if (to) {
+          url.searchParams.set('date_to', to);
+        } else {
+          url.searchParams.delete('date_to');
+        }
 
-    // GROUP BY DEPT
-    function groupByDept(data) {
-      const result = {
-        Security: 0,
-        Bodyguard: 0,
-        Driver: 0,
-        Pramubakti: 0,
-        Cleaning: 0,
-        Pengacara: 0,
-      };
-
-      data.forEach((p) => {
-        result[p.dept]++;
+        window.location.href = url.toString();
       });
 
-      return result;
-    }
 
-    const ctxPersonel = document
-      .getElementById("personnelChart")
-      .getContext("2d");
+    // SET VALUE FILTER SAAT RELOAD
+    document.getElementById('dateFrom').value =
+      "<?= htmlspecialchars($date_from) ?>";
 
-    let personelChart;
-
-    function loadPersonelChart() {
-      const filtered = getFilteredData();
-      const grouped = groupByDept(filtered);
-
-      if (personelChart) personelChart.destroy();
-
-      personelChart = new Chart(ctxPersonel, {
-        type: "doughnut",
-        data: {
-          labels: Object.keys(grouped),
-          datasets: [{
-            data: Object.values(grouped),
-            backgroundColor: [
-              "#6774DF",
-              "#7DC668",
-              "#F5B666",
-              "#5dd2bc",
-              "#ff7076",
-              "#939FAD",
-            ],
-          }, ],
-        },
-        options: {
-          cutout: "65%",
-          plugins: {
-            legend: {
-              position: "bottom",
-            },
-          },
-        },
-      });
-    }
-
-    // INIT
-    loadPersonelChart();
-
-    ["filterGender", "filterDept", "filterStatus"].forEach((id) => {
-      document
-        .getElementById(id)
-        .addEventListener("change", loadPersonelChart);
-    });
-  </script>
-
-  <script>
-    const clientData = [{
-        type: "personal",
-        status: "aktif"
-      },
-      {
-        type: "personal",
-        status: "nonaktif"
-      },
-      {
-        type: "personal",
-        status: "aktif"
-      },
-      {
-        type: "company",
-        status: "aktif"
-      },
-      {
-        type: "company",
-        status: "nonaktif"
-      },
-      {
-        type: "company",
-        status: "aktif"
-      },
-      {
-        type: "company",
-        status: "aktif"
-      },
-      {
-        type: "personal",
-        status: "aktif"
-      },
-    ];
-
-    let currentClientType = "personal";
-
-    function getFilteredClientData() {
-      const status = document.getElementById("clientStatusFilter").value;
-
-      return clientData.filter((c) => {
-        return (
-          c.type === currentClientType && (!status || c.status === status)
-        );
-      });
-    }
-
-    function groupClientStatus(data) {
-      return {
-        Aktif: data.filter((d) => d.status === "aktif").length,
-        Nonaktif: data.filter((d) => d.status === "nonaktif").length,
-      };
-    }
-
-    const ctxClient = document.getElementById("clientChart").getContext("2d");
-
-    let clientChart;
-
-    function loadClientChart() {
-      const filtered = getFilteredClientData();
-      const grouped = groupClientStatus(filtered);
-
-      if (clientChart) clientChart.destroy();
-
-      clientChart = new Chart(ctxClient, {
-        type: "doughnut",
-        data: {
-          labels: ["Aktif", "Nonaktif"],
-          datasets: [{
-            data: [grouped.Aktif, grouped.Nonaktif],
-            backgroundColor: ["#7DC668", "#ff7076"],
-          }, ],
-        },
-        options: {
-          cutout: "65%",
-          plugins: {
-            legend: {
-              position: "bottom",
-            },
-          },
-        },
-      });
-    }
-
-    // INIT
-    loadClientChart();
-
-    // TOGGLE TYPE
-    document
-      .querySelectorAll("#clientTypeToggle .nav-link")
-      .forEach((btn) => {
-        btn.addEventListener("click", function(e) {
-          e.preventDefault();
-
-          document
-            .querySelectorAll("#clientTypeToggle .nav-link")
-            .forEach((el) => el.classList.remove("active"));
-
-          this.classList.add("active");
-
-          currentClientType = this.dataset.type;
-          loadClientChart();
-        });
-      });
-
-    // STATUS FILTER
-    document
-      .getElementById("clientStatusFilter")
-      .addEventListener("change", loadClientChart);
+    document.getElementById('dateTo').value =
+      "<?= htmlspecialchars($date_to) ?>";
   </script>
 
   <script>
     // UNTUK PENGELUARAN
-    const financeData = {
-      "2026-04": {
-        income: 15000000,
-        salary: 5000000,
-        office: 2000000,
-      },
-      "2026-05": {
-        income: 18000000,
-        salary: 6000000,
-        office: 2500000,
-      },
-    };
+    const financeData = <?= json_encode($finance_data) ?>;
 
     // -----------------------------
     function formatRupiah(num) {
