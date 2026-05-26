@@ -232,7 +232,7 @@ $querySubCategory = mysqli_query($conn, "
                             <h1 class="m-0">Daftar Postingan</h1>
                         </div>
                         <a href="add_post.php"
-                            class="btn btn-primary ml-1">Tambah Postingan?</a>
+                            class="btn btn-primary ml-1">Tambah Postingan ?</a>
                     </div>
                 </div>
             </div>

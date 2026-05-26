@@ -20,16 +20,20 @@ $queryUser = mysqli_query($conn, "
         up.*,
         u.email,
         u.password,
+        u.role_id,
+        u.region_id,
+        u.department_id,
+        u.position_id,
         r.role_name,
         rg.region_name,
         d.department_name,
         p.position_name
     FROM user_profile up
     LEFT JOIN users u ON u.id = up.user_id
-    LEFT JOIN roles r ON r.id = up.id_roles
-    LEFT JOIN regions rg ON rg.id = up.id_region
-    LEFT JOIN department d ON d.id = up.id_department
-    LEFT JOIN positions p ON p.id = up.id_position
+    LEFT JOIN roles r ON r.id = u.role_id
+    LEFT JOIN regions rg ON rg.id = u.region_id
+    LEFT JOIN departments d ON d.id = u.department_id
+    LEFT JOIN positions p ON p.id = u.position_id
     WHERE up.user_id = '$userId'
     LIMIT 1
 ");
@@ -56,23 +60,27 @@ if (!$dataUser) {
     ");
 
     $queryUser = mysqli_query($conn, "
-        SELECT
-            up.*,
-            u.email,
-            u.password,
-            r.role_name,
-            rg.region_name,
-            d.department_name,
-            p.position_name
-        FROM user_profile up
-        LEFT JOIN users u ON u.id = up.user_id
-        LEFT JOIN roles r ON r.id = up.id_roles
-        LEFT JOIN regions rg ON rg.id = up.id_region
-        LEFT JOIN department d ON d.id = up.id_department
-        LEFT JOIN positions p ON p.id = up.id_position
-        WHERE up.user_id = '$userId'
-        LIMIT 1
-    ");
+    SELECT
+        up.*,
+        u.email,
+        u.password,
+        u.role_id,
+        u.region_id,
+        u.department_id,
+        u.position_id,
+        r.role_name,
+        rg.region_name,
+        d.department_name,
+        p.position_name
+    FROM user_profile up
+    LEFT JOIN users u ON u.id = up.user_id
+    LEFT JOIN roles r ON r.id = u.role_id
+    LEFT JOIN regions rg ON rg.id = u.region_id
+    LEFT JOIN departments d ON d.id = u.department_id
+    LEFT JOIN positions p ON p.id = u.position_id
+    WHERE up.user_id = '$userId'
+    LIMIT 1
+");
 
     $dataUser = mysqli_fetch_assoc($queryUser);
 }
@@ -97,7 +105,7 @@ $queryRegions = mysqli_query($conn, "
 // DROPDOWN DEPARTMENT
 // ================================
 $queryDepartment = mysqli_query($conn, "
-    SELECT * FROM department
+    SELECT * FROM departments
     ORDER BY department_name ASC
 ");
 
@@ -455,25 +463,30 @@ $queryPositions = mysqli_query($conn, "
 
                                                 <span class="material-icons position-absolute"
                                                     style="left:15px; top:50%;
-                                                    transform:translateY(-50%); color:#8b95a7;
-                                                    font-size:21px; z-index:2;">
+            transform:translateY(-50%);
+            color:#8b95a7; font-size:21px; z-index:2;">
                                                     accessibility
                                                 </span>
 
-                                                <select name="id_roles" class="form-control"
+                                                <!-- TAMPILAN ROLE -->
+                                                <input type="text"
+                                                    class="form-control"
+                                                    value="<?= htmlspecialchars($dataUser['role_name'] ?? 'Belum Ada Role'); ?>"
+                                                    readonly
                                                     style="
-                                        height:55px;
-                                        padding-left:52px;
-                                        border-radius:12px;
-                                        background:#fff;
-                                        border:1px solid #dfe5ef;
-                                        box-shadow:none;" disabled>
+                height:55px;
+                padding-left:52px;
+                border-radius:12px;
+                background:#f5f7fb;
+                border:1px solid #dfe5ef;
+                box-shadow:none;
+                cursor:not-allowed;
+            ">
 
-                                                    <option value="<?= $dataUser['id_roles']; ?>" selected>
-                                                        <?= htmlspecialchars($dataUser['role_name']); ?>
-                                                    </option>
-
-                                                </select>
+                                                <!-- HIDDEN INPUT -->
+                                                <input type="hidden"
+                                                    name="role_id"
+                                                    value="<?= htmlspecialchars($dataUser['role_id'] ?? ''); ?>">
 
                                             </div>
 
@@ -550,7 +563,7 @@ $queryPositions = mysqli_query($conn, "
                                                     business_center
                                                 </span>
 
-                                                <select name="id_department" class="form-control"
+                                                <select name="department_id" class="form-control"
                                                     style="
                                         height:55px;
                                         padding-left:52px;
@@ -564,7 +577,7 @@ $queryPositions = mysqli_query($conn, "
                                                     <?php while ($department = mysqli_fetch_assoc($queryDepartment)) : ?>
 
                                                         <option value="<?= $department['id']; ?>"
-                                                            <?= ($dataUser['id_department'] ?? '') == $department['id'] ? 'selected' : ''; ?>>
+                                                            <?= ($dataUser['department_id'] ?? '') == $department['id'] ? 'selected' : ''; ?>>
                                                             <?= htmlspecialchars($department['department_name']); ?>
                                                         </option>
 
@@ -593,7 +606,7 @@ $queryPositions = mysqli_query($conn, "
                                                     work
                                                 </span>
 
-                                                <select name="id_position" class="form-control"
+                                                <select name="position_id" class="form-control"
                                                     style="
                                         height:55px;
                                         padding-left:52px;
@@ -607,7 +620,7 @@ $queryPositions = mysqli_query($conn, "
                                                     <?php while ($position = mysqli_fetch_assoc($queryPositions)) : ?>
 
                                                         <option value="<?= $position['id']; ?>"
-                                                            <?= ($dataUser['id_position'] ?? '') == $position['id'] ? 'selected' : ''; ?>>
+                                                            <?= ($dataUser['position_id'] ?? '') == $position['id'] ? 'selected' : ''; ?>>
                                                             <?= htmlspecialchars($position['position_name']); ?>
                                                         </option>
 
@@ -635,7 +648,7 @@ $queryPositions = mysqli_query($conn, "
                                                     domain
                                                 </span>
 
-                                                <select name="id_region" class="form-control"
+                                                <select name="region_id" class="form-control"
                                                     style="
                                         height:55px;
                                         padding-left:52px;
@@ -649,7 +662,7 @@ $queryPositions = mysqli_query($conn, "
                                                     <?php while ($region = mysqli_fetch_assoc($queryRegions)) : ?>
 
                                                         <option value="<?= $region['id']; ?>"
-                                                            <?= ($dataUser['id_region'] ?? '') == $region['id'] ? 'selected' : ''; ?>>
+                                                            <?= ($dataUser['region_id'] ?? '') == $region['id'] ? 'selected' : ''; ?>>
                                                             <?= htmlspecialchars($region['region_name']); ?>
                                                         </option>
 
@@ -928,33 +941,31 @@ $queryPositions = mysqli_query($conn, "
                                 </div>
 
                                 <!-- EMAIL -->
-                                <form method="POST"
-                                    action="logic/process_edit_email.php">
-                                    <div class="mb-4">
+                                <div class="mb-4">
 
-                                        <label class="font-weight-medium">
-                                            Email
-                                        </label>
+                                    <label class="font-weight-medium">
+                                        Email
+                                    </label>
 
-                                        <div class="position-relative">
+                                    <div class="position-relative">
 
-                                            <span class="material-icons position-absolute"
-                                                style="
+                                        <span class="material-icons position-absolute"
+                                            style="
                                     left:15px;
                                     top:50%;
                                     transform:translateY(-50%);
                                     color:#8b95a7;
                                     font-size:21px;
                                 ">
-                                                mail
-                                            </span>
+                                            mail
+                                        </span>
 
-                                            <input type="email"
-                                                class="form-control"
-                                                name="email"
-                                                value="<?= htmlspecialchars($dataUser['email'] ?? ''); ?>"
-                                                placeholder="Masukkan email"
-                                                style="
+                                        <input type="email"
+                                            class="form-control"
+                                            name="email"
+                                            value="<?= htmlspecialchars($dataUser['email'] ?? ''); ?>"
+                                            placeholder="Masukkan email"
+                                            style="
                                         height:55px;
                                         padding-left:52px;
                                         border-radius:12px;
@@ -963,21 +974,21 @@ $queryPositions = mysqli_query($conn, "
                                         box-shadow:none;
                                         ">
 
-                                        </div>
-
                                     </div>
 
-                                    <!-- PASSWORD -->
-                                    <div class="mb-4">
+                                </div>
 
-                                        <label class="font-weight-medium">
-                                            Password
-                                        </label>
+                                <!-- PASSWORD -->
+                                <div class="mb-4">
 
-                                        <div class="position-relative">
+                                    <label class="font-weight-medium">
+                                        Password
+                                    </label>
 
-                                            <span class="material-icons position-absolute"
-                                                style="
+                                    <div class="position-relative">
+
+                                        <span class="material-icons position-absolute"
+                                            style="
                 left:15px;
                 top:50%;
                 transform:translateY(-50%);
@@ -985,15 +996,15 @@ $queryPositions = mysqli_query($conn, "
                 font-size:21px;
                 z-index:2;
             ">
-                                                lock
-                                            </span>
+                                            lock
+                                        </span>
 
-                                            <input type="password"
-                                                class="form-control"
-                                                id="passwordInput"
-                                                name="password"
-                                                placeholder="Kosongkan jika tidak ingin mengganti password"
-                                                style="
+                                        <input type="password"
+                                            class="form-control"
+                                            id="passwordInput"
+                                            name="password"
+                                            placeholder="Kosongkan jika tidak ingin mengganti password"
+                                            style="
                                         height:55px;
                                         padding-left:52px;
                                         padding-right:55px;
@@ -1003,10 +1014,10 @@ $queryPositions = mysqli_query($conn, "
                                         box-shadow:none;
                                         ">
 
-                                            <!-- TOGGLE -->
-                                            <span class="material-icons"
-                                                onclick="togglePassword('passwordInput', this)"
-                                                style="
+                                        <!-- TOGGLE -->
+                                        <span class="material-icons"
+                                            onclick="togglePassword('passwordInput', this)"
+                                            style="
                 position:absolute;
                 right:16px;
                 top:50%;
@@ -1016,24 +1027,24 @@ $queryPositions = mysqli_query($conn, "
                 cursor:pointer;
                 z-index:2;
             ">
-                                                visibility_off
-                                            </span>
-
-                                        </div>
+                                            visibility_off
+                                        </span>
 
                                     </div>
 
-                                    <!-- RE PASSWORD -->
-                                    <div class="mb-5">
+                                </div>
 
-                                        <label class="font-weight-medium">
-                                            Re-enter Password
-                                        </label>
+                                <!-- RE PASSWORD -->
+                                <div class="mb-5">
 
-                                        <div class="position-relative">
+                                    <label class="font-weight-medium">
+                                        Re-enter Password
+                                    </label>
 
-                                            <span class="material-icons position-absolute"
-                                                style="
+                                    <div class="position-relative">
+
+                                        <span class="material-icons position-absolute"
+                                            style="
                 left:15px;
                 top:50%;
                 transform:translateY(-50%);
@@ -1041,14 +1052,14 @@ $queryPositions = mysqli_query($conn, "
                 font-size:21px;
                 z-index:2;
             ">
-                                                lock
-                                            </span>
+                                            lock
+                                        </span>
 
-                                            <input type="password"
-                                                id="rePasswordInput"
-                                                class="form-control"
-                                                placeholder="Masukkan ulang password"
-                                                style="
+                                        <input type="password"
+                                            id="rePasswordInput"
+                                            class="form-control"
+                                            placeholder="Masukkan ulang password"
+                                            style="
                 height:55px;
                 padding-left:52px;
                 padding-right:55px;
@@ -1058,10 +1069,10 @@ $queryPositions = mysqli_query($conn, "
                 box-shadow:none;
             ">
 
-                                            <!-- TOGGLE -->
-                                            <span class="material-icons"
-                                                onclick="togglePassword('rePasswordInput', this)"
-                                                style="
+                                        <!-- TOGGLE -->
+                                        <span class="material-icons"
+                                            onclick="togglePassword('rePasswordInput', this)"
+                                            style="
                 position:absolute;
                 right:16px;
                 top:50%;
@@ -1071,31 +1082,28 @@ $queryPositions = mysqli_query($conn, "
                 cursor:pointer;
                 z-index:2;
             ">
-                                                visibility_off
-                                            </span>
-
-                                        </div>
+                                            visibility_off
+                                        </span>
 
                                     </div>
 
-                                    <!-- BUTTON -->
-                                    <button
-                                        type="submit"
-                                        id="btnSubmitEmail"
-                                        class="btn text-white px-5 btn-submit-profile"
-                                        style="height:55px; border-radius:12px; background:linear-gradient(90deg,#3f7cff,#2962ff); font-weight:500; min-width:220px; transition:.25s ease; border:0;">
+                                </div>
 
-                                        <span class="material-icons align-middle mr-2"
-                                            style="font-size:19px;">
-                                            send
-                                        </span>
+                                <!-- BUTTON -->
+                                <button
+                                    type="submit"
+                                    id="btnSubmitEmail"
+                                    class="btn text-white px-5 btn-submit-profile"
+                                    style="height:55px; border-radius:12px; background:linear-gradient(90deg,#3f7cff,#2962ff); font-weight:500; min-width:220px; transition:.25s ease; border:0;">
 
-                                        SUBMIT
+                                    <span class="material-icons align-middle mr-2"
+                                        style="font-size:19px;">
+                                        send
+                                    </span>
 
-                                    </button>
+                                    SUBMIT
 
-
-                                </form>
+                                </button>
 
                             </div>
 
@@ -1104,7 +1112,7 @@ $queryPositions = mysqli_query($conn, "
                         <!-- PHOTO PROFILE -->
                         <div class="upload-photo-wrapper">
                             <form method="POST"
-                                action="logic/process_edit_photo.php"
+                                action="logic/process_edit_profile.php"
                                 enctype="multipart/form-data">
                                 <!-- INPUT -->
                                 <input type="file"
@@ -1574,16 +1582,10 @@ $queryPositions = mysqli_query($conn, "
                 // VALIDASI SELECT
                 for (let select of selects) {
 
-                    if (
-                        select.value.includes('Pilih')
-                    ) {
-
+                    if (select.value === "") {
                         alert('Semua pilihan wajib dipilih!');
-
                         select.focus();
-
                         return;
-
                     }
 
                 }

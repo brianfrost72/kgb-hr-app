@@ -14,6 +14,39 @@ if (isset($_POST['tambah_region'])) {
 
     if ($region_name != '' && $region_address != '') {
 
+        /*
+        |--------------------------------------------------------------------------
+        | CEK DUPLIKAT
+        |--------------------------------------------------------------------------
+        */
+        $check = mysqli_prepare($conn, "
+            SELECT id
+            FROM regions
+            WHERE LOWER(TRIM(region_name)) = LOWER(TRIM(?))
+        ");
+
+        mysqli_stmt_bind_param(
+            $check,
+            "s",
+            $region_name
+        );
+
+        mysqli_stmt_execute($check);
+
+        $result_check = mysqli_stmt_get_result($check);
+
+        if (mysqli_num_rows($result_check) > 0) {
+
+            $_SESSION['error'] = "Nama cabang sudah tersedia.";
+            header("Location:add_regions.php");
+            exit;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | INSERT DATA
+        |--------------------------------------------------------------------------
+        */
         $stmt = mysqli_prepare($conn, "
             INSERT INTO regions (
                 region_name,
@@ -33,49 +66,18 @@ if (isset($_POST['tambah_region'])) {
         if (mysqli_stmt_execute($stmt)) {
 
             $_SESSION['success'] = "Data cabang berhasil ditambahkan.";
-            header("Location:add_regions.php");
-            exit;
         } else {
 
-            $_SESSION['error'] = "Data cabang gagal ditambahkan.";
-            header("Location:add_regions.php");
-            exit;
+            $_SESSION['error'] = "Data cabang gagal ditambahkan. " . mysqli_stmt_error($stmt);
         }
+
+        header("Location:add_regions.php");
+        exit;
     } else {
 
         header("Location:add_regions.php?error=kosong");
         exit;
     }
-}
-
-/*
-|--------------------------------------------------------------------------
-| CEK DUPLIKAT CABANG
-|--------------------------------------------------------------------------
-*/
-
-$check = mysqli_prepare($conn, "
-    SELECT id
-    FROM regions
-    WHERE LOWER(TRIM(region_name)) = LOWER(TRIM(?))
-");
-
-mysqli_stmt_bind_param(
-    $check,
-    "s",
-    $region_name
-);
-
-mysqli_stmt_execute($check);
-
-$result_check = mysqli_stmt_get_result($check);
-
-if (mysqli_num_rows($result_check) > 0) {
-
-    $_SESSION['error'] = "Nama cabang sudah tersedia.";
-
-    header("Location:add_regions.php");
-    exit;
 }
 
 /*
@@ -124,38 +126,6 @@ if (isset($_POST['update_region'])) {
         header("Location:add_regions.php?error=kosong");
         exit;
     }
-}
-
-/*
-|--------------------------------------------------------------------------
-| CEK DUPLIKAT SAAT UPDATE
-|--------------------------------------------------------------------------
-*/
-
-$check = mysqli_prepare($conn, "
-    SELECT id
-    FROM regions
-    WHERE LOWER(TRIM(region_name)) = LOWER(TRIM(?))
-    AND id != ?
-");
-
-mysqli_stmt_bind_param(
-    $check,
-    "si",
-    $region_name,
-    $id
-);
-
-mysqli_stmt_execute($check);
-
-$result_check = mysqli_stmt_get_result($check);
-
-if (mysqli_num_rows($result_check) > 0) {
-
-    $_SESSION['error'] = "Nama cabang sudah digunakan.";
-
-    header("Location:add_regions.php");
-    exit;
 }
 
 /*

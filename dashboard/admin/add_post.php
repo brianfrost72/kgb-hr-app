@@ -46,7 +46,7 @@ if (isset($_POST['submit_post'])) {
     */
     if (isset($_FILES['post_img']) && $_FILES['post_img']['error'] == 0) {
 
-        $folderUpload = $_SERVER['DOCUMENT_ROOT'] . '/my-dashboard/fixed-v2/dashboard/assets/images/uploads/posts/';
+        $folderUpload = __DIR__ . '/assets/images/uploads/posts/';
 
         if (!is_dir($folderUpload)) {
             mkdir($folderUpload, 0777, true);

@@ -22,7 +22,7 @@ if (isset($_POST['tambah_department'])) {
 
         $check = mysqli_prepare($conn, "
             SELECT id
-            FROM department
+            FROM departments
             WHERE LOWER(TRIM(department_name)) = LOWER(TRIM(?))
         ");
 
@@ -51,7 +51,7 @@ if (isset($_POST['tambah_department'])) {
         */
 
         $stmt = mysqli_prepare($conn, "
-            INSERT INTO department (
+            INSERT INTO departments (
                 department_name,
                 created_at
             ) VALUES (?, NOW())
@@ -99,7 +99,7 @@ if (isset($_POST['update_department'])) {
 
         $check = mysqli_prepare($conn, "
             SELECT id
-            FROM department
+            FROM departments
             WHERE LOWER(TRIM(department_name)) = LOWER(TRIM(?))
             AND id != ?
         ");
@@ -130,7 +130,7 @@ if (isset($_POST['update_department'])) {
         */
 
         $stmt = mysqli_prepare($conn, "
-            UPDATE department
+            UPDATE departments
             SET department_name = ?
             WHERE id = ?
         ");
@@ -170,7 +170,7 @@ if (isset($_POST['delete_single'])) {
     if ($id > 0) {
 
         $delete = mysqli_query($conn, "
-            DELETE FROM department
+            DELETE FROM departments
             WHERE id = '$id'
         ");
 
@@ -206,7 +206,7 @@ if (isset($_POST['delete_selected'])) {
         $implode = implode(",", $ids);
 
         $delete = mysqli_query($conn, "
-            DELETE FROM department
+            DELETE FROM departments
             WHERE id IN ($implode)
         ");
 
@@ -233,7 +233,7 @@ if (isset($_POST['delete_selected'])) {
 */
 $departments = mysqli_query($conn, "
     SELECT *
-    FROM department
+    FROM departments
     ORDER BY id ASC
 ");
 ?>

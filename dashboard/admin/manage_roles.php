@@ -3,498 +3,538 @@ session_start();
 
 require_once __DIR__ . "/../koneksi.php";
 
-/*
-|--------------------------------------------------------------------------
-| TAMBAH USER
-|--------------------------------------------------------------------------
-*/
-if (isset($_POST['tambah_user'])) {
+/* *********************************************************************
+********************************************************
+JOIN USERS + USER_PROFILE + MASTER
+*********************************************************
+********************************************************************** */
 
-    $email          = trim($_POST['email']);
-    $password       = password_hash($_POST['password'], PASSWORD_DEFAULT);
-
-    $role_id        = (int) $_POST['role_id'];
-    $region_id      = (int) $_POST['region_id'];
-    $department_id  = (int) $_POST['department_id'];
-    $position_id    = (int) $_POST['position_id'];
-
-    $full_name      = trim($_POST['full_name']);
-    $phone_number   = trim($_POST['phone_number']);
-
-    if (
-        $email != '' &&
-        $_POST['password'] != '' &&
-        $role_id > 0 &&
-        $full_name != ''
-    ) {
-
-        /*
-        |--------------------------------------------------------------------------
-        | CEK EMAIL DUPLIKAT
-        |--------------------------------------------------------------------------
-        */
-
-        $check = mysqli_query($conn, "
-            SELECT id
-            FROM users
-            WHERE email = '$email'
-        ");
-
-        if (mysqli_num_rows($check) > 0) {
-
-            $_SESSION['error'] = "Email sudah digunakan.";
-            header("Location:manage_roles.php");
-            exit;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPLOAD FOTO
-        |--------------------------------------------------------------------------
-        */
-
-        $photo_profile = 'default.png';
-
-        if (!empty($_FILES['photo_profile']['name'])) {
-
-            $file      = $_FILES['photo_profile'];
-
-            $tmp       = $file['tmp_name'];
-
-            $ext       = strtolower(
-                pathinfo($file['name'], PATHINFO_EXTENSION)
-            );
-
-            $allowed   = ['jpg', 'jpeg', 'png'];
-
-            if (!in_array($ext, $allowed)) {
-
-                $_SESSION['error'] =
-                    "Format foto harus JPG JPEG PNG";
-
-                header("Location:manage_roles.php");
-
-                exit;
-            }
-
-            // AUTO NAMA FILE DARI FULL NAME
-            $clean_name = strtolower($full_name);
-
-            $clean_name = preg_replace(
-                '/[^a-z0-9]/',
-                '_',
-                $clean_name
-            );
-
-            $clean_name = preg_replace(
-                '/_+/',
-                '_',
-                $clean_name
-            );
-
-            $photo_name =
-                $clean_name . '.' . $ext;
-
-            $upload_path =
-                "../assets/images/uploads/user_photos/" . $photo_name;
-
-            move_uploaded_file($tmp, $upload_path);
-
-            $photo_profile = $photo_name;
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | INSERT USERS
-        |--------------------------------------------------------------------------
-        */
-
-        $insertUser = mysqli_query($conn, "
-            INSERT INTO users (
-                email,
-                password,
-                role_id,
-                region_id,
-                department_id,
-                position_id,
-                user_type,
-                created_at,
-                update_at
-            ) VALUES (
-                '$email',
-                '$password',
-                '$role_id',
-                '$region_id',
-                '$department_id',
-                '$position_id',
-                'internal',
-                NOW(),
-                NOW()
-            )
-        ");
-
-        if ($insertUser) {
-
-            $user_id = mysqli_insert_id($conn);
-
-            /*
-            |--------------------------------------------------------------------------
-            | INSERT USER PROFILE
-            |--------------------------------------------------------------------------
-            */
-
-            mysqli_query($conn, "
-                INSERT INTO user_profile (
-                    user_id,
-                    full_name,
-                    tempat_lahir,
-                    tanggal_lahir,
-                    jenis_kelamin,
-                    status_kawin,
-                    address,
-                    phone_number,
-                    ktp_number,
-                    npwp,
-                    bpjs_kesehatan,
-                    bpjstk,
-                    no_rekening,
-                    id_department,
-                    id_position,
-                    id_region,
-                    id_roles,
-                    photo_profile,
-                    status
-                ) VALUES (
-                    '$user_id',
-                    '" . mysqli_real_escape_string($conn, $_POST['full_name']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['tempat_lahir']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['tanggal_lahir']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['jenis_kelamin']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['status_kawin']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['address']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['phone_number']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['ktp_number']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['npwp']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['bpjs_kesehatan']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['bpjstk']) . "',
-                    '" . mysqli_real_escape_string($conn, $_POST['no_rekening']) . "',
-                    '$department_id',
-                    '$position_id',
-                    '$region_id',
-                    '$role_id',
-                    '$photo_profile',
-                    'active'
-                )
-            ");
-
-            $_SESSION['success'] = "User berhasil ditambahkan.";
-        } else {
-
-            $_SESSION['error'] = "User gagal ditambahkan.";
-        }
-    } else {
-
-        $_SESSION['error'] = "Field wajib belum lengkap.";
-    }
-
-    header("Location:manage_roles.php");
-    exit;
-}
-
-/*
-|--------------------------------------------------------------------------
-| UPDATE USER
-|--------------------------------------------------------------------------
-*/
-if (isset($_POST['update_user'])) {
-
-    $id             = (int) $_POST['id'];
-    $profile_id     = (int) $_POST['profile_id'];
-
-    $email          = trim($_POST['email']);
-    $role_id        = (int) $_POST['role_id'];
-    $region_id      = (int) $_POST['region_id'];
-    $department_id  = (int) $_POST['department_id'];
-    $position_id    = (int) $_POST['position_id'];
-
-    $full_name      = trim($_POST['full_name']);
-
-    if ($id > 0 && $full_name != '') {
-
-        $password_sql = "";
-
-        if (!empty($_POST['password'])) {
-
-            $new_password = password_hash(
-                $_POST['password'],
-                PASSWORD_DEFAULT
-            );
-
-            $password_sql = ", password = '$new_password'";
-        }
-
-        /*
-|--------------------------------------------------------------------------
-| UPDATE FOTO
-|--------------------------------------------------------------------------
-*/
-
-        $photo_sql = '';
-        if (!empty($_FILES['photo_profile']['name'])) {
-
-            $file = $_FILES['photo_profile'];
-
-            $tmp  = $file['tmp_name'];
-
-            $ext  = strtolower(
-                pathinfo($file['name'], PATHINFO_EXTENSION)
-            );
-
-            $allowed = ['jpg', 'jpeg', 'png'];
-
-            if (in_array($ext, $allowed)) {
-
-                // HAPUS FOTO LAMA
-                $old = mysqli_query($conn, "
-            SELECT photo_profile
-            FROM user_profile
-            WHERE id = '$profile_id'
-        ");
-
-                $oldData = mysqli_fetch_assoc($old);
-
-                if (
-                    !empty($oldData['photo_profile']) &&
-                    $oldData['photo_profile'] != 'default.png'
-                ) {
-
-                    $oldPath =
-                        "../assets/images/uploads/user_photos/" .
-                        $oldData['photo_profile'];
-
-                    if (file_exists($oldPath)) {
-
-                        unlink($oldPath);
-                    }
-                }
-
-                // AUTO NAMA FILE
-                $clean_name = strtolower($full_name);
-
-                $clean_name = preg_replace(
-                    '/[^a-z0-9]/',
-                    '_',
-                    $clean_name
-                );
-
-                $clean_name = preg_replace(
-                    '/_+/',
-                    '_',
-                    $clean_name
-                );
-
-                $photo_name =
-                    $clean_name . '.' . $ext;
-
-                $upload_path =
-                    "../assets/images/uploads/user_photos/" .
-                    $photo_name;
-
-                move_uploaded_file($tmp, $upload_path);
-
-                $photo_sql =
-                    ", photo_profile = '$photo_name'";
-            }
-        }
-
-        mysqli_query($conn, "
-    UPDATE users
-    SET
-        email = '$email',
-        role_id = '$role_id',
-        region_id = '$region_id',
-        department_id = '$department_id',
-        position_id = '$position_id'
-        $password_sql,
-        update_at = NOW()
-    WHERE id = '$id'
-");
-
-        mysqli_query($conn, "
-            UPDATE user_profile
-            SET
-                full_name = '" . mysqli_real_escape_string($conn, $_POST['full_name']) . "',
-                tempat_lahir = '" . mysqli_real_escape_string($conn, $_POST['tempat_lahir']) . "',
-                tanggal_lahir = '" . mysqli_real_escape_string($conn, $_POST['tanggal_lahir']) . "',
-                jenis_kelamin = '" . mysqli_real_escape_string($conn, $_POST['jenis_kelamin']) . "',
-                status_kawin = '" . mysqli_real_escape_string($conn, $_POST['status_kawin']) . "',
-                address = '" . mysqli_real_escape_string($conn, $_POST['address']) . "',
-                phone_number = '" . mysqli_real_escape_string($conn, $_POST['phone_number']) . "',
-                ktp_number = '" . mysqli_real_escape_string($conn, $_POST['ktp_number']) . "',
-                npwp = '" . mysqli_real_escape_string($conn, $_POST['npwp']) . "',
-                bpjs_kesehatan = '" . mysqli_real_escape_string($conn, $_POST['bpjs_kesehatan']) . "',
-                bpjstk = '" . mysqli_real_escape_string($conn, $_POST['bpjstk']) . "',
-                no_rekening = '" . mysqli_real_escape_string($conn, $_POST['no_rekening']) . "',
-                id_department = '$department_id',
-                id_position = '$position_id',
-                id_region = '$region_id',
-                id_roles = '$role_id'
-$photo_sql
-WHERE id = '$profile_id'
-        ");
-
-        $_SESSION['success'] = "User berhasil diupdate.";
-    } else {
-
-        $_SESSION['error'] = "Data tidak valid.";
-    }
-
-    header("Location:manage_roles.php");
-    exit;
-}
-
-
-
-/*
-|--------------------------------------------------------------------------
-| DELETE SINGLE
-|--------------------------------------------------------------------------
-*/
-if (isset($_POST['delete_single'])) {
-
-    $id = (int) $_POST['id'];
-
-    $get = mysqli_query($conn, "
-        SELECT *
-        FROM user_profile
-        WHERE user_id = '$id'
-    ");
-
-    $profile = mysqli_fetch_assoc($get);
-
-    if (!empty($profile['photo_profile'])) {
-
-        $path = "../assets/images/uploads/user_photos/" . $profile['photo_profile'];
-
-        if (file_exists($path)) {
-
-            unlink($path);
-        }
-    }
-
-    mysqli_query($conn, "
-        DELETE FROM user_profile
-        WHERE user_id = '$id'
-    ");
-
-    mysqli_query($conn, "
-        DELETE FROM users
-        WHERE id = '$id'
-    ");
-
-    $_SESSION['success'] = "User berhasil dihapus.";
-
-    header("Location:manage_roles.php");
-    exit;
-}
-
-/*
-|--------------------------------------------------------------------------
-| DELETE SELECTED
-|--------------------------------------------------------------------------
-*/
-if (isset($_POST['delete_selected'])) {
-
-    if (!empty($_POST['selected_id'])) {
-
-        foreach ($_POST['selected_id'] as $id) {
-
-            $id = (int) $id;
-
-            mysqli_query($conn, "
-                DELETE FROM user_profile
-                WHERE user_id = '$id'
-            ");
-
-            mysqli_query($conn, "
-                DELETE FROM users
-                WHERE id = '$id'
-            ");
-        }
-
-        $_SESSION['success'] = "Data terpilih berhasil dihapus.";
-    } else {
-
-        $_SESSION['error'] = "Pilih data terlebih dahulu.";
-    }
-
-    header("Location:manage_roles.php");
-    exit;
-}
-
-/*
-|--------------------------------------------------------------------------
-| DATA USERS
-|--------------------------------------------------------------------------
-*/
 $users = mysqli_query($conn, "
-    SELECT
+    SELECT 
         users.*,
-        user_profile.*,
         user_profile.id AS profile_id,
+        user_profile.full_name,
+        user_profile.id_number,
+        user_profile.ktp_number,
+        user_profile.tempat_lahir,
+        user_profile.tanggal_lahir,
+        user_profile.jenis_kelamin,
+        user_profile.status_kawin,
+        user_profile.address,
+        user_profile.phone_number,
+        user_profile.npwp,
+        user_profile.bpjs_kesehatan,
+        user_profile.bpjstk,
+        user_profile.no_rekening,
+        user_profile.linkedin,
+        user_profile.instagram,
+        user_profile.photo_profile,
+        user_profile.status,
+
         roles.role_name,
-        department.department_name,
-        positions.position_name,
-        regions.region_name
+        regions.region_name,
+        departments.department_name,
+        positions.position_name
 
     FROM users
 
-    LEFT JOIN user_profile
+    LEFT JOIN user_profile 
         ON user_profile.user_id = users.id
 
-    LEFT JOIN roles
+    LEFT JOIN roles 
         ON roles.id = users.role_id
 
-    LEFT JOIN department
-        ON department.id = users.department_id
-
-    LEFT JOIN positions
-        ON positions.id = users.position_id
-
-    LEFT JOIN regions
+    LEFT JOIN regions 
         ON regions.id = users.region_id
+
+    LEFT JOIN departments 
+        ON departments.id = users.department_id
+
+    LEFT JOIN positions 
+        ON positions.id = users.position_id
 
     ORDER BY users.id ASC
 ");
 
-/*
-|--------------------------------------------------------------------------
-| MASTER DATA SELECT
-|--------------------------------------------------------------------------
-*/
+/* *********************************************************************
+********************************************************
+MASTER DATA
+*********************************************************
+********************************************************************** */
 $roles = mysqli_query($conn, "
-    SELECT *
-    FROM roles
+    SELECT * FROM roles
     ORDER BY role_name ASC
 ");
 
+$regions = mysqli_query($conn, "
+    SELECT * FROM regions
+    ORDER BY region_name ASC
+");
+
 $departments = mysqli_query($conn, "
-    SELECT *
-    FROM department
+    SELECT * FROM departments
     ORDER BY department_name ASC
 ");
 
 $positions = mysqli_query($conn, "
     SELECT *
     FROM positions
-    ORDER BY position_name ASC
+    ORDER BY department_id ASC, position_name ASC
 ");
 
-$regions = mysqli_query($conn, "
-    SELECT *
-    FROM regions
-    ORDER BY region_name ASC
-");
+/* *********************************************************************
+********************************************************
+TAMBAH USER
+*********************************************************
+********************************************************************** */
+if (isset($_POST['tambah_user'])) {
+
+    $full_name       = trim($_POST['full_name']);
+    $email           = trim($_POST['email']);
+    $password        = trim($_POST['password']);
+    $role_id         = $_POST['role_id'];
+
+    $region_id       = !empty($_POST['region_id']) ? $_POST['region_id'] : NULL;
+    $department_id   = !empty($_POST['department_id']) ? $_POST['department_id'] : NULL;
+    $position_id     = !empty($_POST['position_id']) ? $_POST['position_id'] : NULL;
+
+    $tempat_lahir    = trim($_POST['tempat_lahir']);
+    $tanggal_lahir   = !empty($_POST['tanggal_lahir']) ? $_POST['tanggal_lahir'] : NULL;
+    $jenis_kelamin   = trim($_POST['jenis_kelamin']);
+    $status_kawin    = trim($_POST['status_kawin']);
+    $phone_number    = trim($_POST['phone_number']);
+    $address         = trim($_POST['address']);
+
+    $ktp_number      = trim($_POST['ktp_number']);
+    $npwp            = trim($_POST['npwp']);
+    $bpjs_kesehatan  = trim($_POST['bpjs_kesehatan']);
+    $bpjstk          = trim($_POST['bpjstk']);
+    $no_rekening     = trim($_POST['no_rekening']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUPER ADMIN
+    |--------------------------------------------------------------------------
+    */
+
+    $isSuperAdmin = ($role_id == 1);
+
+    if (!$isSuperAdmin) {
+
+        if (
+            empty($department_id) ||
+            empty($position_id) ||
+            empty($region_id) ||
+            empty($ktp_number) ||
+            empty($address)
+        ) {
+
+            $_SESSION['error'] = "Data wajib belum lengkap.";
+
+            header("Location: manage_roles.php");
+            exit;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK EMAIL
+    |--------------------------------------------------------------------------
+    */
+
+    $checkEmail = mysqli_query($conn, "
+        SELECT id FROM users
+        WHERE email='$email'
+    ");
+
+    if (mysqli_num_rows($checkEmail) > 0) {
+
+        $_SESSION['error'] = "Email sudah digunakan.";
+
+        header("Location: manage_roles.php");
+        exit;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPLOAD FOTO
+    |--------------------------------------------------------------------------
+    */
+
+    $photoName = "default.png";
+
+    if (!empty($_FILES['photo_profile']['name'])) {
+
+        $ext = strtolower(pathinfo(
+            $_FILES['photo_profile']['name'],
+            PATHINFO_EXTENSION
+        ));
+
+        $photoName = time() . "_" . rand(1000, 9999) . "." . $ext;
+
+        move_uploaded_file(
+            $_FILES['photo_profile']['tmp_name'],
+            "../assets/images/uploads/user_photos/" . $photoName
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | INSERT USERS
+    |--------------------------------------------------------------------------
+    */
+
+    $hashedPassword = password_hash(
+        $password,
+        PASSWORD_DEFAULT
+    );
+
+    mysqli_query($conn, "
+        INSERT INTO users (
+            email,
+            password,
+            role_id,
+            region_id,
+            department_id,
+            position_id,
+            user_type,
+            created_at,
+            last_seen
+        ) VALUES (
+            '$email',
+            '$hashedPassword',
+            '$role_id',
+            " . ($region_id ?: "NULL") . ",
+            " . ($department_id ?: "NULL") . ",
+            " . ($position_id ?: "NULL") . ",
+            'internal',
+            NOW(),
+            NOW()
+        )
+    ");
+
+    $user_id = mysqli_insert_id($conn);
+
+    /*
+    |--------------------------------------------------------------------------
+    | INSERT PROFILE
+    |--------------------------------------------------------------------------
+    */
+
+    mysqli_query($conn, "
+        INSERT INTO user_profile (
+            user_id,
+            full_name,
+            ktp_number,
+            tempat_lahir,
+            tanggal_lahir,
+            jenis_kelamin,
+            status_kawin,
+            address,
+            phone_number,
+            npwp,
+            bpjs_kesehatan,
+            bpjstk,
+            no_rekening,
+            photo_profile,
+            status
+        ) VALUES (
+            '$user_id',
+            '$full_name',
+            '$ktp_number',
+            '$tempat_lahir',
+            " . ($tanggal_lahir ? "'$tanggal_lahir'" : "NULL") . ",
+            '$jenis_kelamin',
+            '$status_kawin',
+            '$address',
+            '$phone_number',
+            '$npwp',
+            '$bpjs_kesehatan',
+            '$bpjstk',
+            '$no_rekening',
+            '$photoName',
+            'active'
+        )
+    ");
+
+    $_SESSION['success'] = "User berhasil ditambahkan.";
+
+    header("Location: manage_roles.php");
+    exit;
+}
+
+/* *********************************************************************
+********************************************************
+UPDATE USER
+*********************************************************
+********************************************************************** */
+if (isset($_POST['update_user'])) {
+
+    $id             = $_POST['id'];
+    $profile_id     = $_POST['profile_id'];
+
+    $full_name      = trim($_POST['full_name']);
+    $email          = trim($_POST['email']);
+    $password       = trim($_POST['password']);
+
+    $role_id        = $_POST['role_id'];
+
+    $region_id      = !empty($_POST['region_id']) ? $_POST['region_id'] : "NULL";
+    $department_id  = !empty($_POST['department_id']) ? $_POST['department_id'] : "NULL";
+    $position_id    = !empty($_POST['position_id']) ? $_POST['position_id'] : "NULL";
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE USERS
+    |--------------------------------------------------------------------------
+    */
+
+    if (!empty($password)) {
+
+        $hashedPassword = password_hash(
+            $password,
+            PASSWORD_DEFAULT
+        );
+
+        mysqli_query($conn, "
+            UPDATE users SET
+                email='$email',
+                password='$hashedPassword',
+                role_id='$role_id',
+                region_id=$region_id,
+                department_id=$department_id,
+                position_id=$position_id
+            WHERE id='$id'
+        ");
+    } else {
+
+        mysqli_query($conn, "
+            UPDATE users SET
+                email='$email',
+                role_id='$role_id',
+                region_id=$region_id,
+                department_id=$department_id,
+                position_id=$position_id
+            WHERE id='$id'
+        ");
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | FOTO
+    |--------------------------------------------------------------------------
+    */
+
+    $photoQuery = "";
+
+    if (!empty($_FILES['photo_profile']['name'])) {
+
+        $ext = strtolower(pathinfo(
+            $_FILES['photo_profile']['name'],
+            PATHINFO_EXTENSION
+        ));
+
+        $photoName = time() . "_" . rand(1000, 9999) . "." . $ext;
+
+        move_uploaded_file(
+            $_FILES['photo_profile']['tmp_name'],
+            "../assets/images/uploads/user_photos/" . $photoName
+        );
+
+        $photoQuery = ",
+            photo_profile='$photoName'
+        ";
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE PROFILE
+    |--------------------------------------------------------------------------
+    */
+
+    mysqli_query($conn, "
+        UPDATE user_profile SET
+            full_name='" . mysqli_real_escape_string($conn, $full_name) . "',
+            tempat_lahir='" . mysqli_real_escape_string($conn, $_POST['tempat_lahir']) . "',
+            tanggal_lahir='" . $_POST['tanggal_lahir'] . "',
+            jenis_kelamin='" . $_POST['jenis_kelamin'] . "',
+            status_kawin='" . $_POST['status_kawin'] . "',
+            address='" . mysqli_real_escape_string($conn, $_POST['address']) . "',
+            phone_number='" . $_POST['phone_number'] . "',
+            ktp_number='" . $_POST['ktp_number'] . "',
+            npwp='" . $_POST['npwp'] . "',
+            bpjs_kesehatan='" . $_POST['bpjs_kesehatan'] . "',
+            bpjstk='" . $_POST['bpjstk'] . "',
+            no_rekening='" . $_POST['no_rekening'] . "'
+            $photoQuery
+        WHERE id='$profile_id'
+    ");
+
+    $_SESSION['success'] = "User berhasil diupdate.";
+
+    header("Location: manage_roles.php");
+    exit;
+}
+
+/* *********************************************************************
+********************************************************
+DELETE SINGLE USER
+*********************************************************
+********************************************************************** */
+if (isset($_POST['delete_single'])) {
+
+    $id = (int) $_POST['id'];
+
+    /*
+    |--------------------------------------------------------------------------
+    | AMBIL FOTO
+    |--------------------------------------------------------------------------
+    */
+
+    $getPhoto = mysqli_query($conn, "
+        SELECT photo_profile
+        FROM user_profile
+        WHERE user_id='$id'
+    ");
+
+    $photoData = mysqli_fetch_assoc($getPhoto);
+
+    /*
+    |--------------------------------------------------------------------------
+    | HAPUS FOTO
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        !empty($photoData['photo_profile']) &&
+        $photoData['photo_profile'] != 'default.png'
+    ) {
+
+        $photoPath =
+            "../assets/images/uploads/user_photos/" .
+            $photoData['photo_profile'];
+
+        if (file_exists($photoPath)) {
+
+            unlink($photoPath);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE PROFILE
+    |--------------------------------------------------------------------------
+    */
+
+    mysqli_query($conn, "
+        DELETE FROM user_profile
+        WHERE user_id='$id'
+    ");
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE USER
+    |--------------------------------------------------------------------------
+    */
+
+    mysqli_query($conn, "
+        DELETE FROM users
+        WHERE id='$id'
+    ");
+
+    $_SESSION['success'] =
+        "User berhasil dihapus.";
+
+    header("Location: manage_roles.php");
+    exit;
+}
+
+/* *********************************************************************
+********************************************************
+DELETE MULTIPLE USER
+*********************************************************
+********************************************************************** */
+if (isset($_POST['delete_selected'])) {
+
+    if (
+        empty($_POST['selected_id'])
+    ) {
+
+        $_SESSION['error'] =
+            "Pilih user terlebih dahulu.";
+
+        header("Location: manage_roles.php");
+        exit;
+    }
+
+    foreach ($_POST['selected_id'] as $id) {
+
+        $id = (int) $id;
+
+        /*
+        |--------------------------------------------------------------------------
+        | AMBIL FOTO
+        |--------------------------------------------------------------------------
+        */
+
+        $getPhoto = mysqli_query($conn, "
+            SELECT photo_profile
+            FROM user_profile
+            WHERE user_id='$id'
+        ");
+
+        $photoData = mysqli_fetch_assoc($getPhoto);
+
+        /*
+        |--------------------------------------------------------------------------
+        | HAPUS FOTO
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !empty($photoData['photo_profile']) &&
+            $photoData['photo_profile'] != 'default.png'
+        ) {
+
+            $photoPath =
+                "../assets/images/uploads/user_photos/" .
+                $photoData['photo_profile'];
+
+            if (file_exists($photoPath)) {
+
+                unlink($photoPath);
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DELETE PROFILE
+        |--------------------------------------------------------------------------
+        */
+
+        mysqli_query($conn, "
+            DELETE FROM user_profile
+            WHERE user_id='$id'
+        ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | DELETE USER
+        |--------------------------------------------------------------------------
+        */
+
+        mysqli_query($conn, "
+            DELETE FROM users
+            WHERE id='$id'
+        ");
+    }
+
+    $_SESSION['success'] =
+        "User terpilih berhasil dihapus.";
+
+    header("Location: manage_roles.php");
+    exit;
+}
 
 ?>
 
@@ -764,8 +804,8 @@ $regions = mysqli_query($conn, "
 
                                                         <img
                                                             src="../assets/images/uploads/user_photos/<?= !empty($row['photo_profile'])
-                                                                                                    ? $row['photo_profile']
-                                                                                                    : 'default.png'; ?>"
+                                                                                                            ? $row['photo_profile']
+                                                                                                            : 'default.png'; ?>"
                                                             class="rounded-circle mr-2"
                                                             width="40"
                                                             height="40"
@@ -1038,8 +1078,8 @@ $regions = mysqli_query($conn, "
 
                                     <select name="status_kawin" class="form-control">
                                         <option value="">---Pilih Status---</option>
-                                        <option>Belum Nikah</option>
-                                        <option>Menikah</option>
+                                        <option value="Belum Menikah">Belum Menikah</option>
+                                        <option value="Menikah">Menikah</option>
                                     </select>
                                 </div>
                             </div>
@@ -1055,7 +1095,9 @@ $regions = mysqli_query($conn, "
                                         </span>
                                     </div>
 
-                                    <select name="role_id" class="form-control">
+                                    <select name="role_id" class="form-control role-required"
+                                        onchange="toggleRoleFields(this)"
+                                        required>
                                         <option value="">---Pilih Roles---</option>
                                         <?php
                                         mysqli_data_seek($roles, 0);
@@ -1088,7 +1130,8 @@ $regions = mysqli_query($conn, "
                                         </span>
                                     </div>
 
-                                    <select name="department_id" class="form-control">
+                                    <select name="department_id" class="form-control"
+                                        onchange="filterPositions(this)">
                                         <option value="">---Pilih Departemen---</option>
                                         <?php
                                         mysqli_data_seek($departments, 0);
@@ -1117,14 +1160,15 @@ $regions = mysqli_query($conn, "
                                         </span>
                                     </div>
 
-                                    <select name="position_id" class="form-control mb-2">
+                                    <select name="position_id" class="form-control mb-2 position-select">
                                         <option value="">---Pilih Jabatan---</option>
                                         <?php
                                         mysqli_data_seek($positions, 0);
                                         while ($position = mysqli_fetch_assoc($positions)):
                                         ?>
 
-                                            <option value="<?= $position['id']; ?>">
+                                            <option value="<?= $position['id']; ?>"
+                                                data-department="<?= $position['department_id']; ?>">
 
                                                 <?= htmlspecialchars($position['position_name']); ?>
 
@@ -1176,8 +1220,8 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <input type="text" name="ktp_number"
-                                        class="form-control"
-                                        placeholder="3216221235646354">
+                                        class="form-control personal-required"
+                                        placeholder="Masukkan No KTP">
                                 </div>
                             </div>
 
@@ -1193,8 +1237,8 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <input type="text" name="npwp"
-                                        class="form-control"
-                                        placeholder="3216221235646354">
+                                        class="form-control personal-required"
+                                        placeholder="Masukkan No NPWP">
                                 </div>
                             </div>
 
@@ -1210,8 +1254,8 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <input type="text" name="bpjs_kesehatan"
-                                        class="form-control"
-                                        placeholder="3216221235646354">
+                                        class="form-control personal-required"
+                                        placeholder="Masukkan No BPJS Kesehatan">
                                 </div>
                             </div>
 
@@ -1227,8 +1271,8 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <input type="text" name="bpjstk"
-                                        class="form-control"
-                                        placeholder="3216221235646354">
+                                        class="form-control personal-required"
+                                        placeholder="Masukkan No BPJS KetenagaKerjaan">
                                 </div>
                             </div>
 
@@ -1244,12 +1288,12 @@ $regions = mysqli_query($conn, "
                                     </div>
 
                                     <input type="text" name="no_rekening"
-                                        class="form-control"
-                                        placeholder="3216221235646354">
+                                        class="form-control personal-required"
+                                        placeholder="Masukkan No Rekening">
                                 </div>
                             </div>
 
-                            <textarea name="address" class="form-control mb-2" placeholder="Alamat"></textarea>
+                            <textarea name="address" class="form-control mb-2" placeholder="Masukkan Alamat"></textarea>
 
                             <input
                                 type="file"
@@ -1454,16 +1498,16 @@ $regions = mysqli_query($conn, "
                                         <select
                                             name="jenis_kelamin" class="form-control">
                                             <option value="">---Pilih Jenis Kelamin---</option>
-                                            <<option
+                                            <option
                                                 value="Laki-laki"
                                                 <?= ($row['jenis_kelamin'] == 'Laki-laki') ? 'selected' : ''; ?>>
                                                 Laki-laki
-                                                </option>
-                                                <option
-                                                    value="Perempuan"
-                                                    <?= ($row['jenis_kelamin'] == 'Perempuan') ? 'selected' : ''; ?>>
-                                                    Perempuan
-                                                </option>
+                                            </option>
+                                            <option
+                                                value="Perempuan"
+                                                <?= ($row['jenis_kelamin'] == 'Perempuan') ? 'selected' : ''; ?>>
+                                                Perempuan
+                                            </option>
                                         </select>
                                     </div>
                                 </div>
@@ -1486,7 +1530,7 @@ $regions = mysqli_query($conn, "
                                             <option
                                                 value="Belum Menikah"
                                                 <?= ($row['status_kawin'] == 'Belum Menikah') ? 'selected' : ''; ?>>
-                                                Belum Nikah
+                                                Belum Menikah
                                             </option>
                                             <option
                                                 value="Menikah"
@@ -1510,7 +1554,9 @@ $regions = mysqli_query($conn, "
 
                                         <select
                                             name="role_id"
-                                            class="form-control">
+                                            class="form-control role-required"
+                                            onchange="toggleRoleFields(this)"
+                                            required>
 
                                             <?php
                                             mysqli_data_seek($roles, 0);
@@ -1548,8 +1594,8 @@ $regions = mysqli_query($conn, "
                                         </div>
 
                                         <select
-                                            name="department_id"
-                                            class="form-control">
+                                            name="department_id" class="form-control"
+                                            onchange="filterPositions(this)">
 
                                             <?php
                                             mysqli_data_seek($departments, 0);
@@ -1583,7 +1629,7 @@ $regions = mysqli_query($conn, "
 
                                         <select
                                             name="position_id"
-                                            class="form-control">
+                                            class="form-control position-select">
 
                                             <?php
                                             mysqli_data_seek($positions, 0);
@@ -1592,6 +1638,7 @@ $regions = mysqli_query($conn, "
 
                                                 <option
                                                     value="<?= $position['id']; ?>"
+                                                    data-department="<?= $position['department_id']; ?>"
                                                     <?= ($position['id'] == $row['position_id']) ? 'selected' : ''; ?>>
 
                                                     <?= htmlspecialchars($position['position_name']); ?>
@@ -1759,8 +1806,8 @@ $regions = mysqli_query($conn, "
 
                                         <img
                                             src="../assets/images/uploads/user_photos/<?= !empty($row['photo_profile'])
-                                                                                    ? $row['photo_profile']
-                                                                                    : 'default.png'; ?>"
+                                                                                            ? $row['photo_profile']
+                                                                                            : 'default.png'; ?>"
                                             class="rounded border"
                                             style="
                 width:80px;
@@ -2454,6 +2501,153 @@ $regions = mysqli_query($conn, "
             */
 
             filterTable();
+
+        });
+    </script>
+
+    <script>
+        function toggleRoleFields(select) {
+
+            let isSuperAdmin = select.value == "1";
+
+            let fields = document.querySelectorAll('.role-required');
+
+            fields.forEach(field => {
+
+                if (isSuperAdmin) {
+
+                    field.removeAttribute('required');
+
+                    field.closest('.form-group')?.style.display = 'none';
+
+                } else {
+
+                    field.setAttribute('required', true);
+
+                    field.closest('.form-group')?.style.display = 'block';
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+
+            document.querySelectorAll('[name="role_id"]').forEach(select => {
+
+                toggleRoleFields(select);
+
+            });
+
+        });
+    </script>
+
+    <script>
+        function filterPositions(departmentSelect) {
+
+            const departmentId =
+                departmentSelect.value;
+
+            /*
+            |--------------------------------------------------------------------------
+            | MODAL
+            |--------------------------------------------------------------------------
+            */
+
+            const modal =
+                departmentSelect.closest('.modal');
+
+            const positionSelect =
+                modal.querySelector('.position-select');
+
+            /*
+            |--------------------------------------------------------------------------
+            | SIMPAN VALUE LAMA
+            |--------------------------------------------------------------------------
+            */
+
+            const currentValue =
+                positionSelect.value;
+
+            /*
+            |--------------------------------------------------------------------------
+            | FILTER OPTION
+            |--------------------------------------------------------------------------
+            */
+
+            positionSelect
+                .querySelectorAll('option')
+                .forEach(option => {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | OPTION DEFAULT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (!option.dataset.department) {
+
+                        option.hidden = false;
+                        return;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | TAMPILKAN SESUAI DEPARTEMEN
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        option.dataset.department === departmentId
+                    ) {
+
+                        option.hidden = false;
+
+                    } else {
+
+                        option.hidden = true;
+                    }
+                });
+
+            /*
+            |--------------------------------------------------------------------------
+            | KEMBALIKAN VALUE LAMA
+            |--------------------------------------------------------------------------
+            */
+
+            const selectedOption =
+                positionSelect.querySelector(
+                    `option[value="${currentValue}"]`
+                );
+
+            if (
+                selectedOption &&
+                selectedOption.dataset.department === departmentId
+            ) {
+
+                positionSelect.value = currentValue;
+
+            } else {
+
+                positionSelect.value = "";
+            }
+        }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            /*
+            |--------------------------------------------------------------------------
+            | FILTER SEMUA MODAL EDIT
+            |--------------------------------------------------------------------------
+            */
+
+            document.querySelectorAll(
+                '[name="department_id"]'
+            ).forEach(select => {
+
+                filterPositions(select);
+
+            });
 
         });
     </script>

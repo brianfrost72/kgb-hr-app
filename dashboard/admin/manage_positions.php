@@ -167,10 +167,10 @@ if (isset($_POST['delete_selected'])) {
 $positions = mysqli_query($conn, "
     SELECT
         positions.*,
-        department.department_name
+        departments.department_name
     FROM positions
-    LEFT JOIN department
-        ON department.id = positions.department_id
+    LEFT JOIN departments
+        ON departments.id = positions.department_id
     ORDER BY positions.id ASC
 ");
 
@@ -181,7 +181,7 @@ $positions = mysqli_query($conn, "
 */
 $departments = mysqli_query($conn, "
     SELECT *
-    FROM department
+    FROM departments
     ORDER BY department_name ASC
 ");
 ?>

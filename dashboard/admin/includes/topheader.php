@@ -1,3 +1,74 @@
+<?php
+// =========================
+// USER TOP HEADER PROFILE
+// =========================
+
+if (session_status() === PHP_SESSION_NONE) {
+  session_start();
+}
+
+require_once __DIR__ . "/../../koneksi.php";
+
+$user_id = $_SESSION['user_id'] ?? 0;
+
+$user_header = null;
+
+if ($user_id > 0) {
+
+  $queryHeaderUser = mysqli_query($conn, "
+        SELECT 
+            users.id,
+            users.email,
+
+            user_profile.full_name,
+            user_profile.photo_profile,
+
+            roles.role_name
+
+        FROM users
+
+        LEFT JOIN user_profile 
+            ON user_profile.user_id = users.id
+
+        LEFT JOIN roles 
+            ON roles.id = users.role_id
+
+        WHERE users.id = '$user_id'
+
+        LIMIT 1
+    ");
+
+  if ($queryHeaderUser && mysqli_num_rows($queryHeaderUser) > 0) {
+    $user_header = mysqli_fetch_assoc($queryHeaderUser);
+  }
+}
+
+// =========================
+// DEFAULT VALUE
+// =========================
+
+$defaultPhoto = "../assets/images/avatar/demi.png";
+
+$userNameHeader  = $user_header['full_name'] ?? 'Unknown User';
+$userRoleHeader  = $user_header['role_name'] ?? 'No Role';
+$userEmailHeader = $user_header['email'] ?? '-';
+
+$userPhotoHeader = $defaultPhoto;
+
+// =========================
+// CHECK PHOTO
+// =========================
+
+if (
+  !empty($user_header['photo_profile']) &&
+  file_exists(
+    __DIR__ . "/../../assets/images/uploads/user_photos/" . $user_header['photo_profile']
+  )
+) {
+
+  $userPhotoHeader = "../assets/images/uploads/user_photos/" . $user_header['photo_profile'];
+}
+?>
 <div id="header" class="mdk-header bg-dark js-mdk-header m-0" data-fixed>
   <div class="mdk-header__content">
     <div
@@ -112,35 +183,78 @@
 
         <ul
           class="nav navbar-nav d-none d-sm-flex border-left navbar-height align-items-center">
+
           <li class="nav-item dropdown">
+
             <a
               href="#account_menu"
               class="nav-link dropdown-toggle"
               data-toggle="dropdown"
               data-caret="false">
+
               <span class="mr-1 d-flex-inline">
-                <span class="text-light">Adrian D.</span>
+
+                <span class="text-light">
+                  <?= htmlspecialchars($userNameHeader); ?>
+                </span>
+
               </span>
+
               <img
-                src="assets/images/avatar/demi.png"
+                src="<?= $userPhotoHeader; ?>"
                 class="rounded-circle"
                 width="32"
-                alt="Frontted" />
+                height="32"
+                style="object-fit: cover;"
+                alt="<?= htmlspecialchars($userNameHeader); ?>" />
+
             </a>
+
             <div
               id="account_menu"
               class="dropdown-menu dropdown-menu-right">
+
               <div class="dropdown-item-text dropdown-item-text--lh">
-                <div><strong>Adrian Demian</strong></div>
-                <div class="text-muted">@adriandemian</div>
+
+                <div>
+                  <strong>
+                    <?= htmlspecialchars($userNameHeader); ?>
+                  </strong>
+                </div>
+
+                <div class="text-muted">
+                  <?= htmlspecialchars($userRoleHeader); ?>
+                </div>
+
+                <div class="text-muted small">
+                  <?= htmlspecialchars($userEmailHeader); ?>
+                </div>
+
               </div>
+
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item active" href="fluid-dashboard.html"><i class="material-icons">dvr</i> Dashboard</a>
-              <a class="dropdown-item" href="edit_profile.php"><i class="material-icons">account_circle</i> Edit Akun</a>
+
+              <a class="dropdown-item active" href="index.php">
+                <i class="material-icons">dvr</i>
+                Dashboard
+              </a>
+
+              <a class="dropdown-item" href="edit_profile.php">
+                <i class="material-icons">account_circle</i>
+                Edit Akun
+              </a>
+
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="logout.php"><i class="material-icons">exit_to_app</i> Logout</a>
+
+              <a class="dropdown-item" href="logout.php">
+                <i class="material-icons">exit_to_app</i>
+                Logout
+              </a>
+
             </div>
+
           </li>
+
         </ul>
       </div>
     </div>

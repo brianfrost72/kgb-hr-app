@@ -19,7 +19,7 @@ $queryDepartment = mysqli_query($conn, "
     SELECT 
         id,
         department_name
-    FROM department
+    FROM departments
     ORDER BY department_name ASC
 ");
 
@@ -31,10 +31,10 @@ $queryPositions = mysqli_query($conn, "
         positions.id,
         positions.position_name,
         positions.department_id,
-        department.department_name
+        departments.department_name
     FROM positions
-    LEFT JOIN department
-        ON positions.department_id = department.id
+    LEFT JOIN departments
+        ON positions.department_id = departments.id
     ORDER BY positions.position_name ASC
 ");
 
@@ -66,14 +66,14 @@ $queryEmployeePayments = mysqli_query($conn, "
         employee_payment.note_payment,
         employee_payment.update_at,
 
-        department.department_name,
+        departments.department_name,
 
         positions.position_name
 
     FROM employee_payment
 
-    LEFT JOIN department
-        ON employee_payment.id_department = department.id
+    LEFT JOIN departments
+        ON employee_payment.id_department = departments.id
 
     LEFT JOIN positions
         ON employee_payment.id_position = positions.id
@@ -231,7 +231,7 @@ if (isset($_GET['detail'])) {
 
         employee.full_name,
 
-        department.department_name,
+        departments.department_name,
 
         positions.position_name
 
@@ -240,8 +240,8 @@ if (isset($_GET['detail'])) {
     LEFT JOIN employee
         ON employee_payment.id_employee = employee.id
 
-    LEFT JOIN department
-        ON employee_payment.id_department = department.id
+    LEFT JOIN departments
+        ON employee_payment.id_department = departments.id
 
     LEFT JOIN positions
         ON employee_payment.id_position = positions.id
@@ -346,7 +346,7 @@ $queryDepartment = mysqli_query($conn, "
     SELECT
         id,
         department_name
-    FROM department
+    FROM departments
     ORDER BY department_name ASC
 ");
 
@@ -358,11 +358,11 @@ $queryPositions = mysqli_query($conn, "
         positions.id,
         positions.position_name,
         positions.department_id,
-        department.department_name
+        departments.department_name
     FROM positions
 
-    LEFT JOIN department
-        ON positions.department_id = department.id
+    LEFT JOIN departments
+        ON positions.department_id = departments.id
 
     ORDER BY positions.position_name ASC
 ");
@@ -415,7 +415,7 @@ $queryTablePayroll = mysqli_query($conn, "
 
         employee.full_name,
 
-        department.department_name,
+        departments.department_name,
 
         positions.position_name,
 
@@ -440,8 +440,8 @@ $queryTablePayroll = mysqli_query($conn, "
     LEFT JOIN employee
         ON employee_payment.id_employee = employee.id
 
-    LEFT JOIN department
-        ON employee_payment.id_department = department.id
+    LEFT JOIN departments
+        ON employee_payment.id_department = departments.id
 
     LEFT JOIN positions
         ON employee_payment.id_position = positions.id

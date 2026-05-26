@@ -48,9 +48,13 @@ while ($row = mysqli_fetch_assoc($queryKomentar)) {
     $item = [
         'id'         => $row['id'],
         'nama'       => $row['name_commenters'],
-        'avatar'     => !empty($row['pict_commenters'])
-            ? '../uploads/commenters/' . $row['pict_commenters']
-            : '../assets/images/default-user.jpg',
+        'avatar' => !empty($row['pict_commenters'])
+            ? (
+                filter_var($row['pict_commenters'], FILTER_VALIDATE_URL)
+                ? $row['pict_commenters']
+                : '../../../assets/images/comment_posts/' . $row['pict_commenters']
+            )
+            : '../../../assets/images/default-user.jpg',
         'email'      => $row['email_commenters'],
         'komentar'   => $row['comment'],
         'status'     => $row['status'],

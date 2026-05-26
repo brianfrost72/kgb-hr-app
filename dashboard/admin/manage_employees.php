@@ -11,7 +11,7 @@ require_once __DIR__ . "/../koneksi.php";
 
 $departments = mysqli_query($conn, "
     SELECT *
-    FROM department
+    FROM departments
     ORDER BY department_name ASC
 ");
 
@@ -49,7 +49,7 @@ $employees = mysqli_query($conn, "
     SELECT
         employee.*,
 
-        department.department_name,
+        departments.department_name,
 
         positions.position_name,
 
@@ -57,8 +57,8 @@ $employees = mysqli_query($conn, "
 
     FROM employee
 
-    LEFT JOIN department
-        ON department.id = employee.id_department
+    LEFT JOIN departments
+        ON departments.id = employee.id_department
 
     LEFT JOIN positions
         ON positions.id = employee.id_position
@@ -449,7 +449,9 @@ id_region = '$id_region',
 
             no_rekening = '" . mysqli_real_escape_string($conn, $_POST['no_rekening']) . "',
 
-            address = '" . mysqli_real_escape_string($conn, $_POST['address']) . "'
+            address = '" . mysqli_real_escape_string($conn, $_POST['address']) . "',
+
+join_date = '" . mysqli_real_escape_string($conn, $_POST['join_date']) . "'
 
 $photo_sql
 
@@ -783,8 +785,27 @@ if (isset($_POST['delete_selected'])) {
 
                                                     <td><?= $no++; ?></td>
 
-                                                    <!-- 26(Tahun)03(Bulan)001(nourut diambil dari tabel employee) -->
-                                                    <td><?= date('ym', strtotime($row['join_date'])) . str_pad($row['id'], 3, '0', STR_PAD_LEFT); ?></td>
+                                                    <?php
+                                                    $nik = '-';
+
+                                                    if (
+                                                        !empty($row['join_date']) &&
+                                                        $row['join_date'] != '0000-00-00'
+                                                    ) {
+
+                                                        $tahun = date('y', strtotime($row['join_date']));
+                                                        $tanggal = date('d', strtotime($row['join_date']));
+                                                        $bulan = date('m', strtotime($row['join_date']));
+
+                                                        $urutan = str_pad($row['id'], 3, '0', STR_PAD_LEFT);
+
+                                                        // format:
+                                                        // 26(tahun)02(tanggal)02(bulan)001(id)
+                                                        $nik = $tahun . $tanggal . $bulan . $urutan;
+                                                    }
+                                                    ?>
+
+                                                    <td><?= $nik; ?></td>
 
                                                     <td class="d-flex align-items-center">
                                                         <img src="../assets/images/profile/employees/<?= !empty($row['profile_picture']) ? $row['profile_picture'] : 'default.png'; ?>"
@@ -801,9 +822,17 @@ if (isset($_POST['delete_selected'])) {
                                                     <td><?= htmlspecialchars($row['department_name']); ?></td>
                                                     <td><?= htmlspecialchars($row['position_name']); ?></td>
                                                     <!-- format hari, bulan, tahun -->
-                                                    <td><?= !empty($row['join_date'])
+                                                    <td>
+                                                        <?=
+                                                        (
+                                                            !empty($row['join_date']) &&
+                                                            $row['join_date'] != '0000-00-00'
+                                                        )
+
                                                             ? date('d/m/Y', strtotime($row['join_date']))
-                                                            : '-'; ?></td>
+                                                            : '-';
+                                                        ?>
+                                                    </td>
 
                                                     <td>
                                                         <button
@@ -923,6 +952,24 @@ if (isset($_POST['delete_selected'])) {
 
                             <!-- LEFT -->
                             <div class="col-md-6">
+
+                                <div class="form-group">
+                                    <label>Tanggal Bergabung</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">event</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="date"
+                                            name="join_date"
+                                            class="form-control"
+                                            value="<?= $row['join_date']; ?>">
+                                    </div>
+                                </div>
 
                                 <!-- NAMA -->
                                 <div class="form-group">
@@ -1136,7 +1183,8 @@ if (isset($_POST['delete_selected'])) {
                                             </span>
                                         </div>
 
-                                        <select name="id_department" class="form-control">
+                                        <select name="id_department" class="form-control"
+                                            onchange="filterPositions(this)">
                                             <option value="">---Pilih Departemen---</option>
                                             <?php
                                             mysqli_data_seek($departments, 0);
@@ -1165,14 +1213,15 @@ if (isset($_POST['delete_selected'])) {
                                             </span>
                                         </div>
 
-                                        <select name="id_position" class="form-control mb-2">
+                                        <select name="id_position" class="form-control mb-2 position-select">
                                             <option value="">---Pilih Jabatan---</option>
                                             <?php
                                             mysqli_data_seek($positions, 0);
                                             while ($position = mysqli_fetch_assoc($positions)):
                                             ?>
 
-                                                <option value="<?= $position['id']; ?>">
+                                                <option value="<?= $position['id']; ?>"
+                                                    data-department="<?= $position['department_id']; ?>">
 
                                                     <?= htmlspecialchars($position['position_name']); ?>
 
@@ -1376,6 +1425,25 @@ if (isset($_POST['delete_selected'])) {
                                 value="<?= $row['id']; ?>">
 
                             <div class="col-md-6">
+
+                                <div class="form-group">
+                                    <label>Tanggal Bergabung</label>
+
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light">
+                                                <span class="material-icons">event</span>
+                                            </span>
+                                        </div>
+
+                                        <input
+                                            type="date"
+                                            name="join_date"
+                                            class="form-control"
+                                            value="<?= $row['join_date']; ?>">
+                                    </div>
+                                </div>
+
                                 <!-- NAMA -->
                                 <div class="form-group">
                                     <label>Nama Lengkap</label>
@@ -1565,7 +1633,8 @@ if (isset($_POST['delete_selected'])) {
 
                                         <select
                                             name="id_department"
-                                            class="form-control">
+                                            class="form-control"
+                                            onchange="filterPositions(this)">
 
                                             <?php
                                             mysqli_data_seek($departments, 0);
@@ -1599,7 +1668,7 @@ if (isset($_POST['delete_selected'])) {
 
                                         <select
                                             name="id_position"
-                                            class="form-control">
+                                            class="form-control position-select">
 
                                             <?php
                                             mysqli_data_seek($positions, 0);
@@ -1608,7 +1677,7 @@ if (isset($_POST['delete_selected'])) {
 
                                                 <option
                                                     value="<?= $position['id']; ?>"
-                                                    <?= ($position['id'] == $row['id_position']) ? 'selected' : ''; ?>>
+                                                    <?= ($position['id'] == $row['id_position']) ? 'selected' : ''; ?> data-department="<?= $position['department_id']; ?>">
 
                                                     <?= htmlspecialchars($position['position_name']); ?>
 
@@ -2383,6 +2452,118 @@ if (isset($_POST['delete_selected'])) {
             reader.readAsDataURL(file);
 
         };
+    </script>
+
+    <script>
+        function filterPositions(departmentSelect) {
+
+            const departmentId =
+                departmentSelect.value;
+
+            /*
+            |--------------------------------------------------------------------------
+            | MODAL
+            |--------------------------------------------------------------------------
+            */
+
+            const modal =
+                departmentSelect.closest('.modal');
+
+            const positionSelect =
+                modal.querySelector('.position-select');
+
+            /*
+            |--------------------------------------------------------------------------
+            | SIMPAN VALUE LAMA
+            |--------------------------------------------------------------------------
+            */
+
+            const currentValue =
+                positionSelect.value;
+
+            /*
+            |--------------------------------------------------------------------------
+            | FILTER OPTION
+            |--------------------------------------------------------------------------
+            */
+
+            positionSelect
+                .querySelectorAll('option')
+                .forEach(option => {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | OPTION DEFAULT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (!option.dataset.department) {
+
+                        option.hidden = false;
+                        return;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | TAMPILKAN SESUAI DEPARTEMEN
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        option.dataset.department === departmentId
+                    ) {
+
+                        option.hidden = false;
+
+                    } else {
+
+                        option.hidden = true;
+                    }
+                });
+
+            /*
+            |--------------------------------------------------------------------------
+            | KEMBALIKAN VALUE LAMA
+            |--------------------------------------------------------------------------
+            */
+
+            const selectedOption =
+                positionSelect.querySelector(
+                    `option[value="${currentValue}"]`
+                );
+
+            if (
+                selectedOption &&
+                selectedOption.dataset.department === departmentId
+            ) {
+
+                positionSelect.value = currentValue;
+
+            } else {
+
+                positionSelect.value = "";
+            }
+        }
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            /*
+            |--------------------------------------------------------------------------
+            | FILTER SEMUA MODAL EDIT
+            |--------------------------------------------------------------------------
+            */
+
+            document.querySelectorAll(
+                '[name="department_id"]'
+            ).forEach(select => {
+
+                filterPositions(select);
+
+            });
+
+        });
     </script>
 
 </body>

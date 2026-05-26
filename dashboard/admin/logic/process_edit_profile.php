@@ -9,86 +9,178 @@ if (!$userId) {
     exit;
 }
 
-// ================================
+// ========================================
+// FUNCTION ESCAPE
+// ========================================
+
+function esc($conn, $value)
+{
+    return mysqli_real_escape_string(
+        $conn,
+        trim($value ?? '')
+    );
+}
+
+// ========================================
 // AMBIL DATA FORM
-// ================================
-$full_name       = mysqli_real_escape_string($conn, $_POST['full_name']);
-$ktp_number      = mysqli_real_escape_string($conn, $_POST['ktp_number']);
-$tempat_lahir    = mysqli_real_escape_string($conn, $_POST['tempat_lahir']);
-$tanggal_lahir   = mysqli_real_escape_string($conn, $_POST['tanggal_lahir']);
-$jenis_kelamin   = mysqli_real_escape_string($conn, $_POST['jenis_kelamin']);
-$status_kawin    = mysqli_real_escape_string($conn, $_POST['status_kawin']);
-$address         = mysqli_real_escape_string($conn, $_POST['address']);
-$phone_number    = mysqli_real_escape_string($conn, $_POST['phone_number']);
-$npwp            = mysqli_real_escape_string($conn, $_POST['npwp']);
-$bpjs_kesehatan  = mysqli_real_escape_string($conn, $_POST['bpjs_kesehatan']);
-$bpjstk          = mysqli_real_escape_string($conn, $_POST['bpjstk']);
-$no_rekening     = mysqli_real_escape_string($conn, $_POST['no_rekening']);
-$id_department   = mysqli_real_escape_string($conn, $_POST['id_department']);
-$id_position     = mysqli_real_escape_string($conn, $_POST['id_position']);
-$id_region       = mysqli_real_escape_string($conn, $_POST['id_region']);
-$id_roles        = mysqli_real_escape_string($conn, $_POST['id_roles']);
-$linkedin        = mysqli_real_escape_string($conn, $_POST['linkedin']);
-$instagram       = mysqli_real_escape_string($conn, $_POST['instagram']);
-$status          = mysqli_real_escape_string($conn, $_POST['status']);
-$email           = mysqli_real_escape_string($conn, $_POST['email']);
-$password        = $_POST['password'];
-// ================================
+// ========================================
+
+// USER PROFILE
+$full_name       = esc($conn, $_POST['full_name']);
+$ktp_number      = esc($conn, $_POST['ktp_number']);
+$tempat_lahir    = esc($conn, $_POST['tempat_lahir']);
+$tanggal_lahir   = esc($conn, $_POST['tanggal_lahir']);
+$jenis_kelamin   = esc($conn, $_POST['jenis_kelamin']);
+$status_kawin    = esc($conn, $_POST['status_kawin']);
+$address         = esc($conn, $_POST['address']);
+$phone_number    = esc($conn, $_POST['phone_number']);
+$npwp            = esc($conn, $_POST['npwp']);
+$bpjs_kesehatan  = esc($conn, $_POST['bpjs_kesehatan']);
+$bpjstk          = esc($conn, $_POST['bpjstk']);
+$no_rekening     = esc($conn, $_POST['no_rekening']);
+$linkedin        = esc($conn, $_POST['linkedin']);
+$instagram       = esc($conn, $_POST['instagram']);
+
+// USERS
+$email           = esc($conn, $_POST['email']);
+$password        = $_POST['password'] ?? '';
+
+$role_id         = esc($conn, $_POST['role_id']);
+$region_id       = esc($conn, $_POST['region_id']);
+$department_id   = esc($conn, $_POST['department_id']);
+$position_id     = esc($conn, $_POST['position_id']);
+
+// ========================================
+// VALIDASI EMAIL
+// ========================================
+
+if (!empty($email)) {
+
+    $checkEmail = mysqli_query($conn, "
+        SELECT id
+        FROM users
+        WHERE email = '$email'
+        AND id != '$userId'
+        LIMIT 1
+    ");
+
+    if (mysqli_num_rows($checkEmail) > 0) {
+
+        header('Location: ../edit_profile.php?error=email_exists');
+        exit;
+    }
+}
+
+// ========================================
 // AUTO GENERATE ID NUMBER
-// ================================
+// ========================================
 
 $tahun = date('y');
 
-$id_number = $tahun .
-    str_pad($userId, 3, '0', STR_PAD_LEFT);
+$id_number =
+    $tahun .
+    str_pad($userId, 4, '0', STR_PAD_LEFT);
 
-// ================================
-// FOTO PROFILE
-// ================================
-$photo_profile = '';
+// ========================================
+// CEK PROFILE
+// ========================================
 
-$queryOld = mysqli_query($conn, "
-    SELECT photo_profile
+$checkProfile = mysqli_query($conn, "
+    SELECT *
     FROM user_profile
     WHERE user_id = '$userId'
     LIMIT 1
 ");
 
-$dataOld = mysqli_fetch_assoc($queryOld);
+if (mysqli_num_rows($checkProfile) == 0) {
 
-$photo_profile = $dataOld['photo_profile'] ?? '';
+    mysqli_query($conn, "
+        INSERT INTO user_profile (
+            user_id,
+            status
+        ) VALUES (
+            '$userId',
+            'active'
+        )
+    ");
+}
+
+$dataProfile = mysqli_fetch_assoc($checkProfile);
+
+// ========================================
+// FOTO PROFILE
+// ========================================
+
+$photo_profile = $dataProfile['photo_profile'] ?? '';
+
+// PATH FIXED
+$uploadDir = 'C:/xampp/htdocs/my-dashboard/fixed-v2/dashboard/assets/images/uploads/user_photos/';
+
+// BUAT FOLDER
+if (!is_dir($uploadDir)) {
+
+    mkdir($uploadDir, 0777, true);
+}
+
+// ========================================
+// UPLOAD FOTO
+// ========================================
 
 if (!empty($_FILES['photo_profile']['name'])) {
 
-    $uploadDir = __DIR__ . '/../../assets/images/uploads/user_photos/';
-
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
-
     $fileTmp  = $_FILES['photo_profile']['tmp_name'];
     $fileName = $_FILES['photo_profile']['name'];
-    $fileExt  = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    $fileSize = $_FILES['photo_profile']['size'];
+
+    $fileExt = strtolower(
+        pathinfo($fileName, PATHINFO_EXTENSION)
+    );
 
     $allowed = ['jpg', 'jpeg', 'png', 'webp'];
 
-    if (in_array($fileExt, $allowed)) {
+    // VALIDASI FORMAT
+    if (!in_array($fileExt, $allowed)) {
 
-        $safeName = preg_replace('/[^A-Za-z0-9\\-]/', '_', $full_name);
+        header('Location: ../edit_profile.php?error=format_foto');
+        exit;
+    }
 
-        $newFileName = $safeName . '_' . time() . '.' . $fileExt;
+    // VALIDASI SIZE 2MB
+    if ($fileSize > 2 * 1024 * 1024) {
 
+        header('Location: ../edit_profile.php?error=size_foto');
+        exit;
+    }
+
+    // SAFE FILE NAME
+    $safeName = preg_replace(
+        '/[^A-Za-z0-9\-]/',
+        '_',
+        $full_name
+    );
+
+    $newFileName =
+        $safeName .
+        '_' .
+        time() .
+        '.' .
+        $fileExt;
+
+    // MOVE FILE
+    if (
         move_uploaded_file(
             $fileTmp,
             $uploadDir . $newFileName
-        );
+        )
+    ) {
 
-        // Hapus file lama
+        // HAPUS FOTO LAMA
         if (!empty($photo_profile)) {
 
             $oldPath = $uploadDir . $photo_profile;
 
             if (file_exists($oldPath)) {
+
                 unlink($oldPath);
             }
         }
@@ -97,10 +189,11 @@ if (!empty($_FILES['photo_profile']['name'])) {
     }
 }
 
-// ================================
-// UPDATE USER PROFILE
-// ================================
-mysqli_query($conn, "
+// ========================================
+// UPDATE USER_PROFILE
+// ========================================
+
+$updateProfile = mysqli_query($conn, "
     UPDATE user_profile SET
         full_name = '$full_name',
         id_number = '$id_number',
@@ -115,48 +208,60 @@ mysqli_query($conn, "
         bpjs_kesehatan = '$bpjs_kesehatan',
         bpjstk = '$bpjstk',
         no_rekening = '$no_rekening',
-        id_department = '$id_department',
-        id_position = '$id_position',
-        id_region = '$id_region',
-        id_roles = '$id_roles',
         linkedin = '$linkedin',
         instagram = '$instagram',
-        photo_profile = '$photo_profile',
-        status = '$status'
+        photo_profile = '$photo_profile'
     WHERE user_id = '$userId'
 ");
 
-// ================================
+// ========================================
 // UPDATE USERS
-// ================================
+// ========================================
+
 if (!empty($password)) {
 
-    $hashPassword = password_hash($password, PASSWORD_DEFAULT);
+    $hashPassword = password_hash(
+        $password,
+        PASSWORD_DEFAULT
+    );
 
-    mysqli_query($conn, "
+    $updateUsers = mysqli_query($conn, "
         UPDATE users SET
             email = '$email',
             password = '$hashPassword',
-            role_id = '$id_roles',
-            region_id = '$id_region',
-            department_id = '$id_department',
-            position_id = '$id_position',
+            role_id = '$role_id',
+            region_id = '$region_id',
+            department_id = '$department_id',
+            position_id = '$position_id',
             update_at = NOW()
         WHERE id = '$userId'
     ");
+
 } else {
 
-    mysqli_query($conn, "
+    $updateUsers = mysqli_query($conn, "
         UPDATE users SET
             email = '$email',
-            role_id = '$id_roles',
-            region_id = '$id_region',
-            department_id = '$id_department',
-            position_id = '$id_position',
+            role_id = '$role_id',
+            region_id = '$region_id',
+            department_id = '$department_id',
+            position_id = '$position_id',
             update_at = NOW()
         WHERE id = '$userId'
     ");
 }
 
-header('Location: ../edit_profile.php?success=1');
+// ========================================
+// RESULT
+// ========================================
+
+if ($updateProfile && $updateUsers) {
+
+    header('Location: ../edit_profile.php?success=1');
+
+} else {
+
+    header('Location: ../edit_profile.php?error=update_failed');
+}
+
 exit;
