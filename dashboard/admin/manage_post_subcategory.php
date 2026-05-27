@@ -167,7 +167,7 @@ if (isset($_POST['tambah_subcategory'])) {
                 echo "
                 <script>
                     alert('Data berhasil ditambahkan');
-                    window.location='manage_post_subcategory.php';
+                    window.location='manage_post_subcategory';
                 </script>
                 ";
             } else {
@@ -248,7 +248,7 @@ if (isset($_POST['update_subcategory'])) {
                 echo "
                 <script>
                     alert('Data berhasil diupdate');
-                    window.location='manage_post_subcategory.php';
+                    window.location='manage_post_subcategory';
                 </script>
                 ";
             } else {
@@ -282,7 +282,7 @@ if (isset($_GET['hapus'])) {
         echo "
         <script>
             alert('Data berhasil dihapus');
-            window.location='manage_post_subcategory.php';
+            window.location='manage_post_subcategory';
         </script>
         ";
     } else {
@@ -319,7 +319,7 @@ if (isset($_POST['hapus_terpilih'])) {
         echo "
         <script>
             alert('Data terpilih berhasil dihapus');
-            window.location='manage_post_subcategory.php';
+            window.location='manage_post_subcategory';
         </script>
         ";
     }
@@ -337,6 +337,7 @@ if (isset($_POST['hapus_terpilih'])) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Sub-Kategori Postingan - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
 
     <!-- Perfect Scrollbar -->
@@ -1024,7 +1025,7 @@ if (isset($_POST['hapus_terpilih'])) {
 
             $('#btnConfirmHapus').attr(
                 'href',
-                'manage_post_subcategory.php?hapus=' + id
+                'manage_post_subcategory?hapus=' + id
             );
 
             $('#modalHapus').modal('show');

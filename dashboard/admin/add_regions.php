@@ -38,7 +38,7 @@ if (isset($_POST['tambah_region'])) {
         if (mysqli_num_rows($result_check) > 0) {
 
             $_SESSION['error'] = "Nama cabang sudah tersedia.";
-            header("Location:add_regions.php");
+            header("Location:add_regions");
             exit;
         }
 
@@ -71,11 +71,11 @@ if (isset($_POST['tambah_region'])) {
             $_SESSION['error'] = "Data cabang gagal ditambahkan. " . mysqli_stmt_error($stmt);
         }
 
-        header("Location:add_regions.php");
+        header("Location:add_regions");
         exit;
     } else {
 
-        header("Location:add_regions.php?error=kosong");
+        header("Location:add_regions?error=kosong");
         exit;
     }
 }
@@ -113,17 +113,17 @@ if (isset($_POST['update_region'])) {
         if (mysqli_stmt_execute($stmt)) {
 
             $_SESSION['success'] = "Data cabang berhasil diupdate.";
-            header("Location:add_regions.php");
+            header("Location:add_regions");
             exit;
         } else {
 
             $_SESSION['error'] = "Data cabang gagal diupdate.";
-            header("Location:add_regions.php");
+            header("Location:add_regions");
             exit;
         }
     } else {
 
-        header("Location:add_regions.php?error=kosong");
+        header("Location:add_regions?error=kosong");
         exit;
     }
 }
@@ -147,12 +147,12 @@ if (isset($_POST['delete_single'])) {
         if ($delete) {
 
             $_SESSION['success'] = "Data cabang berhasil dihapus.";
-            header("Location:add_regions.php");
+            header("Location:add_regions");
             exit;
         } else {
 
             $_SESSION['error'] = "Data cabang gagal dihapus.";
-            header("Location:add_regions.php");
+            header("Location:add_regions");
             exit;
         }
     }
@@ -186,18 +186,18 @@ if (isset($_POST['delete_selected'])) {
         if ($delete) {
 
             $_SESSION['success'] = "Data terpilih berhasil dihapus.";
-            header("Location:add_regions.php");
+            header("Location:add_regions");
             exit;
         } else {
 
             $_SESSION['error'] = "Data terpilih gagal dihapus.";
-            header("Location:add_regions.php");
+            header("Location:add_regions");
             exit;
         }
     } else {
 
         $_SESSION['error'] = "Pilih data terlebih dahulu.";
-        header("Location:add_regions.php");
+        header("Location:add_regions");
         exit;
     }
 }
@@ -224,6 +224,7 @@ $regions = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Tambah Cabang Lokasi - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

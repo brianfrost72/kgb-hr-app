@@ -85,7 +85,7 @@ if (isset($_POST['save_gallery'])) {
             echo "
             <script>
                 alert('Galeri berhasil disimpan!');
-                window.location='manage_gallery.php';
+                window.location='manage_gallery';
             </script>
             ";
         } else {
@@ -136,7 +136,7 @@ if (isset($_GET['delete'])) {
         echo "
         <script>
             alert('Galeri berhasil dihapus!');
-            window.location='manage_gallery.php';
+            window.location='manage_gallery';
         </script>
         ";
 
@@ -176,6 +176,7 @@ if (!$queryGallery) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Galeri - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <link
         type="text/css"
@@ -391,7 +392,7 @@ if (!$queryGallery) {
                                             <td class="align-middle text-center" style="width:120px;">
 
                                                 <a
-                                                    href="manage_gallery.php?delete=<?= $row['id']; ?>"
+                                                    href="manage_gallery?delete=<?= $row['id']; ?>"
                                                     class="btn btn-sm btn-light text-danger"
                                                     onclick="return confirm('Yakin ingin menghapus galeri ini?')">
 

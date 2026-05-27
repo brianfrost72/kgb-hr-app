@@ -312,6 +312,7 @@ foreach ($finance_data as $month => $data) {
     name="viewport"
     content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <title>Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
   <!-- Perfect Scrollbar -->
   <link
@@ -400,7 +401,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">accessibility</i>
                     </span>
                   </div>
-                  <a href="manage_roles.php" class="text-dark">
+                  <a href="manage_roles" class="text-dark">
                     <strong>Manage Role</strong>
                   </a>
                 </div>
@@ -418,7 +419,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">person_add</i>
                     </span>
                   </div>
-                  <a href="manage_employees.php" class="text-dark">
+                  <a href="manage_employees" class="text-dark">
                     <strong>Tambah Personel</strong>
                   </a>
                 </div>
@@ -436,7 +437,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">photo_library</i>
                     </span>
                   </div>
-                  <a href="manage_gallery.php" class="text-dark">
+                  <a href="manage_gallery" class="text-dark">
                     <strong>Manage Galeri</strong>
                   </a>
                 </div>
@@ -454,7 +455,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">work</i>
                     </span>
                   </div>
-                  <a href="manage_job_information.php" class="text-dark">
+                  <a href="manage_job_information" class="text-dark">
                     <strong>Manage Lowongan Kerja</strong>
                   </a>
                 </div>
@@ -472,7 +473,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">work</i>
                     </span>
                   </div>
-                  <a href="manage_company_structure.php" class="text-dark">
+                  <a href="manage_company_structure" class="text-dark">
                     <strong>Manage Struktur Organisasi</strong>
                   </a>
                 </div>
@@ -490,7 +491,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">inbox</i>
                     </span>
                   </div>
-                  <a href="manage_inbox.php" class="text-dark">
+                  <a href="manage_inbox" class="text-dark">
                     <strong>Kotak Masuk</strong>
                   </a>
                 </div>
@@ -508,7 +509,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">layers</i>
                     </span>
                   </div>
-                  <a href="manage_post.php" class="text-dark">
+                  <a href="manage_post" class="text-dark">
                     <strong>Manage Postingan</strong>
                   </a>
                 </div>
@@ -526,7 +527,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">layers</i>
                     </span>
                   </div>
-                  <a href="manage_our_clients.php" class="text-dark">
+                  <a href="manage_our_clients" class="text-dark">
                     <strong>Manage Klien Kami</strong>
                   </a>
                 </div>
@@ -544,7 +545,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">layers</i>
                     </span>
                   </div>
-                  <a href="manage_partners.php" class="text-dark">
+                  <a href="manage_partners" class="text-dark">
                     <strong>Manage Mitra Kami</strong>
                   </a>
                 </div>
@@ -577,7 +578,7 @@ foreach ($finance_data as $month => $data) {
                       <i class="material-icons text-white icon-18pt">layers</i>
                     </span>
                   </div>
-                  <a href="manage_legality.php" class="text-dark">
+                  <a href="manage_legality" class="text-dark">
                     <strong>Manage Legalitas Perusahaan</strong>
                   </a>
                 </div>
@@ -754,7 +755,7 @@ foreach ($finance_data as $month => $data) {
               <div
                 class="card-header d-flex justify-content-between align-items-center flex-wrap">
                 <h4 class="m-0">Total Pendapatan</h4>
-                <a href="manage_income_reports.php" class="btn btn-sm btn-primary">Lihat</a>
+                <a href="manage_income_reports" class="btn btn-sm btn-primary">Lihat</a>
               </div>
 
               <!-- FILTER -->
@@ -797,7 +798,7 @@ foreach ($finance_data as $month => $data) {
               <div
                 class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="m-0">Laporan Keuangan Bulanan</h4>
-                <a href="manage_deposite_reports.php" class="btn btn-sm btn-primary">Lihat</a>
+                <a href="manage_deposite_reports" class="btn btn-sm btn-primary">Lihat</a>
               </div>
 
               <!-- FILTER -->

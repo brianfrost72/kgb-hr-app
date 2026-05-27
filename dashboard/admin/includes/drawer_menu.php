@@ -151,9 +151,9 @@ function showMenu($pages = [])
                 <!-- ROLE AKSES MENU -->
                 <?php if (roleAccess(['Super Admin', 'Moderator'])): ?>
                     <li class="sidebar-menu-item <?= activeMenu([
-                                                        'add_roles.php',
-                                                        'manage_roles.php',
-                                                        'add_regions.php'
+                                                        'add_roles',
+                                                        'manage_roles',
+                                                        'add_regions'
                                                     ]); ?>">
                         <a
                             class="sidebar-menu-button"
@@ -165,24 +165,24 @@ function showMenu($pages = [])
                             <span class="ml-auto sidebar-menu-toggle-icon"></span>
                         </a>
                         <ul class="sidebar-submenu collapse <?= showMenu([
-                                                                'add_roles.php',
-                                                                'manage_roles.php',
-                                                                'add_regions.php'
+                                                                'add_roles',
+                                                                'manage_roles',
+                                                                'add_regions'
                                                             ]); ?>" id="role_menu">
-                            <li class="sidebar-menu-item <?= activeMenu(['add_roles.php']); ?>">
+                            <li class="sidebar-menu-item <?= activeMenu(['add_roles']); ?>">
                                 <a
                                     class="sidebar-menu-button"
-                                    href="add_roles.php">
+                                    href="add_roles">
                                     <span class="sidebar-menu-text">Tambah Role</span>
                                 </a>
                             </li>
-                            <li class="sidebar-menu-item <?= activeMenu(['manage_roles.php']); ?>">
-                                <a class="sidebar-menu-button" href="manage_roles.php">
+                            <li class="sidebar-menu-item <?= activeMenu(['manage_roles']); ?>">
+                                <a class="sidebar-menu-button" href="manage_roles">
                                     <span class="sidebar-menu-text">Manage Role</span>
                                 </a>
                             </li>
-                            <li class="sidebar-menu-item <?= activeMenu(['add_regions.php']); ?>">
-                                <a class="sidebar-menu-button" href="add_regions.php">
+                            <li class="sidebar-menu-item <?= activeMenu(['add_regions']); ?>">
+                                <a class="sidebar-menu-button" href="add_regions">
                                     <span class="sidebar-menu-text">Tambah Cabang Lokasi</span>
                                 </a>
                             </li>
@@ -194,8 +194,8 @@ function showMenu($pages = [])
                 <!-- STRUKTUR ORGANISASI MENU -->
                 <?php if (roleAccess(['Super Admin', 'Moderator'])): ?>
                     <li class="sidebar-menu-item <?= activeMenu([
-                                                        'manage_departments.php',
-                                                        'manage_positions.php'
+                                                        'manage_departments',
+                                                        'manage_positions'
                                                     ]); ?>">
                         <a
                             class="sidebar-menu-button"
@@ -207,13 +207,13 @@ function showMenu($pages = [])
                             <span class="ml-auto sidebar-menu-toggle-icon"></span>
                         </a>
                         <ul class="sidebar-submenu collapse" id="structure_menu">
-                            <li class="sidebar-menu-item <?= activeMenu(['manage_departments.php']); ?>">
-                                <a class="sidebar-menu-button" href="manage_departments.php">
+                            <li class="sidebar-menu-item <?= activeMenu(['manage_departments']); ?>">
+                                <a class="sidebar-menu-button" href="manage_departments">
                                     <span class="sidebar-menu-text">Manage Departemen</span>
                                 </a>
                             </li>
-                            <li class="sidebar-menu-item <?= activeMenu(['manage_positions.php']); ?>">
-                                <a class="sidebar-menu-button" href="manage_positions.php">
+                            <li class="sidebar-menu-item <?= activeMenu(['manage_positions']); ?>">
+                                <a class="sidebar-menu-button" href="manage_positions">
                                     <span class="sidebar-menu-text">Manage Jabatan</span>
                                 </a>
                             </li>
@@ -224,8 +224,8 @@ function showMenu($pages = [])
 
                 <!-- PERSONEL MENU -->
                 <?php if (roleAccess(['Super Admin', 'Moderator', 'Admin'])): ?>
-                    <li class="sidebar-menu-item <?= activeMenu(['manage_employees.php']); ?>">
-                        <a class="sidebar-menu-button" href="manage_employees.php">
+                    <li class="sidebar-menu-item <?= activeMenu(['manage_employees']); ?>">
+                        <a class="sidebar-menu-button" href="manage_employees">
                             <i
                                 class="sidebar-menu-icon sidebar-menu-icon--left material-icons">group</i>
                             <span class="sidebar-menu-text">Master Personel</span>
@@ -236,7 +236,7 @@ function showMenu($pages = [])
 
                 <!-- LAYANAN MENU -->
                 <?php if (roleAccess(['Super Admin', 'Moderator'])): ?>
-                    <li class="sidebar-menu-item <?= activeMenu(['manage_services.php']); ?>">
+                    <li class="sidebar-menu-item <?= activeMenu(['manage_services']); ?>">
                         <a
                             class="sidebar-menu-button"
                             data-toggle="collapse"
@@ -247,8 +247,8 @@ function showMenu($pages = [])
                             <span class="ml-auto sidebar-menu-toggle-icon"></span>
                         </a>
                         <ul class="sidebar-submenu collapse" id="services_menu">
-                            <li class="sidebar-menu-item <?= activeMenu(['manage_services.php']); ?>">
-                                <a class="sidebar-menu-button" href="manage_services.php">
+                            <li class="sidebar-menu-item <?= activeMenu(['manage_services']); ?>">
+                                <a class="sidebar-menu-button" href="manage_services">
                                     <span class="sidebar-menu-text">Manage Layanan</span>
                                 </a>
                             </li>
@@ -265,10 +265,10 @@ function showMenu($pages = [])
                 <!-- LAPORAN FINANSIAL MENU -->
                 <?php if (roleAccess(['Super Admin', 'Moderator', 'Staff'])): ?>
                     <li class="sidebar-menu-item <?= activeMenu([
-                                                        'manage_income_reports.php',
-                                                        'manage_expense_reports.php',
-                                                        'manage_employee_payment.php',
-                                                        'manage_deposite_reports.php'
+                                                        'manage_income_reports',
+                                                        'manage_expense_reports',
+                                                        'manage_employee_payment',
+                                                        'manage_deposite_reports'
                                                     ]); ?>">
                         <a
                             class="sidebar-menu-button"
@@ -280,23 +280,23 @@ function showMenu($pages = [])
                             <span class="ml-auto sidebar-menu-toggle-icon"></span>
                         </a>
                         <ul class="sidebar-submenu collapse" id="financial_reports_menu">
-                            <li class="sidebar-menu-item <?= activeMenu(['manage_income_reports.php']); ?>">
-                                <a class="sidebar-menu-button" href="manage_income_reports.php">
+                            <li class="sidebar-menu-item <?= activeMenu(['manage_income_reports']); ?>">
+                                <a class="sidebar-menu-button" href="manage_income_reports">
                                     <span class="sidebar-menu-text">Manage Laporan Pemasukan</span>
                                 </a>
                             </li>
-                            <li class="sidebar-menu-item <?= activeMenu(['manage_expense_reports.php']); ?>">
-                                <a class="sidebar-menu-button" href="manage_expense_reports.php">
+                            <li class="sidebar-menu-item <?= activeMenu(['manage_expense_reports']); ?>">
+                                <a class="sidebar-menu-button" href="manage_expense_reports">
                                     <span class="sidebar-menu-text">Manage Laporan Pengeluaran</span>
                                 </a>
                             </li>
-                            <li class="sidebar-menu-item <?= activeMenu(['manage_employee_payment.php']); ?>">
-                                <a class="sidebar-menu-button" href="manage_employee_payment.php">
+                            <li class="sidebar-menu-item <?= activeMenu(['manage_employee_payment']); ?>">
+                                <a class="sidebar-menu-button" href="manage_employee_payment">
                                     <span class="sidebar-menu-text">Manage Penggajian</span>
                                 </a>
                             </li>
                             <li class="sidebar-menu-item">
-                                <a class="sidebar-menu-button" href="manage_deposite_reports.php">
+                                <a class="sidebar-menu-button" href="manage_deposite_reports">
                                     <span class="sidebar-menu-text">Deposit Keuangan</span>
                                 </a>
                             </li>
@@ -324,12 +324,12 @@ function showMenu($pages = [])
                     </a>
                     <ul class="sidebar-submenu collapse" id="client_menu">
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="manage_client-private.php">
+                            <a class="sidebar-menu-button" href="manage_client-private">
                                 <span class="sidebar-menu-text">Personal / Private</span>
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
-                            <a class="sidebar-menu-button" href="manage_client-corporate.php">
+                            <a class="sidebar-menu-button" href="manage_client-corporate">
                                 <span class="sidebar-menu-text">Perusahaan</span>
                             </a>
                         </li>
@@ -339,7 +339,7 @@ function showMenu($pages = [])
 
             <!-- ORDER MENU -->
             <!-- <li class="sidebar-menu-item">
-                    <a class="sidebar-menu-button" href="manage_orders.php">
+                    <a class="sidebar-menu-button" href="manage_orders">
                         <i
                             class="sidebar-menu-icon sidebar-menu-icon--left material-icons">local_grocery_store</i>
                         <span class="sidebar-menu-text">Manage Order</span>
@@ -350,7 +350,7 @@ function showMenu($pages = [])
 
             <!-- MEMBER MENU -->
             <!-- <li class="sidebar-menu-item">
-                    <a class="sidebar-menu-button" href="our_members.php">
+                    <a class="sidebar-menu-button" href="our_members">
                         <i
                             class="sidebar-menu-icon sidebar-menu-icon--left material-icons">card_membership</i>
                         <span class="sidebar-menu-text">Member Konig</span>
@@ -481,8 +481,8 @@ function showMenu($pages = [])
 
                         <!-- JOB APPLICATION MENU -->
                         <li class="sidebar-menu-item <?= activeMenu([
-                                                            'add_job_information.php',
-                                                            'manage_job_information.php'
+                                                            'add_job_information',
+                                                            'manage_job_information'
                                                         ]); ?>">
                             <a
                                 class="sidebar-menu-button"
@@ -494,15 +494,15 @@ function showMenu($pages = [])
                                 <span class="ml-auto sidebar-menu-toggle-icon"></span>
                             </a>
                             <ul class="sidebar-submenu collapse" id="job_menu">
-                                <li class="sidebar-menu-item <?= activeMenu(['add_job_information.php']); ?>">
+                                <li class="sidebar-menu-item <?= activeMenu(['add_job_information']); ?>">
                                     <a
                                         class="sidebar-menu-button"
-                                        href="add_job_information.php">
+                                        href="add_job_information">
                                         <span class="sidebar-menu-text">Tambah Info Loker</span>
                                     </a>
                                 </li>
-                                <li class="sidebar-menu-item <?= activeMenu(['manage_job_information.php']); ?>">
-                                    <a class="sidebar-menu-button" href="manage_job_information.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['manage_job_information']); ?>">
+                                    <a class="sidebar-menu-button" href="manage_job_information">
                                         <span class="sidebar-menu-text">Manage Info Loker</span>
                                     </a>
                                 </li>
@@ -512,7 +512,7 @@ function showMenu($pages = [])
 
                         <!-- STRUKTUR PERUSAHAAN MENU -->
                         <li class="sidebar-menu-item <?= activeMenu([
-                                                            'manage_company_structure.php'
+                                                            'manage_company_structure'
                                                         ]); ?>">
                             <a
                                 class="sidebar-menu-button"
@@ -524,8 +524,8 @@ function showMenu($pages = [])
                                 <span class="ml-auto sidebar-menu-toggle-icon"></span>
                             </a>
                             <ul class="sidebar-submenu collapse" id="company_structure_menu">
-                                <li class="sidebar-menu-item <?= activeMenu(['manage_company_structure.php']); ?>">
-                                    <a class="sidebar-menu-button" href="manage_company_structure.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['manage_company_structure']); ?>">
+                                    <a class="sidebar-menu-button" href="manage_company_structure">
                                         <span class="sidebar-menu-text">Manage Struktur Perusahaan</span>
                                     </a>
                                 </li>
@@ -534,7 +534,7 @@ function showMenu($pages = [])
                         <!-- STRUKTUR PERUSAHAAN MENU END -->
 
                         <!-- GALLERY MENU -->
-                        <li class="sidebar-menu-item <?= activeMenu(['manage_gallery.php']); ?>">
+                        <li class="sidebar-menu-item <?= activeMenu(['manage_gallery']); ?>">
                             <a
                                 class="sidebar-menu-button"
                                 data-toggle="collapse"
@@ -545,8 +545,8 @@ function showMenu($pages = [])
                                 <span class="ml-auto sidebar-menu-toggle-icon"></span>
                             </a>
                             <ul class="sidebar-submenu collapse" id="gallery_menu">
-                                <li class="sidebar-menu-item <?= activeMenu(['manage_gallery.php']); ?>">
-                                    <a class="sidebar-menu-button" href="manage_gallery.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['manage_gallery']); ?>">
+                                    <a class="sidebar-menu-button" href="manage_gallery">
                                         <span class="sidebar-menu-text">Manage Galeri</span>
                                     </a>
                                 </li>
@@ -555,7 +555,7 @@ function showMenu($pages = [])
                         <!-- GALLERY MENU END -->
 
                         <!-- OUR CLIENT MENU -->
-                        <li class="sidebar-menu-item <?= activeMenu(['manage_our_clients.php']); ?>">
+                        <li class="sidebar-menu-item <?= activeMenu(['manage_our_clients']); ?>">
                             <a
                                 class="sidebar-menu-button"
                                 data-toggle="collapse"
@@ -566,8 +566,8 @@ function showMenu($pages = [])
                                 <span class="ml-auto sidebar-menu-toggle-icon"></span>
                             </a>
                             <ul class="sidebar-submenu collapse" id="our_client_menu">
-                                <li class="sidebar-menu-item <?= activeMenu(['manage_our_clients.php']); ?>">
-                                    <a class="sidebar-menu-button" href="manage_our_clients.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['manage_our_clients']); ?>">
+                                    <a class="sidebar-menu-button" href="manage_our_clients">
                                         <span class="sidebar-menu-text">Manage Klien Kami</span>
                                     </a>
                                 </li>
@@ -576,8 +576,8 @@ function showMenu($pages = [])
                         <!-- KLIEN KAMI MENU END -->
 
                         <!-- MITRA MENU -->
-                        <li class="sidebar-menu-item <?= activeMenu(['manage_partners.php']); ?>">
-                            <a class="sidebar-menu-button" href="manage_partners.php">
+                        <li class="sidebar-menu-item <?= activeMenu(['manage_partners']); ?>">
+                            <a class="sidebar-menu-button" href="manage_partners">
                                 <i
                                     class="sidebar-menu-icon sidebar-menu-icon--left material-icons">layers</i>
                                 <span class="sidebar-menu-text">Mitra Kami</span>
@@ -586,8 +586,8 @@ function showMenu($pages = [])
                         <!-- MITRA MENU END -->
 
                         <!-- BANNER MENU -->
-                        <li class="sidebar-menu-item <?= activeMenu(['manage_banner.php']); ?>">
-                            <a class="sidebar-menu-button" href="manage_banner.php">
+                        <li class="sidebar-menu-item <?= activeMenu(['manage_banner']); ?>">
+                            <a class="sidebar-menu-button" href="manage_banner">
                                 <i
                                     class="sidebar-menu-icon sidebar-menu-icon--left material-icons">layers</i>
                                 <span class="sidebar-menu-text">Manage Hero Banner</span>
@@ -596,8 +596,8 @@ function showMenu($pages = [])
                         <!-- BANNER MENU END -->
 
                         <!-- SOCIAL MEDIA MENU -->
-                        <li class="sidebar-menu-item <?= activeMenu(['manage_socmed.php']); ?>">
-                            <a class="sidebar-menu-button" href="manage_socmed.php">
+                        <li class="sidebar-menu-item <?= activeMenu(['manage_socmed']); ?>">
+                            <a class="sidebar-menu-button" href="manage_socmed">
                                 <i
                                     class="sidebar-menu-icon sidebar-menu-icon--left material-icons">layers</i>
                                 <span class="sidebar-menu-text">Manage Social Media</span>
@@ -606,8 +606,8 @@ function showMenu($pages = [])
                         <!-- SOCIAL MEDIA MENU END -->
 
                         <!-- IKLAN MENU -->
-                        <li class="sidebar-menu-item <?= activeMenu(['manage_ads.php']); ?>">
-                            <a class="sidebar-menu-button" href="manage_ads.php">
+                        <li class="sidebar-menu-item <?= activeMenu(['manage_ads']); ?>">
+                            <a class="sidebar-menu-button" href="manage_ads">
                                 <i
                                     class="sidebar-menu-icon sidebar-menu-icon--left material-icons">layers</i>
                                 <span class="sidebar-menu-text">Manage Iklan</span>
@@ -616,8 +616,8 @@ function showMenu($pages = [])
                         <!-- IKLAN MENU END -->
 
                         <!-- LEGALITAS MENU -->
-                        <li class="sidebar-menu-item <?= activeMenu(['manage_legality.php']); ?>">
-                            <a class="sidebar-menu-button" href="manage_legality.php">
+                        <li class="sidebar-menu-item <?= activeMenu(['manage_legality']); ?>">
+                            <a class="sidebar-menu-button" href="manage_legality">
                                 <i
                                     class="sidebar-menu-icon sidebar-menu-icon--left material-icons">assignment_turned_in</i>
                                 <span class="sidebar-menu-text">Legalitas</span>
@@ -627,11 +627,11 @@ function showMenu($pages = [])
 
                         <!-- BERITA / ARTIKEL PERUSAHAAN MENU -->
                         <li class="sidebar-menu-item <?= activeMenu([
-                                                            'manage_post_category.php',
-                                                            'manage_post_subcategory.php',
-                                                            'add_post.php',
-                                                            'manage_post.php',
-                                                            'manage_comments.php'
+                                                            'manage_post_category',
+                                                            'manage_post_subcategory',
+                                                            'add_post',
+                                                            'manage_post',
+                                                            'manage_comments'
                                                         ]); ?>">
                             <a
                                 class="sidebar-menu-button"
@@ -644,28 +644,28 @@ function showMenu($pages = [])
                                 <span class="ml-auto sidebar-menu-toggle-icon"></span>
                             </a>
                             <ul class="sidebar-submenu collapse" id="article_menu">
-                                <li class="sidebar-menu-item <?= activeMenu(['manage_post_category.php']); ?>">
-                                    <a class="sidebar-menu-button" href="manage_post_category.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['manage_post_category']); ?>">
+                                    <a class="sidebar-menu-button" href="manage_post_category">
                                         <span class="sidebar-menu-text">Manage Kategori</span>
                                     </a>
                                 </li>
-                                <li class="sidebar-menu-item <?= activeMenu(['manage_post_subcategory.php']); ?>">
-                                    <a class="sidebar-menu-button" href="manage_post_subcategory.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['manage_post_subcategory']); ?>">
+                                    <a class="sidebar-menu-button" href="manage_post_subcategory">
                                         <span class="sidebar-menu-text">Manage Sub-Kategori</span>
                                     </a>
                                 </li>
-                                <li class="sidebar-menu-item <?= activeMenu(['add_post.php']); ?>">
-                                    <a class="sidebar-menu-button" href="add_post.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['add_post']); ?>">
+                                    <a class="sidebar-menu-button" href="add_post">
                                         <span class="sidebar-menu-text">Tambah Postingan</span>
                                     </a>
                                 </li>
-                                <li class="sidebar-menu-item <?= activeMenu(['manage_post.php']); ?>">
-                                    <a class="sidebar-menu-button" href="manage_post.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['manage_post']); ?>">
+                                    <a class="sidebar-menu-button" href="manage_post">
                                         <span class="sidebar-menu-text">Manage Postingan</span>
                                     </a>
                                 </li>
-                                <li class="sidebar-menu-item <?= activeMenu(['manage_comments.php']); ?>">
-                                    <a class="sidebar-menu-button" href="manage_comments.php">
+                                <li class="sidebar-menu-item <?= activeMenu(['manage_comments']); ?>">
+                                    <a class="sidebar-menu-button" href="manage_comments">
                                         <span class="sidebar-menu-text">Manage Komentar</span>
                                         <!-- <span class="badge badge-primary badge-pill ml-1">3</span> -->
                                     </a>
@@ -675,8 +675,8 @@ function showMenu($pages = [])
                         <!-- BERITA / ARTIKEL MENU END -->
 
                         <!-- KOTAK MASUK MENU -->
-                        <li class="sidebar-menu-item <?= activeMenu(['manage_inbox.php']); ?>">
-                            <a class="sidebar-menu-button" href="manage_inbox.php">
+                        <li class="sidebar-menu-item <?= activeMenu(['manage_inbox']); ?>">
+                            <a class="sidebar-menu-button" href="manage_inbox">
                                 <i
                                     class="sidebar-menu-icon sidebar-menu-icon--left material-icons">inbox</i>
                                 <span class="sidebar-menu-text">Kotak Masuk</span>
@@ -692,7 +692,7 @@ function showMenu($pages = [])
 
             <div class="d-flex align-items-center sidebar-p-a border-bottom sidebar-account">
 
-                <a href="edit_profile.php"
+                <a href="edit_profile"
                     class="flex d-flex align-items-center text-underline-0 text-body">
 
                     <span class="avatar avatar-sm mr-2">
@@ -746,19 +746,19 @@ function showMenu($pages = [])
                         <div class="dropdown-divider"></div>
 
                         <a class="dropdown-item"
-                            href="index.php">
+                            href="/">
                             Dashboard
                         </a>
 
                         <a class="dropdown-item"
-                            href="edit_profile.php">
+                            href="edit_profile">
                             Edit Profile
                         </a>
 
                         <div class="dropdown-divider"></div>
 
                         <a class="dropdown-item"
-                            href="logout.php">
+                            href="logout">
                             Logout
                         </a>
 

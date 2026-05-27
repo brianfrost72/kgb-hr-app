@@ -3,7 +3,7 @@ session_start();
 require_once "dashboard/koneksi.php";
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: index.php");
+    header("Location: /");
     exit;
 }
 
@@ -11,7 +11,7 @@ $email    = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 
 if (!$email || !$password) {
-    header("Location: index.php?error=1");
+    header("Location: /?error=1");
     exit;
 }
 
@@ -43,7 +43,7 @@ $stmt->execute();
 $res = $stmt->get_result();
 
 if (!$user = $res->fetch_assoc()) {
-    header("Location: index.php?error=1");
+    header("Location: /?error=1");
     exit;
 }
 
@@ -52,7 +52,7 @@ if (!$user = $res->fetch_assoc()) {
 ====================== */
 
 if (!password_verify($password, $user['password'])) {
-    header("Location: index.php?error=1");
+    header("Location: /?error=1");
     exit;
 }
 
@@ -104,9 +104,9 @@ if ($user['user_type'] === 'client') {
     if (($sp['status'] ?? 'inactive') !== 'active') {
 
         if (($sp['inactive_reason'] ?? '') === 'auto') {
-            header("Location: index.php?client_auto_block=1");
+            header("Location: /?client_auto_block=1");
         } else {
-            header("Location: index.php?client_admin_block=1");
+            header("Location: /?client_admin_block=1");
         }
         exit;
     }
@@ -119,7 +119,7 @@ if ($user['user_type'] === 'client') {
 
 if ($user['user_type'] === 'internal') {
     if (($user['status'] ?? 'inactive') !== 'active') {
-        header("Location: index.php?blocked=1");
+        header("Location: /?blocked=1");
         exit;
     }
 }
@@ -210,5 +210,5 @@ if ($user_type === 'client') {
     exit;
 }
 
-header("Location: dashboard/admin/index.php");
+header("Location: dashboard/admin/");
 exit;

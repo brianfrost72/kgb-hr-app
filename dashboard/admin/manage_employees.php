@@ -154,7 +154,7 @@ if (isset($_POST['tambah_employee'])) {
             $_SESSION['error'] =
                 "Email sudah digunakan.";
 
-            header("Location:manage_employees.php");
+            header("Location:manage_employees");
 
             exit;
         }
@@ -184,7 +184,7 @@ if (isset($_POST['tambah_employee'])) {
                 $_SESSION['error'] =
                     "Format foto harus JPG JPEG PNG.";
 
-                header("Location:manage_employees.php");
+                header("Location:manage_employees");
 
                 exit;
             }
@@ -303,7 +303,7 @@ if (isset($_POST['tambah_employee'])) {
             "Field wajib belum lengkap.";
     }
 
-    header("Location:manage_employees.php");
+    header("Location:manage_employees");
 
     exit;
 }
@@ -358,7 +358,7 @@ if (isset($_POST['update_employee'])) {
         $_SESSION['error'] =
             "Semua field wajib diisi kecuali KTA.";
 
-        header("Location:manage_employees.php");
+        header("Location:manage_employees");
 
         exit;
     }
@@ -463,7 +463,7 @@ $photo_sql
     $_SESSION['success'] =
         "Employee berhasil diupdate.";
 
-    header("Location:manage_employees.php");
+    header("Location:manage_employees");
 
     exit;
 }
@@ -486,7 +486,7 @@ if (isset($_POST['delete_employee'])) {
     $_SESSION['success'] =
         "Employee berhasil dihapus.";
 
-    header("Location:manage_employees.php");
+    header("Location:manage_employees");
 
     exit;
 }
@@ -519,7 +519,7 @@ if (isset($_POST['delete_selected'])) {
             "Tidak ada data dipilih.";
     }
 
-    header("Location:manage_employees.php");
+    header("Location:manage_employees");
 
     exit;
 }
@@ -537,6 +537,7 @@ if (isset($_POST['delete_selected'])) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Personel - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

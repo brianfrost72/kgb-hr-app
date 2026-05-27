@@ -158,19 +158,19 @@ if (
 
               <div class="dropdown-divider"></div>
 
-              <a class="dropdown-item active" href="index.php">
+              <a class="dropdown-item active" href="/">
                 <i class="material-icons">dvr</i>
                 Dashboard
               </a>
 
-              <a class="dropdown-item" href="edit_profile.php">
+              <a class="dropdown-item" href="edit_profile">
                 <i class="material-icons">account_circle</i>
                 Edit Akun
               </a>
 
               <div class="dropdown-divider"></div>
 
-              <a class="dropdown-item" href="logout.php">
+              <a class="dropdown-item" href="logout">
                 <i class="material-icons">exit_to_app</i>
                 Logout
               </a>

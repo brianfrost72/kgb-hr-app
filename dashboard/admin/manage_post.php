@@ -172,6 +172,7 @@ $querySubCategory = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Daftar Postingan - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
 
     <!-- Perfect Scrollbar -->
@@ -231,7 +232,7 @@ $querySubCategory = mysqli_query($conn, "
                             </nav>
                             <h1 class="m-0">Daftar Postingan</h1>
                         </div>
-                        <a href="add_post.php"
+                        <a href="add_post"
                             class="btn btn-primary ml-1">Tambah Postingan ?</a>
                     </div>
                 </div>
@@ -573,7 +574,7 @@ $querySubCategory = mysqli_query($conn, "
                                                     <div class="d-flex justify-content-center">
 
                                                         <a
-                                                            href="edit_post.php?id=<?= $row['id']; ?>"
+                                                            href="edit_post?id=<?= $row['id']; ?>"
                                                             class="mr-2">
                                                             <button
                                                                 class="btn btn-outline-primary btn-sm"
@@ -932,7 +933,7 @@ $querySubCategory = mysqli_query($conn, "
                 document.getElementById('showEntries').value;
 
             let url =
-                'manage_post.php?';
+                'manage_post?';
 
             url += 'search=' + encodeURIComponent(search);
             url += '&category=' + category;

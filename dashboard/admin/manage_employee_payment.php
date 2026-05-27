@@ -123,7 +123,7 @@ if (isset($_POST['add_employee_payment'])) {
 
         $_SESSION['error'] = "Payroll personil sudah tersedia";
 
-        header("Location: manage_employee_payment.php");
+        header("Location: manage_employee_payment");
 
         exit;
     }
@@ -189,7 +189,7 @@ if (isset($_POST['add_employee_payment'])) {
         $_SESSION['error'] = "Gagal menambahkan payroll : " . mysqli_error($conn);
     }
 
-    header("Location: manage_employee_payment.php");
+    header("Location: manage_employee_payment");
     exit;
 }
 
@@ -213,7 +213,7 @@ if (isset($_GET['delete'])) {
         $_SESSION['error'] = "Gagal menghapus payroll";
     }
 
-    header("Location: manage_employee_payment.php");
+    header("Location: manage_employee_payment");
     exit;
 }
 
@@ -318,7 +318,7 @@ if (isset($_POST['update_employee_payment'])) {
         $_SESSION['error'] = "Gagal update payroll : " . mysqli_error($conn);
     }
 
-    header("Location: manage_employee_payment.php");
+    header("Location: manage_employee_payment");
     exit;
 }
 
@@ -461,6 +461,7 @@ $queryTablePayroll = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Gaji Karyawan - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -1457,7 +1458,7 @@ $queryTablePayroll = mysqli_query($conn, "
                             <div class="text-right">
 
                                 <!-- TUTUP -->
-                                <a href="manage_employee_payment.php"
+                                <a href="manage_employee_payment"
                                     class="btn btn-light">
 
                                     Tutup

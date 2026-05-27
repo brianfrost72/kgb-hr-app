@@ -131,7 +131,7 @@ if (isset($_POST['tambah_user'])) {
 
             $_SESSION['error'] = "Data wajib belum lengkap.";
 
-            header("Location: manage_roles.php");
+            header("Location: manage_roles");
             exit;
         }
     }
@@ -151,7 +151,7 @@ if (isset($_POST['tambah_user'])) {
 
         $_SESSION['error'] = "Email sudah digunakan.";
 
-        header("Location: manage_roles.php");
+        header("Location: manage_roles");
         exit;
     }
 
@@ -259,7 +259,7 @@ if (isset($_POST['tambah_user'])) {
 
     $_SESSION['success'] = "User berhasil ditambahkan.";
 
-    header("Location: manage_roles.php");
+    header("Location: manage_roles");
     exit;
 }
 
@@ -372,7 +372,7 @@ if (isset($_POST['update_user'])) {
 
     $_SESSION['success'] = "User berhasil diupdate.";
 
-    header("Location: manage_roles.php");
+    header("Location: manage_roles");
     exit;
 }
 
@@ -445,7 +445,7 @@ if (isset($_POST['delete_single'])) {
     $_SESSION['success'] =
         "User berhasil dihapus.";
 
-    header("Location: manage_roles.php");
+    header("Location: manage_roles");
     exit;
 }
 
@@ -463,7 +463,7 @@ if (isset($_POST['delete_selected'])) {
         $_SESSION['error'] =
             "Pilih user terlebih dahulu.";
 
-        header("Location: manage_roles.php");
+        header("Location: manage_roles");
         exit;
     }
 
@@ -532,7 +532,7 @@ if (isset($_POST['delete_selected'])) {
     $_SESSION['success'] =
         "User terpilih berhasil dihapus.";
 
-    header("Location: manage_roles.php");
+    header("Location: manage_roles");
     exit;
 }
 
@@ -548,6 +548,7 @@ if (isset($_POST['delete_selected'])) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage User Role - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

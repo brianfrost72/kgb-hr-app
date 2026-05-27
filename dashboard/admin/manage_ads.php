@@ -37,7 +37,7 @@ if (isset($_GET['delete'])) {
 
     echo "
     <script>
-        window.location='manage_ads.php';
+        window.location='manage_ads';
     </script>
     ";
 }
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     echo "
                     <script>
-                        window.location='manage_ads.php';
+                        window.location='manage_ads';
                     </script>
                     ";
                 } else {
@@ -161,6 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Iklan - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <link
         type="text/css"

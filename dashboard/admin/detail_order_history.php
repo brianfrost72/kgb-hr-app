@@ -8,6 +8,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Detail Riwayat Pesanan - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

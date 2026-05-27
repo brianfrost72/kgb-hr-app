@@ -12,6 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reset Password | Konig Guard Bureau</title>
+    <link href="assets/images/favicon.png" rel="icon" />
     <link rel="stylesheet" href="assets/css/login.css" />
 </head>
 
@@ -60,7 +61,7 @@ if (session_status() === PHP_SESSION_NONE) {
                             document.querySelector(".reset-content").style.display = "none";
                             document.querySelector(".reset-success").style.display = "block";
                             setTimeout(() => {
-                                window.location.href = "index.php";
+                                window.location.href = "/";
                             }, 5000);
                         });
                     </script>
@@ -78,7 +79,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 
                 <div class="switch">
-                    Kembali ke <a href="index.php">Login</a> ?
+                    Kembali ke <a href="/">Login</a> ?
                 </div>
             </div>
 

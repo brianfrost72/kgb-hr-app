@@ -8,6 +8,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Order In - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Prevent the demo from appearing in search engines -->
     <meta name="robots" content="noindex" />

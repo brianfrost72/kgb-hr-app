@@ -47,7 +47,7 @@ if (isset($_POST['submit_job'])) {
     ) {
 
         $_SESSION['failed'] = "Semua field wajib diisi!";
-        header("Location: add_job_information.php");
+        header("Location: add_job_information");
         exit;
     }
 
@@ -55,7 +55,7 @@ if (isset($_POST['submit_job'])) {
     if (!filter_var($link_info, FILTER_VALIDATE_URL)) {
 
         $_SESSION['failed'] = "Format link tidak valid!";
-        header("Location: add_job_information.php");
+        header("Location: add_job_information");
         exit;
     }
 
@@ -63,7 +63,7 @@ if (isset($_POST['submit_job'])) {
     if ($job_quota <= 0) {
 
         $_SESSION['failed'] = "Kuota harus lebih dari 0!";
-        header("Location: add_job_information.php");
+        header("Location: add_job_information");
         exit;
     }
 
@@ -71,7 +71,7 @@ if (isset($_POST['submit_job'])) {
     if ($end_info < $start_info) {
 
         $_SESSION['failed'] = "Tanggal tutup tidak boleh kurang dari tanggal post!";
-        header("Location: add_job_information.php");
+        header("Location: add_job_information");
         exit;
     }
 
@@ -108,12 +108,12 @@ if (isset($_POST['submit_job'])) {
     if ($query) {
 
         $_SESSION['success'] = "Lowongan kerja berhasil ditambahkan!";
-        header("Location: manage_job_information.php");
+        header("Location: manage_job_information");
         exit;
     } else {
 
         $_SESSION['failed'] = "Gagal menambahkan data lowongan!";
-        header("Location: add_job_information.php");
+        header("Location: add_job_information");
         exit;
     }
 }
@@ -130,6 +130,7 @@ if (isset($_POST['submit_job'])) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Tambah Info Loker - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 

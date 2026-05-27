@@ -52,7 +52,7 @@ if (isset($_POST['btn_simpan'])) {
                 echo "
                     <script>
                         alert('Data berhasil diupdate');
-                        window.location='manage_legality.php';
+                        window.location='manage_legality';
                     </script>
                 ";
 
@@ -81,7 +81,7 @@ if (isset($_POST['btn_simpan'])) {
                 echo "
                     <script>
                         alert('Data berhasil ditambahkan');
-                        window.location='manage_legality.php';
+                        window.location='manage_legality';
                     </script>
                 ";
 
@@ -102,6 +102,7 @@ if (isset($_POST['btn_simpan'])) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Legalitas - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

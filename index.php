@@ -15,6 +15,7 @@ if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login | Konig Guard Bureau</title>
+    <link href="assets/images/favicon.png" rel="icon" />
     <link rel="stylesheet" href="assets/css/login.css" />
 </head>
 
@@ -111,7 +112,7 @@ if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
             </div>
 
             <div class="forgot">
-                <a href="reset_password.php">Lupa kata sandi?</a>
+                <a href="reset_password">Lupa kata sandi?</a>
             </div>
 
             <button type="submit">Masuk</button>

@@ -94,6 +94,7 @@ $queryInbox = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Pesan Masuk - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
 
     <!-- Perfect Scrollbar -->

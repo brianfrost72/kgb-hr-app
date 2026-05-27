@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "../koneksi.php";
+require_once __DIR__ . "/../koneksi.php";
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -80,7 +80,7 @@ if (isset($_POST['add_income'])) {
         ");
 
         if ($insert) {
-            echo "<script>alert('Laporan pemasukan berhasil ditambahkan!'); window.location='manage_income_reports.php';</script>";
+            echo "<script>alert('Laporan pemasukan berhasil ditambahkan!'); window.location='manage_income_reports';</script>";
         } else {
             echo "<script>alert('Gagal menambahkan data!');</script>";
         }
@@ -114,7 +114,7 @@ if (isset($_GET['delete'])) {
         WHERE id='$id'
     ");
 
-    echo "<script>alert('Data berhasil dihapus!'); window.location='manage_income_reports.php';</script>";
+    echo "<script>alert('Data berhasil dihapus!'); window.location='manage_income_reports';</script>";
 }
 
 /* ================= FILTER ================= */
@@ -160,6 +160,7 @@ $totalIncome = $totalData['total_income'] ?? 0;
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Laporan Pemasukan - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

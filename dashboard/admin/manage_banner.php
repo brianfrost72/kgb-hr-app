@@ -196,7 +196,7 @@ if (isset($_POST['save_banner'])) {
         echo "
             <script>
                 alert('Banner berhasil disimpan');
-                window.location='manage_banner.php';
+                window.location='manage_banner';
             </script>
         ";
     } else {
@@ -253,7 +253,7 @@ if (isset($_GET['delete'])) {
     echo "
         <script>
             alert('Banner berhasil dihapus');
-            window.location='manage_banner.php';
+            window.location='manage_banner';
         </script>
     ";
 }
@@ -280,6 +280,7 @@ $getBanners = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Member - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

@@ -26,5 +26,5 @@ session_unset();
 session_destroy();
 
 /* redirect */
-header("Location: ../../index.php");
+header("Location: ../../");
 exit;

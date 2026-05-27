@@ -24,7 +24,7 @@ if (isset($_POST['tambah_service'])) {
 
         $_SESSION['error'] = "Semua field wajib diisi!";
 
-        header("Location: manage_services.php");
+        header("Location: manage_services");
         exit;
     } else {
 
@@ -39,7 +39,7 @@ if (isset($_POST['tambah_service'])) {
 
             $_SESSION['error'] = "Nama layanan sudah ada!";
 
-            header("Location: manage_services.php");
+            header("Location: manage_services");
             exit;
         } else {
 
@@ -78,7 +78,7 @@ if (isset($_POST['tambah_service'])) {
 
             $_SESSION['success'] = "Data berhasil ditambahkan!";
 
-            header("Location: manage_services.php");
+            header("Location: manage_services");
             exit;
         }
     }
@@ -108,7 +108,7 @@ if (isset($_POST['update_service'])) {
 
         $_SESSION['error'] = "Semua field wajib diisi!";
 
-        header("Location: manage_services.php");
+        header("Location: manage_services");
         exit;
     } else {
 
@@ -124,7 +124,7 @@ if (isset($_POST['update_service'])) {
 
             $_SESSION['error'] = "Nama layanan sudah digunakan!";
 
-            header("Location: manage_services.php");
+            header("Location: manage_services");
             exit;
         } else {
 
@@ -172,7 +172,7 @@ if (isset($_POST['update_service'])) {
 
             $_SESSION['success'] = "Data berhasil diupdate!";
 
-            header("Location: manage_services.php");
+            header("Location: manage_services");
             exit;
         }
     }
@@ -216,7 +216,7 @@ if (isset($_POST['hapus_service'])) {
 
     $_SESSION['success'] = "Data berhasil dihapus!";
 
-    header("Location: manage_services.php");
+    header("Location: manage_services");
     exit;
 }
 
@@ -263,7 +263,7 @@ if (isset($_POST['hapus_terpilih'])) {
 
         $_SESSION['success'] = "Data terpilih berhasil dihapus!";
 
-        header("Location: manage_services.php");
+        header("Location: manage_services");
         exit;
     }
 }
@@ -285,9 +285,7 @@ $dataServices = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Tambah Layanan - Dashboard | Konig Guard Bureau</title>
-
-    <!-- Prevent the demo from appearing in search engines -->
-    <meta name="robots" content="noindex" />
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

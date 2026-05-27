@@ -77,7 +77,7 @@ if (isset($_POST['save_client'])) {
         }
     }
 
-    header("Location: manage_our_clients.php");
+    header("Location: manage_our_clients");
     exit;
 }
 
@@ -119,7 +119,7 @@ if (isset($_POST['edit_client'])) {
 
             $_SESSION['error'] = "Format gambar harus JPG, JPEG, PNG atau WEBP!";
 
-            header("Location: manage_our_clients.php");
+            header("Location: manage_our_clients");
             exit;
         }
 
@@ -157,7 +157,7 @@ if (isset($_POST['edit_client'])) {
         $_SESSION['error'] = "Gagal update data: " . mysqli_error($conn);
     }
 
-    header("Location: manage_our_clients.php");
+    header("Location: manage_our_clients");
     exit;
 }
 
@@ -202,7 +202,7 @@ if (isset($_GET['delete'])) {
         $_SESSION['error'] = "Gagal hapus data!";
     }
 
-    header("Location: manage_our_clients.php");
+    header("Location: manage_our_clients");
     exit;
 }
 
@@ -271,6 +271,7 @@ if (!$queryClients) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Klien Kami - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <link
         type="text/css"

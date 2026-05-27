@@ -143,6 +143,7 @@ if (isset($_POST['submit_post'])) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Tambah Postingan - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <link
         href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"
@@ -719,7 +720,7 @@ if (isset($_POST['submit_post'])) {
         document.getElementById("btnOkayPosting")
             .addEventListener("click", function() {
 
-                window.location.href = "manage_post.php";
+                window.location.href = "manage_post";
 
             });
     </script>

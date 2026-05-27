@@ -85,7 +85,7 @@ if (isset($_POST['add_expense'])) {
 
             echo "<script>
                 alert('Laporan pengeluaran berhasil ditambahkan!');
-                window.location='manage_expense_reports.php';
+                window.location='manage_expense_reports';
             </script>";
         }
     }
@@ -151,7 +151,7 @@ if (isset($_POST['update_expense'])) {
 
         echo "<script>
             alert('Data berhasil diupdate!');
-            window.location='manage_expense_reports.php';
+            window.location='manage_expense_reports';
         </script>";
     }
 }
@@ -185,7 +185,7 @@ if (isset($_GET['delete'])) {
 
     echo "<script>
         alert('Data berhasil dihapus!');
-        window.location='manage_expense_reports.php';
+        window.location='manage_expense_reports';
     </script>";
 }
 
@@ -236,6 +236,7 @@ $totalExpense = $totalData['total_expense'] ?? 0;
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Laporan Pengeluaran - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

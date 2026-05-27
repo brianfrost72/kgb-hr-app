@@ -81,6 +81,7 @@ while ($row = mysqli_fetch_assoc($queryKomentar)) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Komentar - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
@@ -794,7 +795,7 @@ while ($row = mysqli_fetch_assoc($queryKomentar)) {
             if (!confirmArsip) return;
 
 
-            fetch('update_comment_status.php', {
+            fetch('update_comment_status', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -845,7 +846,7 @@ while ($row = mysqli_fetch_assoc($queryKomentar)) {
             if (!confirmUp) return;
 
 
-            fetch('logic/update_comment_status.php', {
+            fetch('logic/update_comment_status', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

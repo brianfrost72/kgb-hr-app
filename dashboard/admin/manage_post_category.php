@@ -39,7 +39,7 @@ if (isset($_POST['tambah_category'])) {
         echo "
         <script>
             alert('Data sudah ada!');
-            window.location='manage_post_category.php';
+            window.location='manage_post_category';
         </script>
         ";
     } else {
@@ -59,7 +59,7 @@ if (isset($_POST['tambah_category'])) {
             echo "
             <script>
                 alert('Data berhasil ditambahkan');
-                window.location='manage_post_category.php';
+                window.location='manage_post_category';
             </script>
             ";
         } else {
@@ -113,7 +113,7 @@ if (isset($_POST['edit_category'])) {
         echo "
         <script>
             alert('Data sudah ada!');
-            window.location='manage_post_category.php';
+            window.location='manage_post_category';
         </script>
         ";
     } else {
@@ -130,7 +130,7 @@ if (isset($_POST['edit_category'])) {
             echo "
             <script>
                 alert('Data berhasil diupdate');
-                window.location='manage_post_category.php';
+                window.location='manage_post_category';
             </script>
             ";
         } else {
@@ -161,7 +161,7 @@ if (isset($_GET['hapus'])) {
     echo "
     <script>
         alert('Data berhasil dihapus');
-        window.location='manage_post_category.php';
+        window.location='manage_post_category';
     </script>
     ";
 }
@@ -185,7 +185,7 @@ if (isset($_POST['hapus_terpilih'])) {
         echo "
         <script>
             alert('Data terpilih berhasil dihapus');
-            window.location='manage_post_category.php';
+            window.location='manage_post_category';
         </script>
         ";
     } else {
@@ -217,7 +217,7 @@ if (isset($_POST['edit_category'])) {
 
     echo "<script>
         alert('Kategori berhasil diupdate');
-        window.location='manage_post_category.php';
+        window.location='manage_post_category';
     </script>";
 }
 
@@ -279,6 +279,7 @@ $dataKategori = mysqli_query($conn, "
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Kategori Posting - Dashboard | Konig Guard Bureau</title>
 
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

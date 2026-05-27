@@ -80,6 +80,7 @@ $totalAkanBerakhir = mysqli_fetch_assoc($totalAkanBerakhirQuery);
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Lowongan Kerja - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

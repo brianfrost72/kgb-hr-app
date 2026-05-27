@@ -27,7 +27,7 @@ if (isset($_POST['add_partner'])) {
         $_SESSION['error'] = "Partner gagal ditambahkan.";
     }
 
-    header("Location: manage_partners.php");
+    header("Location: manage_partners");
     exit;
 }
 
@@ -52,7 +52,7 @@ if (isset($_POST['edit_partner'])) {
         $_SESSION['error'] = "Partner gagal diupdate.";
     }
 
-    header("Location: manage_partners.php");
+    header("Location: manage_partners");
     exit;
 }
 
@@ -74,7 +74,7 @@ if (isset($_GET['delete'])) {
         $_SESSION['error'] = "Partner gagal dihapus.";
     }
 
-    header("Location: manage_partners.php");
+    header("Location: manage_partners");
     exit;
 }
 
@@ -147,6 +147,7 @@ $partners = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Mitra Kami - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

@@ -42,7 +42,7 @@ if (isset($_POST['tambah_role'])) {
         }
     }
 
-    header("Location: add_roles.php");
+    header("Location: add_roles");
     exit;
 }
 
@@ -86,7 +86,7 @@ if (isset($_POST['update_role'])) {
         }
     }
 
-    header("Location: add_roles.php");
+    header("Location: add_roles");
     exit;
 }
 
@@ -106,7 +106,7 @@ if (isset($_GET['hapus'])) {
 
     $_SESSION['success'] = "Role berhasil dihapus!";
 
-    header("Location: add_roles.php");
+    header("Location: add_roles");
     exit;
 }
 
@@ -137,7 +137,7 @@ if (isset($_POST['hapus_terpilih'])) {
         $_SESSION['success'] = "Data terpilih berhasil dihapus!";
     }
 
-    header("Location: add_roles.php");
+    header("Location: add_roles");
     exit;
 }
 
@@ -163,6 +163,7 @@ $roles = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Tambah Role - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link
@@ -593,7 +594,7 @@ $roles = mysqli_query($conn, "
                         </button>
 
                         <a
-                            href="add_roles.php?hapus=<?= $row['id']; ?>"
+                            href="add_roles?hapus=<?= $row['id']; ?>"
                             class="btn btn-danger">
 
                             Ya, Hapus

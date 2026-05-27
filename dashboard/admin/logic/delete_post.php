@@ -35,6 +35,6 @@ if(isset($_GET['id'])){
     }
 }
 
-header('Location: ../manage_post.php');
+header('Location: ../manage_post');
 exit;
 ?>

@@ -159,7 +159,7 @@ if (isset($_POST['update_post'])) {
         echo "
     <script>
         alert('Post berhasil diupdate');
-        window.location.href='manage_post.php';
+        window.location.href='manage_post';
     </script>
     ";
     } else {
@@ -180,6 +180,7 @@ if (isset($_POST['update_post'])) {
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Edit Postingan - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <link
         href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"

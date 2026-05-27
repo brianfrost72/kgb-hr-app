@@ -40,7 +40,7 @@ if (isset($_POST['tambah_department'])) {
 
             $_SESSION['error'] = "Nama departemen sudah digunakan.";
 
-            header("Location:manage_departments.php");
+            header("Location:manage_departments");
             exit;
         }
 
@@ -75,7 +75,7 @@ if (isset($_POST['tambah_department'])) {
         $_SESSION['error'] = "Nama departemen wajib diisi.";
     }
 
-    header("Location:manage_departments.php");
+    header("Location:manage_departments");
     exit;
 }
 
@@ -119,7 +119,7 @@ if (isset($_POST['update_department'])) {
 
             $_SESSION['error'] = "Nama departemen sudah digunakan.";
 
-            header("Location:manage_departments.php");
+            header("Location:manage_departments");
             exit;
         }
 
@@ -154,7 +154,7 @@ if (isset($_POST['update_department'])) {
         $_SESSION['error'] = "Data tidak valid.";
     }
 
-    header("Location:manage_departments.php");
+    header("Location:manage_departments");
     exit;
 }
 
@@ -183,7 +183,7 @@ if (isset($_POST['delete_single'])) {
         }
     }
 
-    header("Location:manage_departments.php");
+    header("Location:manage_departments");
     exit;
 }
 
@@ -222,7 +222,7 @@ if (isset($_POST['delete_selected'])) {
         $_SESSION['error'] = "Pilih data terlebih dahulu.";
     }
 
-    header("Location:manage_departments.php");
+    header("Location:manage_departments");
     exit;
 }
 
@@ -248,6 +248,7 @@ $departments = mysqli_query($conn, "
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Manage Departemen - Dashboard | Konig Guard Bureau</title>
+    <link href="../assets/images/favicon.png" rel="icon" />
 
     <!-- Perfect Scrollbar -->
     <link

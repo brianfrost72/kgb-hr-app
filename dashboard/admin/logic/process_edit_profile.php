@@ -66,7 +66,7 @@ if (!empty($email)) {
 
     if (mysqli_num_rows($checkEmail) > 0) {
 
-        header('Location: ../edit_profile.php?error=email_exists');
+        header('Location: ../edit_profile?error=email_exists');
         exit;
     }
 }
@@ -141,14 +141,14 @@ if (!empty($_FILES['photo_profile']['name'])) {
     // VALIDASI FORMAT
     if (!in_array($fileExt, $allowed)) {
 
-        header('Location: ../edit_profile.php?error=format_foto');
+        header('Location: ../edit_profile?error=format_foto');
         exit;
     }
 
     // VALIDASI SIZE 2MB
     if ($fileSize > 2 * 1024 * 1024) {
 
-        header('Location: ../edit_profile.php?error=size_foto');
+        header('Location: ../edit_profile?error=size_foto');
         exit;
     }
 
@@ -257,11 +257,11 @@ if (!empty($password)) {
 
 if ($updateProfile && $updateUsers) {
 
-    header('Location: ../edit_profile.php?success=1');
+    header('Location: ../edit_profile?success=1');
 
 } else {
 
-    header('Location: ../edit_profile.php?error=update_failed');
+    header('Location: ../edit_profile?error=update_failed');
 }
 
 exit;
