@@ -19,7 +19,7 @@ if (!$email || !$password) {
    AMBIL USER + ROLE + STATUS
 ====================== */
 
-$stmt = $conn->prepare("
+$stmt = $conn->prepare ("
 SELECT 
     u.id,
     u.email,

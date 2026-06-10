@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Jika file/folder asli ada, jangan rewrite
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Cari file .php
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L]
+
+# Default index
+DirectoryIndex index.php
